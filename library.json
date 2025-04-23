@@ -1,0 +1,24 @@
+{
+    "name": "IMU",
+    "description": "IMU",
+    "keywords": "IMU Inertial Management Unit gyro accelerometer",
+    "authors": {
+        "name": "Martin Budden",
+        "url": "https://github.com/martinbudden"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/martinbudden/Library-IMU"
+    },
+    "dependencies": [
+        {
+            "name": "martinbudden/IMU_TYPES",
+            "version": "^0.2.2"
+        }
+    ],
+    "license": "MIT",
+    "version": "0.0.1",
+    "frameworks": "*",
+    "platforms": "*",
+    "headers": ["BUS_I2C.h", "BUS_SPI.h", "IMU_Base.h", "IMU_BMI270.h", "IMU_BNO085.h", "IMU_LSM6DS3TR_C.h", "IMU_M5Stack.h", "IMU_M5Unified.h", "IMU_MPU6886.h"]
+}

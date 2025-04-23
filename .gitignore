@@ -1,0 +1,10 @@
+.pio
+.pioenvs
+.piolibdeps
+
+.vscode/*.*
+!.vscode/settings.json
+
+compile_commands.json
+c_cpp_properties.json
+launch.json
