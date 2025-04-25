@@ -11,6 +11,7 @@
         "llvmlibc",
         "martinbudden",
         "raspberrypi",
+        "seeed",
         "suppr",
         "unflags",
         "Wattributes",
@@ -22,6 +23,7 @@
         "Winline",
         "Wnarrowing",
         "Wsign",
-        "Wtrampolines"
+        "Wtrampolines",
+        "xiao"
     ]
 }

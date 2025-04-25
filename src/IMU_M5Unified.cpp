@@ -4,9 +4,22 @@
 #include <IMU_M5Unified.h>
 #include <cassert>
 
-IMU_M5_UNIFIED::IMU_M5_UNIFIED(axis_order_t axisOrder, void* i2cMutex) :
-    IMU_Base(axisOrder, i2cMutex)
+IMU_M5_UNIFIED::IMU_M5_UNIFIED(axis_order_t axisOrder) :
+    IMU_Base(axisOrder)
 {
+}
+
+int IMU_M5_UNIFIED::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex)
+{
+    (void)outputDataRateHz;
+    (void)gyroSensitivity;
+    (void)accSensitivity;
+#if defined(I2C_MUTEX_REQUIRED)
+    _i2cMutex = static_cast<SemaphoreHandle_t>(i2cMutex);
+#else
+    (void)i2cMutex;
+#endif
+
     i2cSemaphoreTake();
 #if defined(IMU_BUILD_YNEG_XPOS_ZPOS)
     M5.Imu.setAxisOrder(m5::IMU_Class::axis_y_neg, m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_z_pos);
@@ -19,7 +32,7 @@ IMU_M5_UNIFIED::IMU_M5_UNIFIED(axis_order_t axisOrder, void* i2cMutex) :
 #elif defined(IMU_BUILD_ZPOS_XNEG_YNEG)
     M5.Imu.setAxisOrder(m5::IMU_Class::axis_z_pos, m5::IMU_Class::axis_x_neg, m5::IMU_Class::axis_y_neg);
 #else
-    switch (axisOrder) {
+    switch (_axisOrder) {
     case XPOS_YPOS_ZPOS:
         M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_y_pos, m5::IMU_Class::axis_z_pos);
         break;
@@ -41,13 +54,6 @@ IMU_M5_UNIFIED::IMU_M5_UNIFIED(axis_order_t axisOrder, void* i2cMutex) :
     }
 #endif
     i2cSemaphoreGive();
-}
-
-int IMU_M5_UNIFIED::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity)
-{
-    (void)outputDataRateHz;
-    (void)gyroSensitivity;
-    (void)accSensitivity;
 
     return 0;
 }

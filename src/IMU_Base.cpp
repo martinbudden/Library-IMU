@@ -14,12 +14,24 @@ IMU_Base::IMU_Base(axis_order_t axisOrder) :
 {
 }
 
-IMU_Base::IMU_Base(axis_order_t axisOrder, [[maybe_unused]] void* i2cMutex) :
-#if defined(I2C_MUTEX_REQUIRED)
-    _i2cMutex(static_cast<SemaphoreHandle_t>(i2cMutex)),
-#endif
-    _axisOrder(axisOrder)
+int IMU_Base::init(uint32_t outputDataRateHz, void* i2cMutex)
 {
+    return init(outputDataRateHz, GYRO_FULL_SCALE_MAX, ACC_FULL_SCALE_MAX, i2cMutex);
+}
+
+int IMU_Base::init(uint32_t outputDataRateHz)
+{
+    return init(outputDataRateHz, nullptr);
+}
+
+int IMU_Base::init(void* i2cMutex)
+{
+    return init(0, GYRO_FULL_SCALE_MAX, ACC_FULL_SCALE_MAX, i2cMutex);
+}
+
+int IMU_Base::init()
+{
+    return init(nullptr);
 }
 
 void IMU_Base::delayMs(int ms)
@@ -32,16 +44,6 @@ void IMU_Base::delayMs(int ms)
 #else // defaults to FRAMEWORK_ARDUINO
     delay(ms);
 #endif
-}
-
-int IMU_Base::init(uint32_t outputDataRateHz)
-{
-    return init(outputDataRateHz, GYRO_FULL_SCALE_MAX, ACC_FULL_SCALE_MAX);
-}
-
-int IMU_Base::init()
-{
-    return init(0, GYRO_FULL_SCALE_MAX, ACC_FULL_SCALE_MAX);
 }
 
 IMU_Base::xyz_int32_t IMU_Base::getGyroOffset() const

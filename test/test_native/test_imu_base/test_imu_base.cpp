@@ -11,17 +11,18 @@ public:
     IMU_Test& operator=(IMU_Test&&) = delete;
     IMU_Test() = default;
     explicit IMU_Test(axis_order_t axisOrder) : IMU_Base(axisOrder) {}
-    virtual int init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity) override;
+    virtual int init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex) override;
     virtual xyz_int32_t readGyroRaw() override;
     virtual xyz_int32_t readAccRaw() override;
 // NOLINTEND(cppcoreguidelines-explicit-virtual-functions,hicpp-use-override,modernize-use-override)
 };
 
-int IMU_Test::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity)
+int IMU_Test::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex)
 {
     (void)outputDataRateHz;
     (void)gyroSensitivity;
     (void)accSensitivity;
+    (void)i2cMutex;
 
     return 0;
 }

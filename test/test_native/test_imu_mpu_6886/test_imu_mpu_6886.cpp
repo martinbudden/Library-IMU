@@ -26,8 +26,7 @@ void test_mpu_6886()
 
 #if defined(USE_IMU_MPU6886_SPI)
     constexpr uint32_t spiFrequency = 2000000;
-    constexpr uint8_t CS_pin = 0;
-    static const IMU_MPU6886 imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::SPI_INDEX_0, CS_pin);
+    static const IMU_MPU6886 imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::SPI_INDEX_0, {});
 #else
     static const IMU_MPU6886 imu(IMU_Base::XPOS_YPOS_ZPOS, IMU_I2C_SDA_PIN, IMU_I2C_SCL_PIN);
 #endif

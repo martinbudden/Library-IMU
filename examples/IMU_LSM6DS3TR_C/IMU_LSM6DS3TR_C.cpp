@@ -18,10 +18,10 @@ void setup()
     // create an LSM6DS3TR_C sensor object
 #if defined(USE_IMU_LSM6DS3TR_C_SPI)
     constexpr uint32_t spiFrequency = 20000000;
-    static IMU_LSM6DS3TR_C imuSensorStatic(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::SPI_INDEX_0, IMU_SPI_CS_PIN, IMU_SPI_SCK_PIN, IMU_SPI_CIPO_PIN, IMU_SPI_COPI_PIN);
+    static IMU_LSM6DS3TR_C imuSensorStatic(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::SPI_INDEX_0, {IMU_SPI_CS_PIN, IMU_SPI_SCK_PIN, IMU_SPI_CIPO_PIN, IMU_SPI_COPI_PIN});
 #else
 #if defined(USE_I2C_WIRE_1)
-    static IMU_LSM6DS3TR_C imuSensorStatic(IMU_Base::XPOS_YPOS_ZPOS, Wire1, IMU_I2C_SDA_PIN, IMU_I2C_SCL_PIN, IMU_LSM6DS3TR_C::I2C_ADDRESS, nullptr);
+    static IMU_LSM6DS3TR_C imuSensorStatic(IMU_Base::XPOS_YPOS_ZPOS, Wire1, IMU_I2C_SDA_PIN, IMU_I2C_SCL_PIN, IMU_LSM6DS3TR_C::I2C_ADDRESS);
 #else
     static IMU_LSM6DS3TR_C imuSensorStatic(IMU_Base::XPOS_YPOS_ZPOS, IMU_I2C_SDA_PIN, IMU_I2C_SCL_PIN);
 #endif

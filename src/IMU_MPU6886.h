@@ -9,17 +9,15 @@ class IMU_MPU6886 : public IMU_Base {
 public:
 #if defined(USE_IMU_MPU6886_SPI)
     // SPI constructors
-    IMU_MPU6886(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_index_t SPI_index, uint8_t CS_pin);
+    IMU_MPU6886(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_index_t SPI_index, const BUS_SPI::spi_pins_t& pins);
 #else
     // I2C constructors
-    IMU_MPU6886(axis_order_t axisOrder, BUS_I2C::i2c_index_t I2C_index, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address, void* i2cMutex);
-    IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address, void* i2cMutex) : IMU_MPU6886(axisOrder, BUS_I2C::I2C_INDEX_0, SDA_pin, SCL_pin, I2C_address, i2cMutex) {}
-    IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address) : IMU_MPU6886(axisOrder, SDA_pin, SCL_pin, I2C_address, nullptr) {}
-    IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, void* i2cMutex) : IMU_MPU6886(axisOrder, SDA_pin, SCL_pin, I2C_ADDRESS, i2cMutex) {}
-    IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) : IMU_MPU6886(axisOrder, SDA_pin, SCL_pin, I2C_ADDRESS, nullptr) {}
+    IMU_MPU6886(axis_order_t axisOrder, BUS_I2C::i2c_index_t I2C_index, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address);
+    IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address) : IMU_MPU6886(axisOrder, BUS_I2C::I2C_INDEX_0, SDA_pin, SCL_pin, I2C_address) {}
+    IMU_MPU6886(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin) : IMU_MPU6886(axisOrder, SDA_pin, SCL_pin, I2C_ADDRESS) {}
 #endif
 public:
-    virtual int init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity) override;
+    virtual int init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex) override;
 public:
     static constexpr uint8_t I2C_ADDRESS = 0x68;
     enum acc_scale_t { AFS_2G = 0, AFS_4G, AFS_8G, AFS_16G };

@@ -116,7 +116,6 @@ public:
 public:
     virtual ~IMU_Base() = default;
     explicit IMU_Base(axis_order_t axisOrder);
-    IMU_Base(axis_order_t axisOrder, void* i2cMutex);
 public:
     struct xyz_int32_t {
         int32_t x;
@@ -131,8 +130,10 @@ public:
     static constexpr float radiansToDegrees = static_cast<float>(180.0 / M_PI);
 public:
     static void delayMs(int ms);
-    virtual int init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity) = 0;
+    virtual int init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex) = 0;
+    virtual int init(uint32_t outputDataRateHz, void* i2cMutex) final;
     virtual int init(uint32_t outputDataRateHz) final;
+    virtual int init(void* i2cMutex) final;
     virtual int init() final;
     virtual xyz_int32_t getGyroOffset() const;
     virtual void setGyroOffset(const xyz_int32_t& gyroOffset);

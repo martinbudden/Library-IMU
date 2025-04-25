@@ -96,17 +96,17 @@ constexpr uint8_t REG_ZA_OFFSET_L           = 0x7E;
 // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers,hicpp-signed-bitwise)
 
 #if defined(USE_IMU_MPU6886_SPI)
-IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_index_t SPI_index, uint8_t CS_pin) :
+IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_index_t SPI_index, const BUS_SPI::spi_pins_t& pins) :
     IMU_Base(axisOrder),
-    _bus(frequency, SPI_index, CS_pin)
+    _bus(frequency, SPI_index, pins)
 {
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_temperature_gyro_data_t) == acc_temperature_gyro_data_t::DATA_SIZE);
     static_assert(sizeof(acc_temperature_gyro_array_t) == acc_temperature_gyro_array_t::DATA_SIZE);
 }
 #else
-IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder, BUS_I2C::i2c_index_t I2C_index, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address, void* i2cMutex) :
-    IMU_Base(axisOrder, i2cMutex),
+IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder, BUS_I2C::i2c_index_t I2C_index, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address) :
+    IMU_Base(axisOrder),
     _bus(I2C_address, I2C_index, SDA_pin, SCL_pin)
 {
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
@@ -115,11 +115,16 @@ IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder, BUS_I2C::i2c_index_t I2C_index,
 }
 #endif
 
-int IMU_MPU6886::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity)
+int IMU_MPU6886::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex)
 {
     (void)outputDataRateHz;
     (void)gyroSensitivity;
     (void)accSensitivity;
+#if defined(I2C_MUTEX_REQUIRED)
+    _i2cMutex = static_cast<SemaphoreHandle_t>(i2cMutex);
+#else
+    (void)i2cMutex;
+#endif
 
     i2cSemaphoreTake();
 

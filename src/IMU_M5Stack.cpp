@@ -9,25 +9,31 @@ constexpr float ACC_8G_RES { 8.0 / 32768.0 };
 } // end namespace
 
 
-IMU_M5_STACK::IMU_M5_STACK(axis_order_t axisOrder, void* i2cMutex) :
-    IMU_Base(axisOrder, i2cMutex)
+IMU_M5_STACK::IMU_M5_STACK(axis_order_t axisOrder) :
+    IMU_Base(axisOrder)
 {
+    _gyroResolutionDPS = GYRO_2000DPS_RES;
+    _gyroResolutionRPS = GYRO_2000DPS_RES * degreesToRadians;
+    _accResolution = ACC_8G_RES;
+}
+
+int IMU_M5_STACK::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex)
+{
+    (void)outputDataRateHz;
+    (void)gyroSensitivity;
+    (void)accSensitivity;
+#if defined(I2C_MUTEX_REQUIRED)
+    _i2cMutex = static_cast<SemaphoreHandle_t>(i2cMutex);
+#else
+    (void)i2cMutex;
+#endif
+
     // Set up FIFO for IMU
     // IMU data frequency is 500Hz
     i2cSemaphoreTake();
     M5.IMU.setFIFOEnable(true);
     M5.IMU.RestFIFO();
     i2cSemaphoreGive();
-    _gyroResolutionDPS = GYRO_2000DPS_RES;
-    _gyroResolutionRPS = GYRO_2000DPS_RES * degreesToRadians;
-    _accResolution = ACC_8G_RES;
-}
-
-int IMU_M5_STACK::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity)
-{
-    (void)outputDataRateHz;
-    (void)gyroSensitivity;
-    (void)accSensitivity;
 
     return 0;
 }

@@ -41,6 +41,11 @@ BUS_SPI::BUS_SPI(uint32_t frequency, spi_index_t SPI_index, uint8_t CS_pin)
     (void)SPI_index;
 }
 
+BUS_SPI::BUS_SPI(uint32_t frequency, spi_index_t SPI_index, const spi_pins_t& pins) :
+    BUS_SPI(frequency, SPI_index, pins.cs, pins.sck, pins.cipo, pins.copi)
+{
+}
+
 BUS_SPI::BUS_SPI(uint32_t frequency, spi_index_t SPI_index, uint8_t CS_pin, uint8_t SCK_pin, uint8_t CIPO_pin, uint8_t COPI_pin) :
 #if defined(FRAMEWORK_PICO)
     _spi(spi_default),

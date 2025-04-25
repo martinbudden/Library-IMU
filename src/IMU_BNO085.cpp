@@ -49,26 +49,31 @@ enum {
 // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 
 #if defined(USE_IMU_BNO085_SPI)
-IMU_BNO085::IMU_BNO085(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_index_t SPI_index, uint8_t CS_pin) :
+IMU_BNO085::IMU_BNO085(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_index_t SPI_index, const BUS_SPI::spi_pins_t& pins) :
     IMU_Base(axisOrder),
-    _bus(frequency, SPI_index, CS_pin, IMU_SPI_SCK_PIN, IMU_SPI_CIPO_PIN, IMU_SPI_COPI_PIN),
+    _bus(frequency, SPI_index, pins),
     _axisOrderQuaternion(axisOrientations[axisOrder])
 {
 }
 #else
-IMU_BNO085::IMU_BNO085(axis_order_t axisOrder, BUS_I2C::i2c_index_t I2C_index, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address, void* i2cMutex) :
-    IMU_Base(axisOrder, i2cMutex),
+IMU_BNO085::IMU_BNO085(axis_order_t axisOrder, BUS_I2C::i2c_index_t I2C_index, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address) :
+    IMU_Base(axisOrder),
     _bus(I2C_address, I2C_index, SDA_pin, SCL_pin),
     _axisOrderQuaternion(axisOrientations[axisOrder])
 {
 }
 #endif
 
-int IMU_BNO085::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity)
+int IMU_BNO085::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex)
 {
     assert(outputDataRateHz <= 400);
     (void)gyroSensitivity;
     (void)accSensitivity;
+#if defined(I2C_MUTEX_REQUIRED)
+    _i2cMutex = static_cast<SemaphoreHandle_t>(i2cMutex);
+#else
+    (void)i2cMutex;
+#endif
 
     // transmit reset byte on channel 1
     _shtpPacket.data[0] = 1; //Reset
