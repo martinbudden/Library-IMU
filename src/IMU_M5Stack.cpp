@@ -23,11 +23,13 @@ IMU_M5_STACK::IMU_M5_STACK(axis_order_t axisOrder, void* i2cMutex) :
     _accResolution = ACC_8G_RES;
 }
 
-void IMU_M5_STACK::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity)
+int IMU_M5_STACK::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity)
 {
     (void)outputDataRateHz;
     (void)gyroSensitivity;
     (void)accSensitivity;
+
+    return 0;
 }
 
 IMU_Base::xyz_int32_t IMU_M5_STACK::readAccRaw()

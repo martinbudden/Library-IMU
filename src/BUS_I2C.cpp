@@ -11,10 +11,9 @@
 #include <Arduino.h>
 #endif
 
-
-BUS_I2C::BUS_I2C(uint8_t I2C_address, uint8_t SDA_pin, uint8_t SCL_pin) :
+BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_t I2C_index, uint8_t SDA_pin, uint8_t SCL_pin) :
 #if defined(FRAMEWORK_PICO)
-    _I2C(i2c_default),
+    _I2C(I2C_index == I2C_INDEX_2 ? i2c1 : i2c0),
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_TEST)
 #else // defaults to FRAMEWORK_ARDUINO
@@ -26,13 +25,14 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, uint8_t SDA_pin, uint8_t SCL_pin) :
 {
 #if defined(FRAMEWORK_PICO)
     i2c_init(_I2C, 400 * 1000);
-    gpio_set_function(_SDA_pin, GPIO_FUNC_I2C);
-    gpio_set_function(_SCL_pin, GPIO_FUNC_I2C);
+    gpio_set_function(_SDA_pin, GPIO_FUNC_I2C); // PICO_DEFAULT_I2C_SDA_PIN is GP4
+    gpio_set_function(_SCL_pin, GPIO_FUNC_I2C); // PICO_DEFAULT_I2C_SCL_PIN is GP5
     gpio_pull_up(_SDA_pin);
     gpio_pull_up(_SCL_pin);
-    // Make the I2C pins available to picotool
+    // Make the I2C pins available to pictooof
     bi_decl(bi_2pins_with_func(_SDA_pin, _SCL_pin, GPIO_FUNC_I2C));
 #elif defined(FRAMEWORK_ESPIDF)
+    (void)I2C_index;
     i2c_master_bus_config_t i2c_mst_config = {
         .i2c_port = 0,//TEST_I2C_PORT,
         .sda_io_num = static_cast<gpio_num_t>(_SDA_pin),
@@ -61,7 +61,9 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, uint8_t SDA_pin, uint8_t SCL_pin) :
 
     ESP_ERROR_CHECK(i2c_master_bus_add_device(_bus_handle, &dev_cfg, &_dev_handle));
 #elif defined(FRAMEWORK_TEST)
+    (void)I2C_index;
 #else // defaults to FRAMEWORK_ARDUINO
+    (void)I2C_index;
 #if defined(USE_ARDUINO_ESP32) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)// ESP32, ARDUINO_ARCH_ESP32 defined in platform.txt
     _wire.begin(SDA_pin, SCL_pin);
 #else
@@ -69,6 +71,38 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, uint8_t SDA_pin, uint8_t SCL_pin) :
 #endif
 #endif
 }
+
+BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_t I2C_index)
+#if defined(FRAMEWORK_PICO)
+    : BUS_I2C(I2C_address, I2C_index, I2C_index == I2C_INDEX_0 ? PICO_DEFAULT_I2C_SDA_PIN : 0, I2C_index == I2C_INDEX_0 ? PICO_DEFAULT_I2C_SDA_PIN : 0)
+#elif defined(FRAMEWORK_ESPIDF)
+    : BUS_I2C(I2C_address, I2C_index, 0, 0)
+#elif defined(FRAMEWORK_TEST)
+    : BUS_I2C(I2C_address, I2C_index, 0, 0)
+#else // defaults to FRAMEWORK_ARDUINO
+#if defined(USE_ARDUINO_ESP32) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)// ESP32, ARDUINO_ARCH_ESP32 defined in platform.txt
+    : BUS_I2C(I2C_address, I2C_index, 0, 0)
+#else
+    : BUS_I2C(I2C_address, I2C_index, 0, 0)
+#endif
+#endif
+{
+}
+
+#if !defined(FRAMEWORK_PICO) && !defined(FRAMEWORK_ESPIDF) && !defined(FRAMEWORK_TEST)
+BUS_I2C::BUS_I2C(uint8_t I2C_address, TwoWire& wire, uint8_t SDA_pin, uint8_t SCL_pin) :
+    _wire(wire),
+    _I2C_address(I2C_address),
+    _SDA_pin(SDA_pin),
+    _SCL_pin(SCL_pin)
+{
+#if defined(USE_ARDUINO_ESP32) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)// ESP32, ARDUINO_ARCH_ESP32 defined in platform.txt
+    _wire.begin(SDA_pin, SCL_pin);
+#else
+    _wire.begin();
+#endif
+}
+#endif
 
 uint8_t BUS_I2C::readRegister(uint8_t reg) const
 {

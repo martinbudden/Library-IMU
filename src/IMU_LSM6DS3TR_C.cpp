@@ -154,20 +154,27 @@ constexpr uint8_t REG_OUTZ_H_ACC            = 0x2D;
 Gyroscope data rates up to 6.4 kHz, accelerometer up to 1.6 kHz
 */
 #if defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_LSM6DSOX_SPI)
-IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint32_t frequency, uint8_t CS_pin, uint8_t SCK_pin, uint8_t CIPO_pin, uint8_t COPI_pin) :
+IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_index_t SPI_index, uint8_t CS_pin, uint8_t SCK_pin, uint8_t CIPO_pin, uint8_t COPI_pin) :
     IMU_Base(axisOrder),
-    _bus(frequency, CS_pin, SCK_pin, CIPO_pin, COPI_pin)
+    _bus(frequency, SPI_index, CS_pin, SCK_pin, CIPO_pin, COPI_pin)
 {
 }
 #else
-IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address, void* i2cMutex) :
+IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, BUS_I2C::i2c_index_t I2C_index, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address, void* i2cMutex) :
     IMU_Base(axisOrder, i2cMutex),
-    _bus(I2C_address, SDA_pin, SCL_pin)
+    _bus(I2C_address, I2C_index, SDA_pin, SCL_pin)
+{
+}
+#if !defined(FRAMEWORK_PICO) && !defined(FRAMEWORK_ESPIDF) && !defined(FRAMEWORK_TEST)
+IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, TwoWire& wire, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address, void* i2cMutex) :
+    IMU_Base(axisOrder, i2cMutex),
+    _bus(I2C_address, wire, SDA_pin, SCL_pin)
 {
 }
 #endif
+#endif
 
-void IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity) // NOLINT(readability-function-cognitive-complexity)
+int IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity) // NOLINT(readability-function-cognitive-complexity)
 {
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
@@ -182,6 +189,9 @@ void IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSen
     Serial.println(chipID, HEX);
 #endif
     //assert(chipID == REG_WHO_AM_I_RESPONSE_LSM6DS3TR_C || chipID == REG_WHO_AM_I_RESPONSE_ISM330DHCX || chipID == REG_WHO_AM_I_RESPONSE_LSM6DSOX);
+    if (chipID != REG_WHO_AM_I_RESPONSE_LSM6DS3TR_C && chipID != REG_WHO_AM_I_RESPONSE_ISM330DHCX && chipID != REG_WHO_AM_I_RESPONSE_LSM6DSOX) {
+        return chipID == 0 ? -1 : chipID;
+    }
 
     _bus.writeRegister(REG_INT1_CTRL, INT1_DRDY_G); // Enable gyro data ready on INT1 pin
     delayMs(1);
@@ -266,6 +276,8 @@ void IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSen
         break;
     }
     delayMs(1);
+
+    return 0;
 }
 
 IMU_Base::xyz_int32_t IMU_LSM6DS3TR_C::readGyroRaw()

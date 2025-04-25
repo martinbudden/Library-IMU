@@ -8,3 +8,7 @@
 compile_commands.json
 c_cpp_properties.json
 launch.json
+
+examples/CodeCell/.gitignore
+examples/IMU_BMI270/.gitignore
+examples/IMU_LSM6DS3TR_C/.gitignore

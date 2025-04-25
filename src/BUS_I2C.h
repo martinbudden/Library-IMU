@@ -15,7 +15,15 @@ typedef struct i2c_inst i2c_inst_t;
 
 class BUS_I2C {
 public:
-    BUS_I2C(uint8_t I2C_address, uint8_t SDA_pin, uint8_t SCL_pin);
+    enum i2c_index_t { I2C_INDEX_0, I2C_INDEX_1, I2C_INDEX_2, I2C_INDEX_3 };
+public:
+    BUS_I2C(uint8_t I2C_address, i2c_index_t I2C_index);
+    explicit BUS_I2C(uint8_t I2C_address) : BUS_I2C(I2C_address, I2C_INDEX_0) {}
+    BUS_I2C(uint8_t I2C_address, i2c_index_t I2C_index, uint8_t SDA_pin, uint8_t SCL_pin);
+    BUS_I2C(uint8_t I2C_address, uint8_t SDA_pin, uint8_t SCL_pin) : BUS_I2C(I2C_address, I2C_INDEX_0, SDA_pin, SCL_pin) {}
+#if !defined(FRAMEWORK_PICO) && !defined(FRAMEWORK_ESPIDF) && !defined(FRAMEWORK_TEST)
+    BUS_I2C(uint8_t I2C_address, TwoWire& wire, uint8_t SDA_pin, uint8_t SCL_pin);
+#endif
 public:
     uint8_t readRegister(uint8_t reg) const;
     uint8_t readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const;

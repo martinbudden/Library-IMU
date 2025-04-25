@@ -1,5 +1,6 @@
 {
     "cSpell.words": [
+        "afruitnrf",
         "altera",
         "bugprone",
         "CIPO",
@@ -10,7 +11,9 @@
         "libc",
         "llvmlibc",
         "martinbudden",
+        "nordicnrf",
         "raspberrypi",
+        "Seeed",
         "suppr",
         "unflags",
         "Wattributes",
@@ -22,6 +25,7 @@
         "Winline",
         "Wnarrowing",
         "Wsign",
-        "Wtrampolines"
+        "Wtrampolines",
+        "XIAO"
     ]
 }

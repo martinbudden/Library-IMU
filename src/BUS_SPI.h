@@ -14,8 +14,11 @@ typedef struct spi_inst spi_inst_t;
 
 class BUS_SPI {
 public:
-    BUS_SPI(uint32_t frequency, uint8_t CS_pin);
-    BUS_SPI(uint32_t frequency, uint8_t CS_pin, uint8_t SCK_pin, uint8_t CIPO_pin, uint8_t COPI_pin);
+    enum spi_index_t { SPI_INDEX_0, SPI_INDEX_1, SPI_INDEX_2, SPI_INDEX_3 };
+public:
+    BUS_SPI(uint32_t frequency, spi_index_t SPI_index, uint8_t CS_pin);
+    BUS_SPI(uint32_t frequency, spi_index_t SPI_index, uint8_t CS_pin, uint8_t SCK_pin, uint8_t CIPO_pin, uint8_t COPI_pin);
+    BUS_SPI(uint32_t frequency, uint8_t CS_pin) : BUS_SPI(frequency, SPI_INDEX_0, CS_pin) {}
 public:
     uint8_t readRegister(uint8_t reg) const;
     uint8_t readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const;
@@ -39,5 +42,5 @@ private:
     uint8_t _SCK_pin {};
     uint8_t _CIPO_pin {};
     uint8_t _COPI_pin {};
-    uint8_t _spiIndex {};
+    uint8_t _SPI_index {};
 };

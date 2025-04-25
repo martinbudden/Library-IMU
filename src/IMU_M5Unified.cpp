@@ -43,11 +43,13 @@ IMU_M5_UNIFIED::IMU_M5_UNIFIED(axis_order_t axisOrder, void* i2cMutex) :
     i2cSemaphoreGive();
 }
 
-void IMU_M5_UNIFIED::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity)
+int IMU_M5_UNIFIED::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity)
 {
     (void)outputDataRateHz;
     (void)gyroSensitivity;
     (void)accSensitivity;
+
+    return 0;
 }
 
 IMU_Base::xyz_int32_t IMU_M5_UNIFIED::readAccRaw()

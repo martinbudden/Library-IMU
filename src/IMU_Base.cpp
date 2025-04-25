@@ -34,14 +34,14 @@ void IMU_Base::delayMs(int ms)
 #endif
 }
 
-void IMU_Base::init(uint32_t outputDataRateHz)
+int IMU_Base::init(uint32_t outputDataRateHz)
 {
-    init(outputDataRateHz, GYRO_FULL_SCALE_MAX, ACC_FULL_SCALE_MAX);
+    return init(outputDataRateHz, GYRO_FULL_SCALE_MAX, ACC_FULL_SCALE_MAX);
 }
 
-void IMU_Base::init()
+int IMU_Base::init()
 {
-    init(0, GYRO_FULL_SCALE_MAX, ACC_FULL_SCALE_MAX);
+    return init(0, GYRO_FULL_SCALE_MAX, ACC_FULL_SCALE_MAX);
 }
 
 IMU_Base::xyz_int32_t IMU_Base::getGyroOffset() const

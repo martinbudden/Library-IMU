@@ -28,19 +28,20 @@ static inline void cs_deselect(uint8_t CS_pin) {
 }
 #endif
 
-BUS_SPI::BUS_SPI(uint32_t frequency, uint8_t CS_pin)
+BUS_SPI::BUS_SPI(uint32_t frequency, spi_index_t SPI_index, uint8_t CS_pin)
 #if defined(FRAMEWORK_PICO)
     : BUS_SPI(frequency, CS_pin, PICO_DEFAULT_SPI_SCK_PIN  , PICO_DEFAULT_SPI_RX_PIN, PICO_DEFAULT_SPI_TX_PIN)
     // there is also PICO_DEFAULT_SPI_CSN_PIN
 #elif defined(FRAMEWORK_ESPIDF)
-    : BUS_SPI(frequency, CS_pin, 0, 0, 0)
+    : BUS_SPI(frequency, SPI_index, CS_pin, 0, 0, 0)
 #else // defaults to FRAMEWORK_ARDUINO
-     : BUS_SPI(frequency, CS_pin, 0, 0, 0)
+     : BUS_SPI(frequency, SPI_index, CS_pin, 0, 0, 0)
 #endif
 {
+    (void)SPI_index;
 }
 
-BUS_SPI::BUS_SPI(uint32_t frequency, uint8_t CS_pin, uint8_t SCK_pin, uint8_t CIPO_pin, uint8_t COPI_pin) :
+BUS_SPI::BUS_SPI(uint32_t frequency, spi_index_t SPI_index, uint8_t CS_pin, uint8_t SCK_pin, uint8_t CIPO_pin, uint8_t COPI_pin) :
 #if defined(FRAMEWORK_PICO)
     _spi(spi_default),
 #elif defined(FRAMEWORK_ESPIDF)
@@ -54,6 +55,7 @@ BUS_SPI::BUS_SPI(uint32_t frequency, uint8_t CS_pin, uint8_t SCK_pin, uint8_t CI
     _CIPO_pin(CIPO_pin),
     _COPI_pin(COPI_pin)
 {
+    (void)SPI_index;
 #if defined(FRAMEWORK_PICO)
     spi_init(_SPI, _frequency);
     gpio_set_function(_CIPO_pin, GPIO_FUNC_SPI);
