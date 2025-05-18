@@ -2,7 +2,8 @@
 #include <cassert>
 
 
-#if defined(FRAMEWORK_PICO)
+#if defined(FRAMEWORK_RPI_PICO)
+#include <pico/time.h>
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_TEST)
 #else // defaults to FRAMEWORK_ARDUINO
@@ -36,7 +37,7 @@ int IMU_Base::init()
 
 void IMU_Base::delayMs(int ms)
 {
-#if defined(FRAMEWORK_PICO)
+#if defined(FRAMEWORK_RPI_PICO)
     sleep_ms(ms);
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_TEST)
@@ -44,6 +45,11 @@ void IMU_Base::delayMs(int ms)
 #else // defaults to FRAMEWORK_ARDUINO
     delay(ms);
 #endif
+}
+
+void IMU_Base::setInterrupt(int userIrq)
+{
+    (void)userIrq;
 }
 
 IMU_Base::xyz_int32_t IMU_Base::getGyroOffset() const

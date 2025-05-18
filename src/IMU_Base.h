@@ -135,6 +135,7 @@ public:
     virtual int init(uint32_t outputDataRateHz) final;
     virtual int init(void* i2cMutex) final;
     virtual int init() final;
+    virtual void setInterrupt(int userIrq);
     virtual xyz_int32_t getGyroOffset() const;
     virtual void setGyroOffset(const xyz_int32_t& gyroOffset);
     virtual xyz_int32_t getAccOffset() const;

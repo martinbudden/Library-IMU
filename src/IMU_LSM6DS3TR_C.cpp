@@ -154,21 +154,26 @@ constexpr uint8_t REG_OUTZ_H_ACC            = 0x2D;
 Gyroscope data rates up to 6.4 kHz, accelerometer up to 1.6 kHz
 */
 #if defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_LSM6DSOX_SPI)
-IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_index_t SPI_index, const BUS_SPI::spi_pins_t& pins) :
+IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_index_t SPI_index, const BUS_SPI::pins_t& pins) :
     IMU_Base(axisOrder),
+#if defined(USE_IMU_SPI_DMA)
+    _bus(frequency, SPI_index, pins, REG_OUTX_L_G, reinterpret_cast<uint8_t*>(&_accGyroData.spiReadStartByte), sizeof(acc_gyro_data_t)+1)
+#else
     _bus(frequency, SPI_index, pins)
+#endif
 {
+    _dmaSpiRegister = REG_OUTX_L_G | BUS_SPI::READ_BIT;
 }
 #else
-IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, BUS_I2C::i2c_index_t I2C_index, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address) :
+IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, BUS_I2C::i2c_index_t I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
     IMU_Base(axisOrder),
-    _bus(I2C_address, I2C_index, SDA_pin, SCL_pin)
+    _bus(I2C_address, I2C_index, pins)
 {
 }
-#if !defined(FRAMEWORK_PICO) && !defined(FRAMEWORK_ESPIDF) && !defined(FRAMEWORK_TEST)
-IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, TwoWire& wire, uint8_t SDA_pin, uint8_t SCL_pin, uint8_t I2C_address) :
+#if !defined(FRAMEWORK_RPI_PICO) && !defined(FRAMEWORK_ESPIDF) && !defined(FRAMEWORK_TEST)
+IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, TwoWire& wire, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
     IMU_Base(axisOrder),
-    _bus(I2C_address, wire, SDA_pin, SCL_pin)
+    _bus(I2C_address, wire, pins)
 {
 }
 #endif
@@ -198,6 +203,7 @@ int IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSens
         return chipID == 0 ? -1 : chipID;
     }
 
+    // INT pins are by default forced to ground, so active high
     _bus.writeRegister(REG_INT1_CTRL, INT1_DRDY_G); // Enable gyro data ready on INT1 pin
     delayMs(1);
     _bus.writeRegister(REG_INT2_CTRL, INT2_DRDY_G); // Enable gyro data ready on INT2 pin
@@ -285,6 +291,11 @@ int IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSens
     return 0;
 }
 
+void IMU_LSM6DS3TR_C::setInterrupt(int userIrq)
+{
+    _bus.setInterrupt(userIrq);
+}
+
 IMU_Base::xyz_int32_t IMU_LSM6DS3TR_C::readGyroRaw()
 {
     mems_sensor_data_t gyro; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init,misc-const-correctness)
@@ -318,10 +329,10 @@ IMU_Base::xyz_int32_t IMU_LSM6DS3TR_C::readAccRaw()
 IMU_Base::gyroRPS_Acc_t IMU_LSM6DS3TR_C::readGyroRPS_Acc()
 {
     i2cSemaphoreTake();
-    _bus.readRegister(REG_OUTX_L_G, &_accGyroData.data[0], sizeof(_accGyroData));
+    _bus.readRegister(REG_OUTX_L_G, &_accGyroData.accGyro.data[0], sizeof(_accGyroData));
     i2cSemaphoreGive();
 
-    return gyroRPS_AccFromRaw(_accGyroData.value);
+    return gyroRPS_AccFromRaw(_accGyroData.accGyro.value);
 }
 
 IMU_Base::gyroRPS_Acc_t IMU_LSM6DS3TR_C::gyroRPS_AccFromRaw(const acc_gyro_data_t::value_t& data) const

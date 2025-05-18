@@ -18,7 +18,7 @@ void setup()
     Serial.begin(115200);
 
     // create a BMI270 sensor object
-    static IMU_BMI270 imuSensorStatic(IMU_Base::XPOS_YPOS_ZPOS, I2C_SDA_PIN, I2C_SCL_PIN);
+    static IMU_BMI270 imuSensorStatic(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{.sda=I2C_SDA_PIN, .scl=I2C_SCL_PIN});
     imuSensor = &imuSensorStatic;
     // initialize the sensor object
     imuSensor->init();

@@ -1,6 +1,7 @@
 {
     "cSpell.words": [
         "afruitnrf",
+        "AHRS",
         "altera",
         "Budden",
         "bugprone",
@@ -19,6 +20,7 @@
         "hicpp",
         "Hillcrest",
         "Inven",
+        "IRAM",
         "libc",
         "llvmlibc",
         "martinbudden",

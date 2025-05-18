@@ -16,7 +16,7 @@ IMU_BNO085& newBNO085()
     constexpr uint8_t CS_pin = 0;
     static IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::SPI_INDEX_0, CS_pin);
 #else
-    static IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, IMU_I2C_SDA_PIN, IMU_I2C_SCL_PIN);
+    static IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{.sda=IMU_I2C_SDA_PIN, .scl=IMU_I2C_SCL_PIN, .irq=0, .irqLevel=0});
 #endif
     return imu;
 }
@@ -107,7 +107,7 @@ void test_bno085_channel_gyro_integrated_rotation_vector_report()
     constexpr int orientation_Q_point = 14;
     //constexpr int gyro_Q_point = 10;
 
-    // BNO085 uses [real, i, j, k] for quaternion, IMU_TYPES uses [w, x, y, z]
+    // BNO085 uses [real, i, j, k] for quaternion, VectorQuaternionMatrix uses [w, x, y, z]
     TEST_ASSERT_EQUAL_FLOAT(static_cast<float>(gyroRotation.real) * powf(2, -orientation_Q_point), orientation.getW());
     TEST_ASSERT_EQUAL_FLOAT(static_cast<float>(gyroRotation.i) * powf(2, -orientation_Q_point), orientation.getX());
     TEST_ASSERT_EQUAL_FLOAT(static_cast<float>(gyroRotation.j) * powf(2, -orientation_Q_point), orientation.getY());
@@ -126,7 +126,7 @@ void test_bno085()
     constexpr uint8_t CS_pin = 0;
     static const IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::SPI_INDEX_0, CS_pin);
 #else
-    static const IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, IMU_I2C_SDA_PIN, IMU_I2C_SCL_PIN);
+    static const IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{.sda=IMU_I2C_SDA_PIN, .scl=IMU_I2C_SCL_PIN, .irq=0, .irqLevel=0});
 #endif
     TEST_ASSERT_EQUAL(4096, imu.getAccOneG_Raw());
 }
