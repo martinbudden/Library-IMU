@@ -1,13 +1,13 @@
 #include "BUS_SPI.h"
 
 #if defined(FRAMEWORK_RPI_PICO)
-#if defined(USE_IMU_SPI_DMA)
-#include "hardware/dma.h"
-#endif
 #include "hardware/spi.h"
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
 #include <array>
+#if defined(USE_IMU_SPI_DMA)
+#include <cstring>
+#endif
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_TEST)
 #else // defaults to FRAMEWORK_ARDUINO
@@ -15,7 +15,7 @@
 #include <SPI.h>
 #endif
 
-#define MAP_CS_FOR_SPI
+//#define MAP_CS_FOR_SPI // not got this working, it's probably not worth the bother
 
 BUS_SPI* BUS_SPI::bus {nullptr};
 
@@ -33,11 +33,11 @@ void BUS_SPI::dataReadyISR(unsigned int gpio, uint32_t events)
     dma_channel_configure(bus->_dmaRx, &bus->_dmaRxConfig,
                           bus->_readBuf, // destination, write SPI data to data
                           &spi_get_hw(bus->_spi)->dr, // source, read data from SPI
-                          _bus->_readlength, // element count (each element is 8 bits)
+                          bus->_readLength, // element count (each element is 8 bits)
                           false); // don't start yet
-    dma_start_channel_mask((1u << bus->_dmaTX) | (1u << bus->_dmaRX));
+    dma_start_channel_mask((1u << bus->_dmaTx) | (1u << bus->_dmaRx));
     // wait for rx to complete
-    dma_channel_wait_for_finish_blocking(bus->_dmaRX);
+    dma_channel_wait_for_finish_blocking(bus->_dmaRx);
 #else
     bus->readRegister(bus->_readRegister, bus->_readBuf, bus->_readLength);
 #endif
@@ -59,23 +59,15 @@ INSTRUCTION_RAM_ATTR void BUS_SPI::dataReadyISR()
 
 #if defined(FRAMEWORK_RPI_PICO)
 static inline void cs_select(uint8_t CS_pin) {
-#if defined(MAP_CS_FOR_SPI)
-    (void)CS_pin;
-#else
     asm volatile("nop \n nop \n nop");
-    gpio_put(uint8_t CS_pin, 0);  // Active low
+    gpio_put(CS_pin, 0);  // Active low
     asm volatile("nop \n nop \n nop");
-#endif
 }
 
 static inline void cs_deselect(uint8_t CS_pin) {
-#if defined(MAP_CS_FOR_SPI)
-    (void)CS_pin;
-#else
     asm volatile("nop \n nop \n nop");
-    gpio_put(uint8_t CS_pin, 1);
+    gpio_put(CS_pin, 1);
     asm volatile("nop \n nop \n nop");
-#endif
 }
 #endif // FRAMEWORK_RPI_PICO
 
@@ -83,8 +75,8 @@ static inline void cs_deselect(uint8_t CS_pin) {
 BUS_SPI::~BUS_SPI()
 {
 #if defined(FRAMEWORK_RPI_PICO)
-    dma_channel_unclaim(dma_tx);
-    dma_channel_unclaim(dma_rx);
+    dma_channel_unclaim(_dmaRx);
+    dma_channel_unclaim(_dmaTx);
 #endif
 }
 #endif
@@ -110,11 +102,11 @@ BUS_SPI::BUS_SPI(uint32_t frequency, spi_index_t SPI_index, const pins_t& pins, 
     ,_readBuf(readBuf)
     ,_readLength(readLength)
 #if defined(FRAMEWORK_RPI_PICO)
+    ,_spi(SPI_index == SPI_INDEX_1 ? spi1 : spi0)
 #if defined(USE_IMU_SPI_DMA)
     ,_dmaRx(dma_claim_unused_channel(true))
     ,_dmaTx(dma_claim_unused_channel(true))
 #endif
-    ,_spi(SPI_index == SPI_INDEX_1 ? spi1 : spi0)
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_TEST)
 #else // defaults to FRAMEWORK_ARDUINO
@@ -197,14 +189,18 @@ void BUS_SPI::setInterrupt(int userIrq)
 uint8_t BUS_SPI::readRegister(uint8_t reg) const
 {
 #if defined(FRAMEWORK_RPI_PICO)
+#if defined(MAP_CS_FOR_SPI)
+    std::array<uint8_t, 2> outBuf = { reg | READ_BIT, 0 }; // remove read bit as this is a write
+    spi_write_read_blocking(_spi, &outBuf[0], &_writeReadBuf[0], 2);
+    reg = _writeReadBuf[1];
+#else
     cs_select(_pins.cs);
     reg |= READ_BIT;
     spi_write_blocking(_spi, &reg, 1);
-    sleep_ms(10);
-    uint8_t ret;
-    spi_read_blocking(_spi, 0, &ret, 1);
+    spi_read_blocking(_spi, 0, &reg, 1);
     cs_deselect(_pins.cs);
-    return ret;
+#endif
+    return reg;
 #elif defined(FRAMEWORK_ESPIDF)
     (void)reg;
 #elif defined(FRAMEWORK_TEST)
@@ -230,16 +226,15 @@ uint8_t BUS_SPI::readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const
 bool BUS_SPI::readRegister(uint8_t reg, uint8_t* data, size_t length) const
 {
 #if defined(FRAMEWORK_RPI_PICO)
-#if defined(MAP_CS_FOR_SPI)
     reg |= READ_BIT;
-    spi_write_blocking(_spi, &reg, 1);
-    spi_read_blocking(_spi, 0, data, length);
+#if defined(MAP_CS_FOR_SPI)
+    spi_write_read_blocking(_spi, &reg, &_writeReadBuf[0], 1);
+    spi_write_read_blocking(_spi, &_writeReadBuf[0], data, length);
 #else
     cs_select(_pins.cs);
-    reg |= READ_BIT;
     spi_write_blocking(_spi, &reg, 1);
-    sleep_ms(10);
     spi_read_blocking(_spi, 0, data, length);
+    //const_cast<BUS_SPI*>(this)->readRegisterDMA(reg, data, length);
     cs_deselect(_pins.cs);
 #endif
     return true;
@@ -270,14 +265,16 @@ bool BUS_SPI::readRegisterDMA(uint8_t reg, uint8_t* data, size_t length)
     _readRegister = reg | READ_BIT;
 #if defined(USE_IMU_SPI_DMA)
 #if defined(FRAMEWORK_RPI_PICO)
+    std::array<uint8_t, 256> buf;
     dma_channel_configure(_dmaRx, &_dmaRxConfig,
-                          data, // destination, write SPI data to data
+                          &buf[0], // destination, write SPI data to data
                           &spi_get_hw(_spi)->dr, // source, read data from SPI
-                          length, // element count (each element is 8 bits)
+                          length+1, // element count (each element is 8 bits)
                           false); // don't start yet
-    dma_start_channel_mask((1u << _dmaTX) | (1u << _dmaRX));
+    dma_start_channel_mask((1u << _dmaTx) | (1u << _dmaRx));
     // wait for rx to complete
-    dma_channel_wait_for_finish_blocking(_dmaRX);
+    dma_channel_wait_for_finish_blocking(_dmaRx);
+    memcpy(data, &buf[1], length);
     return true;
 #else
     (void)data;
@@ -292,9 +289,13 @@ bool BUS_SPI::readRegisterDMA(uint8_t reg, uint8_t* data, size_t length)
 bool BUS_SPI::readBytes(uint8_t* data, size_t length) const
 {
 #if defined(FRAMEWORK_RPI_PICO)
+#if defined(MAP_CS_FOR_SPI)
+    spi_write_read_blocking(_spi, &_writeReadBuf[0], data, length);
+#else
     cs_select(_pins.cs);
     spi_read_blocking(_spi, 0, data, length);
     cs_deselect(_pins.cs);
+#endif
     return true;
 #elif defined(FRAMEWORK_ESPIDF)
     *data = 0;
@@ -324,11 +325,14 @@ bool BUS_SPI::readBytesWithTimeout(uint8_t* data, size_t length, uint8_t timeout
 uint8_t BUS_SPI::writeRegister(uint8_t reg, uint8_t data)
 {
 #if defined(FRAMEWORK_RPI_PICO)
-    std::array<uint8_t, 2> buf = { reg & 0x7FU, data }; // remove read bit as this is a write
+    std::array<uint8_t, 2> outBuf = { reg & 0x7FU, data }; // remove read bit as this is a write
+#if defined(MAP_CS_FOR_SPI)
+    spi_write_read_blocking(_spi, &outBuf[0], &_writeReadBuf[0], 2);
+#else
     cs_select(_pins.cs);
-    spi_write_blocking(_spi, &buf[0], 2);
+    spi_write_blocking(_spi, &outBuf[0], 2);
     cs_deselect(_pins.cs);
-    sleep_ms(10);
+#endif
 #elif defined(FRAMEWORK_ESPIDF)
     (void)reg;
     (void)data;
@@ -349,11 +353,16 @@ uint8_t BUS_SPI::writeRegister(uint8_t reg, uint8_t data)
 uint8_t BUS_SPI::writeRegister(uint8_t reg, const uint8_t* data, size_t length)
 {
 #if defined(FRAMEWORK_RPI_PICO)
-    cs_select(_pins.cs);
     reg &= 0x7FU;
+#if defined(MAP_CS_FOR_SPI)
+    spi_write_read_blocking(_spi, &reg, &_writeReadBuf[0], 1);
+    spi_write_read_blocking(_spi, data, &_writeReadBuf[0], length);
+#else
+    cs_select(_pins.cs);
     spi_write_blocking(_spi, &reg, 1);
     spi_write_blocking(_spi, data, length);
     cs_deselect(_pins.cs);
+#endif
 #elif defined(FRAMEWORK_ESPIDF)
     (void)reg;
     (void)data;

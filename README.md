@@ -1,6 +1,6 @@
 # IMU Library ![license](https://img.shields.io/badge/license-MIT-green) ![open source](https://badgen.net/badge/open/source/blue?icon=github)
 
-This library implements drivers for  IMUs (Inertial Management Units), that is combined gyroscopes and accelerometers.
+This library implements drivers for IMUs (Inertial Management Units), that is combined gyroscopes and accelerometers.
 
 The following IMUs are currently implemented:
 
@@ -19,11 +19,9 @@ The LSM6DS3TR-C, ISM330DHCX, and LSM6DSOX are broadly compatible and share the s
 
 By default the drivers are configured to us I2C. To use SPI, define the relevant SPI build flag for the IMU. This can be done in the `build_flags` section of `platformio.ini`.
 
-The SPI versions of the drivers are not yet working and are still under development.
-
 ## Frameworks
 
-Currently only the Arduino framework is supported.
+The Arduino Framework and the Raspberry Pi Pico SDK Framework are supported.
 
 ## Dependencies
 

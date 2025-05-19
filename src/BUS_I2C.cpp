@@ -74,16 +74,16 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_t I2C_index, const pins_t& pins)
 BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_t I2C_index)
 #if defined(FRAMEWORK_RPI_PICO)
     : BUS_I2C(I2C_address, I2C_index,
-        I2C_index == I2C_INDEX_0 ? pins_t{.sda=PICO_DEFAULT_I2C_SDA_PIN, .scl=PICO_DEFAULT_I2C_SCL_PIN, .irq=0, .irqLevel=0} : pins_t{.sda=0, .scl=0, .irq=0, .irqLevel=0})
+        I2C_index == I2C_INDEX_0 ? pins_t{.sda=PICO_DEFAULT_I2C_SDA_PIN, .scl=PICO_DEFAULT_I2C_SCL_PIN, .irq=IRQ_NOT_SET, .irqLevel=0} : pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET, .irqLevel=0})
 #elif defined(FRAMEWORK_ESPIDF)
-    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=0, .irqLevel=0})
+    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET, .irqLevel=0})
 #elif defined(FRAMEWORK_TEST)
-    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=0, .irqLevel=0})
+    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET, .irqLevel=0})
 #else // defaults to FRAMEWORK_ARDUINO
 #if defined(USE_ARDUINO_ESP32) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)// ESP32, ARDUINO_ARCH_ESP32 defined in platform.txt
-    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=0, .irqLevel=0})
+    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET, .irqLevel=0})
 #else
-    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=0, .irqLevel=0})
+    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET, .irqLevel=0})
 #endif
 #endif
 {

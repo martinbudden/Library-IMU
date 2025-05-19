@@ -4,6 +4,9 @@
 #include <cstdint>
 
 #if defined(FRAMEWORK_RPI_PICO)
+#if defined(USE_IMU_SPI_DMA)
+#include "hardware/dma.h"
+#endif
 typedef struct spi_inst spi_inst_t;
 #define INSTRUCTION_RAM_ATTR
 #elif defined(FRAMEWORK_ESPIDF)
@@ -66,11 +69,12 @@ private:
 #if defined(FRAMEWORK_RPI_PICO)
     static void dataReadyISR(unsigned int gpio, uint32_t events);
     spi_inst_t* _spi;
+    //mutable std::array<uint8_t, 256> _writeReadBuf {};
 #if defined(USE_IMU_SPI_DMA)
-    const uint32_t _dmaRX;
-    const uint32_t _dmaTX;
-    dma_channel_config _dmaRxConfig;
-    dma_channel_config _dmaTxConfig;
+    const uint32_t _dmaRx;
+    const uint32_t _dmaTx;
+    dma_channel_config _dmaRxConfig {};
+    dma_channel_config _dmaTxConfig {};
 #endif
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_TEST)
