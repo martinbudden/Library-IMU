@@ -27,6 +27,7 @@ Currently support only one interrupt, but could index action off the interrupt p
 #if defined(FRAMEWORK_RPI_PICO)
 void BUS_SPI::dataReadyISR(unsigned int gpio, uint32_t events)
 {
+    // reading the register resets the interrupt
 #if defined(USE_IMU_SPI_DMA)
     // _dmaTx configuration hasn't changed
     dma_channel_configure(bus->_dmaRx, &bus->_dmaRxConfig,
@@ -38,17 +39,20 @@ void BUS_SPI::dataReadyISR(unsigned int gpio, uint32_t events)
     // wait for rx to complete
     dma_channel_wait_for_finish_blocking(bus->_dmaRX);
 #else
-    // reading the register resets the interrupt
     bus->readRegister(bus->_readRegister, bus->_readBuf, bus->_readLength);
 #endif
-    // set the user IRQ so that the AHRS can read process the data
+    // set the user IRQ so that the AHRS can process the data
     irq_set_pending(bus->_userIrq);
 }
 #else
 INSTRUCTION_RAM_ATTR void BUS_SPI::dataReadyISR()
 {
+#if defined(USE_IMU_SPI_DMA)
+    static_assert(false);
+#else
     // for the moment, just read the predefined register into the predefined read buffer
     bus->readRegister(bus->_readRegister, bus->_readBuf, bus->_readLength);
+#endif
 }
 #endif
 
@@ -119,6 +123,11 @@ BUS_SPI::BUS_SPI(uint32_t frequency, spi_index_t SPI_index, const pins_t& pins, 
 {
     bus = this;
 #if defined(FRAMEWORK_RPI_PICO)
+    static_assert(static_cast<int>(IRQ_LEVEL_LOW) == GPIO_IRQ_LEVEL_LOW);
+    static_assert(static_cast<int>(IRQ_LEVEL_HIGH) == GPIO_IRQ_LEVEL_HIGH);
+    static_assert(static_cast<int>(IRQ_EDGE_FALL) == GPIO_IRQ_EDGE_FALL);
+    static_assert(static_cast<int>(IRQ_EDGE_RISE) == GPIO_IRQ_EDGE_RISE);
+
     spi_init(_spi, _frequency);
     gpio_set_function(_pins.cipo, GPIO_FUNC_SPI);
     gpio_set_function(_pins.sck, GPIO_FUNC_SPI);
@@ -178,10 +187,10 @@ void BUS_SPI::setInterrupt(int userIrq)
 {
     _userIrq = userIrq;
 #if defined(FRAMEWORK_RPI_PICO)
-    if (_pins.irq != IRQ_NOT_SET) {
-        gpio_init(_pins.irq);
-        gpio_set_irq_enabled_with_callback(_pins.irq, _pins.irqLevel, true, &dataReadyISR);
-    }
+    assert(_pins.irq != IRQ_NOT_SET);
+    assert(_pins.irqLevel != 0);
+    gpio_init(_pins.irq);
+    gpio_set_irq_enabled_with_callback(_pins.irq, _pins.irqLevel, true, &dataReadyISR);
 #endif
 }
 
