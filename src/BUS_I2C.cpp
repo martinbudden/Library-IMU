@@ -11,7 +11,33 @@
 #include <Arduino.h>
 #endif
 
+
+BUS_I2C* BUS_I2C::bus {nullptr};
+
+/*!
+Data ready interrupt service routine (ISR)
+
+Currently support only one interrupt, but could index action off the gpio pin
+*/
+#if defined(FRAMEWORK_RPI_PICO)
+void BUS_I2C::dataReadyISR(unsigned int gpio, uint32_t events)
+{
+    // reading the register resets the interrupt
+    bus->readRegister(bus->_readRegister, bus->_readBuf, bus->_readLength);
+    // set the user IRQ so that the AHRS can process the data
+    irq_set_pending(bus->_userIrq);
+}
+#else
+INSTRUCTION_RAM_ATTR void BUS_I2C::dataReadyISR()
+{
+    // reading the register resets the interrupt
+    bus->readRegister(bus->_readRegister, bus->_readBuf, bus->_readLength);
+}
+#endif
+
 BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_t I2C_index, const pins_t& pins) :
+    _I2C_index(I2C_index),
+    _pins(pins),
 #if defined(FRAMEWORK_RPI_PICO)
     _I2C(I2C_index == I2C_INDEX_1 ? i2c1 : i2c0),
 #elif defined(FRAMEWORK_ESPIDF)
@@ -19,7 +45,6 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_t I2C_index, const pins_t& pins)
 #else // defaults to FRAMEWORK_ARDUINO
     _wire(Wire),
 #endif
-    _pins(pins),
     _I2C_address(I2C_address)
 {
 #if defined(FRAMEWORK_RPI_PICO)
@@ -31,7 +56,6 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_t I2C_index, const pins_t& pins)
     // Make the I2C pins available to pictooof
     bi_decl(bi_2pins_with_func(_pins.sda, _pins.scl, GPIO_FUNC_I2C));
 #elif defined(FRAMEWORK_ESPIDF)
-    (void)I2C_index;
     i2c_master_bus_config_t i2c_mst_config = {
         .i2c_port = 0,//TEST_I2C_PORT,
         .sda_io_num = static_cast<gpio_num_t>(_pins.sda),
@@ -60,9 +84,7 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_t I2C_index, const pins_t& pins)
 
     ESP_ERROR_CHECK(i2c_master_bus_add_device(_bus_handle, &dev_cfg, &_dev_handle));
 #elif defined(FRAMEWORK_TEST)
-    (void)I2C_index;
 #else // defaults to FRAMEWORK_ARDUINO
-    (void)I2C_index;
 #if defined(USE_ARDUINO_ESP32) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)// ESP32, ARDUINO_ARCH_ESP32 defined in platform.txt
     _wire.begin(_pins.sda, _pins.scl);
 #else
@@ -87,20 +109,24 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_t I2C_index)
 #endif
 #endif
 {
+}
+
+#if !defined(FRAMEWORK_RPI_PICO) && !defined(FRAMEWORK_ESPIDF) && !defined(FRAMEWORK_TEST)
+BUS_I2C::BUS_I2C(uint8_t I2C_address, TwoWire& wire, const pins_t& pins) :
+    _I2C_index(I2C_INDEX_0),
+    _pins(pins),
+    _wire(wire),
+    _I2C_address(I2C_address)
+{
+    bus = this;
+
 #if defined(FRAMEWORK_RPI_PICO)
     static_assert(static_cast<int>(IRQ_LEVEL_LOW) == GPIO_IRQ_LEVEL_LOW);
     static_assert(static_cast<int>(IRQ_LEVEL_HIGH) == GPIO_IRQ_LEVEL_HIGH);
     static_assert(static_cast<int>(IRQ_EDGE_FALL) == GPIO_IRQ_EDGE_FALL);
     static_assert(static_cast<int>(IRQ_EDGE_RISE) == GPIO_IRQ_EDGE_RISE);
 #endif
-}
 
-#if !defined(FRAMEWORK_RPI_PICO) && !defined(FRAMEWORK_ESPIDF) && !defined(FRAMEWORK_TEST)
-BUS_I2C::BUS_I2C(uint8_t I2C_address, TwoWire& wire, const pins_t& pins) :
-    _wire(wire),
-    _pins(pins),
-    _I2C_address(I2C_address)
-{
 #if defined(USE_ARDUINO_ESP32) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)// ESP32, ARDUINO_ARCH_ESP32 defined in platform.txt
     _wire.begin(_pins.sda, _pins.scl);
 #else
@@ -109,17 +135,27 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, TwoWire& wire, const pins_t& pins) :
 }
 #endif
 
-void BUS_I2C::setInterrupt(int userIrq)
+void BUS_I2C::setInterrupt(int userIrq, uint8_t readRegister, uint8_t* readBuf, size_t readLength)
 {
     _userIrq = userIrq;
+    _readRegister = readRegister;
+    _readBuf = readBuf;
+    _readLength = readLength;
+#if defined(FRAMEWORK_RPI_PICO)
+    assert(_pins.irq != IRQ_NOT_SET);
+    assert(_pins.irqLevel != 0);
+    gpio_init(_pins.irq);
+    enum { IRQ_ENABLED = true };
+    gpio_set_irq_enabled_with_callback(_pins.irq, _pins.irqLevel, IRQ_ENABLED, &dataReadyISR);
+#endif
 }
 
 uint8_t BUS_I2C::readRegister(uint8_t reg) const
 {
 #if defined(FRAMEWORK_RPI_PICO)
-    i2c_write_blocking(_I2C, _I2C_address, &reg, 1, true); // true to keep master control of bus
+    i2c_write_blocking(_I2C, _I2C_address, &reg, 1, RETAIN_CONTROL_OF_BUS);
     uint8_t ret;
-    i2c_read_blocking(_I2C, _I2C_address, &ret, 1, false);
+    i2c_read_blocking(_I2C, _I2C_address, &ret, 1, DONT_RETAIN_CONTROL_OF_BUS);
     return ret;
 #elif defined(FRAMEWORK_ESPIDF)
     (void)reg;
@@ -141,9 +177,9 @@ uint8_t BUS_I2C::readRegister(uint8_t reg) const
 uint8_t BUS_I2C::readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const
 {
 #if defined(FRAMEWORK_RPI_PICO)
-    i2c_write_blocking(_I2C, _I2C_address, &reg, 1, true); // true to keep control of bus
+    i2c_write_blocking(_I2C, _I2C_address, &reg, 1, RETAIN_CONTROL_OF_BUS);
     uint8_t ret;
-    i2c_read_timeout_us(_I2C, _I2C_address, &ret, 1, false, timeoutMs * 1000);
+    i2c_read_timeout_us(_I2C, _I2C_address, &ret, 1, DONT_RETAIN_CONTROL_OF_BUS, timeoutMs * 1000);
     return ret;
 #elif defined(FRAMEWORK_ESPIDF)
     (void)reg;
@@ -170,8 +206,8 @@ uint8_t BUS_I2C::readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const
 bool BUS_I2C::readRegister(uint8_t reg, uint8_t* data, size_t length) const // NOLINT(readability-non-const-parameter)
 {
 #if defined(FRAMEWORK_RPI_PICO)
-    i2c_write_blocking(_I2C, _I2C_address, &reg, 1, true); // true to keep control of bus
-    i2c_read_blocking(_I2C, _I2C_address, data, length, false);
+    i2c_write_blocking(_I2C, _I2C_address, &reg, 1, RETAIN_CONTROL_OF_BUS);
+    i2c_read_blocking(_I2C, _I2C_address, data, length, DONT_RETAIN_CONTROL_OF_BUS);
 #elif defined(FRAMEWORK_ESPIDF)
     (void)reg;
     (void)data;
@@ -218,7 +254,7 @@ bool BUS_I2C::readBytesWithTimeout(uint8_t* data, size_t length, uint32_t timeou
     i2c_read_timeout_us(_I2C, _I2C_address, data, length, false, timeoutMs *1000);
     return true;
 #elif defined(FRAMEWORK_ESPIDF)
-    (void)data;
+    *data = 0;
     (void)length;
     (void)timeoutMs;
 #elif defined(FRAMEWORK_TEST)

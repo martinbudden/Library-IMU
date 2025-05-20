@@ -115,6 +115,14 @@ IMU_Base::gyroRPS_Acc_t IMU_Base::readGyroRPS_Acc()
     };
 }
 
+IMU_Base::gyroRPS_Acc_t IMU_Base::getGyroRPS_Acc() const
+{
+    return gyroRPS_Acc_t {
+        .gyroRPS {},
+        .acc {}
+    };
+}
+
 Quaternion IMU_Base::readOrientation()
 {
     return Quaternion {};

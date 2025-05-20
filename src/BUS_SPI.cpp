@@ -1,11 +1,13 @@
 #include "BUS_SPI.h"
 
+//#define MAP_CS_FOR_SPI // not got this working, it's probably not worth the bother
+
 #if defined(FRAMEWORK_RPI_PICO)
-#include "hardware/spi.h"
-#include "pico/stdlib.h"
-#include "pico/binary_info.h"
-#include <array>
-#if defined(USE_IMU_SPI_DMA)
+#include <hardware/spi.h>
+#include <pico/stdlib.h>
+#include <pico/binary_info.h>
+#include <boards/pico.h> // for PICO_DEFAULT_LED_PIN
+#if defined(MAP_CS_FOR_SPI)
 #include <cstring>
 #endif
 #elif defined(FRAMEWORK_ESPIDF)
@@ -15,19 +17,19 @@
 #include <SPI.h>
 #endif
 
-//#define MAP_CS_FOR_SPI // not got this working, it's probably not worth the bother
 
 BUS_SPI* BUS_SPI::bus {nullptr};
 
 /*!
 Data ready interrupt service routine (ISR)
 
-Currently support only one interrupt, but could index action off the interrupt pin
+Currently support only one interrupt, but could index action off gpio pin
 */
 #if defined(FRAMEWORK_RPI_PICO)
 void BUS_SPI::dataReadyISR(unsigned int gpio, uint32_t events)
 {
     // reading the register resets the interrupt
+    //gpio_put(PICO_DEFAULT_LED_PIN, 1);
 #if defined(USE_IMU_SPI_DMA)
     // _dmaTx configuration hasn't changed
     dma_channel_configure(bus->_dmaRx, &bus->_dmaRxConfig,
@@ -71,6 +73,13 @@ static inline void cs_deselect(uint8_t CS_pin) {
 }
 #endif // FRAMEWORK_RPI_PICO
 
+#define CS_LOW() ({*_csOut &= ~_csBit;})
+#define CS_HIGH() ({*_csOut |= _csBit;})
+//#define CS_LOW() ({digitalWrite(_pins.cs, LOW);})
+//#define CS_HIGH() ({digitalWrite(_pins.cs, HIGH);})
+
+
+
 #if defined(USE_IMU_SPI_DMA)
 BUS_SPI::~BUS_SPI()
 {
@@ -91,22 +100,14 @@ BUS_SPI::BUS_SPI(uint32_t frequency, spi_index_t SPI_index, uint8_t CS_pin)
      : BUS_SPI(frequency, SPI_index, { .cs=CS_pin, .sck=0, .cipo=0, .copi=0, .irq=IRQ_NOT_SET, .irqLevel=0 })
 #endif
 {
-    (void)SPI_index;
 }
 
-BUS_SPI::BUS_SPI(uint32_t frequency, spi_index_t SPI_index, const pins_t& pins, uint8_t readRegister, uint8_t* readBuf, size_t readLength) :
+BUS_SPI::BUS_SPI(uint32_t frequency, spi_index_t SPI_index, const pins_t& pins) :
     _frequency(frequency)
     ,_SPI_index(SPI_index)
     ,_pins(pins)
-    ,_readRegister(readRegister | READ_BIT)
-    ,_readBuf(readBuf)
-    ,_readLength(readLength)
 #if defined(FRAMEWORK_RPI_PICO)
     ,_spi(SPI_index == SPI_INDEX_1 ? spi1 : spi0)
-#if defined(USE_IMU_SPI_DMA)
-    ,_dmaRx(dma_claim_unused_channel(true))
-    ,_dmaTx(dma_claim_unused_channel(true))
-#endif
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_TEST)
 #else // defaults to FRAMEWORK_ARDUINO
@@ -138,7 +139,34 @@ BUS_SPI::BUS_SPI(uint32_t frequency, spi_index_t SPI_index, const pins_t& pins, 
     bi_decl(bi_1pin_with_name(_pins.cs, "SPI CS"));
 #endif
 
+#elif defined(FRAMEWORK_ESPIDF)
+
+#elif defined(FRAMEWORK_TEST)
+
+#else // defaults to FRAMEWORK_ARDUINO
+    _spi.begin();
+    pinMode(_pins.cs, OUTPUT);
+    CS_HIGH();
+
+    _csBit = digitalPinToBitMask(_pins.cs);
+    _csOut = portOutputRegister(digitalPinToPort(_pins.cs));
+
+#endif
+}
+
+void BUS_SPI::setInterrupt(int userIrq, uint8_t readRegister, uint8_t* readBuf, size_t readLength)
+{
+    _userIrq = userIrq;
+    _readRegister = readRegister;
+    _readBuf = readBuf;
+    _readLength = readLength;
+#if defined(FRAMEWORK_RPI_PICO)
+    assert(_pins.irq != IRQ_NOT_SET);
+    assert(_pins.irqLevel != 0);
+    gpio_init(_pins.irq);
+    gpio_set_irq_enabled_with_callback(_pins.irq, _pins.irqLevel, true, &dataReadyISR);
 #if defined(USE_IMU_SPI_DMA)
+    _dmaTx = dma_claim_unused_channel(true);
     _dmaTxConfig = dma_channel_get_default_config(_dmaTx);
     channel_config_set_transfer_data_size(&_dmaTxConfig, DMA_SIZE_8); // 8-bit transfers
     channel_config_set_dreq(&_dmaTxConfig, spi_get_dreq(_spi, true));
@@ -150,6 +178,7 @@ BUS_SPI::BUS_SPI(uint32_t frequency, spi_index_t SPI_index, const pins_t& pins, 
                           _readLength, // number of bytes to read (each element is DMA_SIZE_8, ie 8 bits)
                           false); // don't start yet
 
+    _dmaRx = dma_claim_unused_channel(true);
     _dmaRxConfig = dma_channel_get_default_config(_dmaRx);
     channel_config_set_transfer_data_size(&_dmaRxConfig, DMA_SIZE_8); // 8-bit transfers
     channel_config_set_dreq(&_dmaRxConfig, spi_get_dreq(_spi, false));
@@ -160,30 +189,8 @@ BUS_SPI::BUS_SPI(uint32_t frequency, spi_index_t SPI_index, const pins_t& pins, 
                           &spi_get_hw(_spi)->dr, // source, read data from SPI
                           _readLength, // number of bytes to read (each element is DMA_SIZE_8, ie 8 bits)
                           false); // don't start yet
-#endif
-#elif defined(FRAMEWORK_ESPIDF)
-#elif defined(FRAMEWORK_TEST)
-#else // defaults to FRAMEWORK_ARDUINO
-    _spi.begin();
-    pinMode(_pins.cs, OUTPUT);
-    digitalWrite(_pins.cs, HIGH);
-#endif
-}
-
-BUS_SPI::BUS_SPI(uint32_t frequency, spi_index_t SPI_index, const pins_t& pins) :
-    BUS_SPI(frequency, SPI_index, pins, 0, nullptr, 0)
-{
-}
-
-void BUS_SPI::setInterrupt(int userIrq)
-{
-    _userIrq = userIrq;
-#if defined(FRAMEWORK_RPI_PICO)
-    assert(_pins.irq != IRQ_NOT_SET);
-    assert(_pins.irqLevel != 0);
-    gpio_init(_pins.irq);
-    gpio_set_irq_enabled_with_callback(_pins.irq, _pins.irqLevel, true, &dataReadyISR);
-#endif
+#endif // USE_IMU_SPI_DMA
+#endif // FRAMEWORK_RPI_PICO
 }
 
 uint8_t BUS_SPI::readRegister(uint8_t reg) const
@@ -207,10 +214,10 @@ uint8_t BUS_SPI::readRegister(uint8_t reg) const
     (void)reg;
 #else // defaults to FRAMEWORK_ARDUINO
     _spi.beginTransaction(SPISettings(_frequency, MSBFIRST, SPI_MODE0));
-    digitalWrite(_pins.cs, LOW);
+    CS_LOW();
     _spi.transfer(reg | READ_BIT);
     const uint8_t ret = _spi.transfer(0); // NOLINT(cppcoreguidelines-init-variables) false positive
-    digitalWrite(_pins.cs, HIGH);
+    CS_HIGH();
     _spi.endTransaction();
     return ret;
 #endif
@@ -228,8 +235,10 @@ bool BUS_SPI::readRegister(uint8_t reg, uint8_t* data, size_t length) const
 #if defined(FRAMEWORK_RPI_PICO)
     reg |= READ_BIT;
 #if defined(MAP_CS_FOR_SPI)
-    spi_write_read_blocking(_spi, &reg, &_writeReadBuf[0], 1);
-    spi_write_read_blocking(_spi, &_writeReadBuf[0], data, length);
+    _writeReadBuf[0] = reg;
+    std::array<uint8_t, 256> buf;
+    spi_write_read_blocking(_spi, &_writeReadBuf[0], &buf[0], length+1);
+    memcpy(data, &buf[1], length);
 #else
     cs_select(_pins.cs);
     spi_write_blocking(_spi, &reg, 1);
@@ -248,12 +257,12 @@ bool BUS_SPI::readRegister(uint8_t reg, uint8_t* data, size_t length) const
     (void)length;
 #else // defaults to FRAMEWORK_ARDUINO
     _spi.beginTransaction(SPISettings(_frequency, MSBFIRST, SPI_MODE0));
-    digitalWrite(_pins.cs, LOW);
+    CS_LOW();
     _spi.transfer(reg | READ_BIT);
     for (size_t ii = 0; ii < length; ++ii) {
         data[ii] = _spi.transfer(READ_BIT); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     }
-    digitalWrite(_pins.cs, HIGH);
+    CS_HIGH();
     _spi.endTransaction();
     return true;
 #endif
@@ -305,18 +314,18 @@ bool BUS_SPI::readBytes(uint8_t* data, size_t length) const
     (void)length;
 #else // defaults to FRAMEWORK_ARDUINO
     _spi.beginTransaction(SPISettings(_frequency, MSBFIRST, SPI_MODE0));
-    digitalWrite(_pins.cs, LOW);
+    CS_LOW();
     for (size_t ii = 0; ii < length; ++ii) {
         data[ii] = _spi.transfer(READ_BIT); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     }
-    digitalWrite(_pins.cs, HIGH);
+    CS_HIGH();
     _spi.endTransaction();
     return true;
 #endif
     return false;
 }
 
-bool BUS_SPI::readBytesWithTimeout(uint8_t* data, size_t length, uint8_t timeoutMs) const
+bool BUS_SPI::readBytesWithTimeout(uint8_t* data, size_t length, uint32_t timeoutMs) const
 {
     (void)timeoutMs;
     return readBytes(data, length);
@@ -341,10 +350,10 @@ uint8_t BUS_SPI::writeRegister(uint8_t reg, uint8_t data)
     (void)data;
 #else // defaults to FRAMEWORK_ARDUINO
     _spi.beginTransaction(SPISettings(_frequency, MSBFIRST, SPI_MODE0));
-    digitalWrite(_pins.cs, LOW);
+    CS_LOW();
     _spi.transfer(reg);
     _spi.transfer(data);
-    digitalWrite(_pins.cs, HIGH);
+    CS_HIGH();
     _spi.endTransaction();
 #endif
     return 0;
@@ -355,8 +364,10 @@ uint8_t BUS_SPI::writeRegister(uint8_t reg, const uint8_t* data, size_t length)
 #if defined(FRAMEWORK_RPI_PICO)
     reg &= 0x7FU;
 #if defined(MAP_CS_FOR_SPI)
-    spi_write_read_blocking(_spi, &reg, &_writeReadBuf[0], 1);
-    spi_write_read_blocking(_spi, data, &_writeReadBuf[0], length);
+    _writeReadBuf[0] = reg;
+    memcpy(&_writeReadBuf[1], data, length);
+    std::array<uint8_t, 256> buf;
+    spi_write_read_blocking(_spi, &_writeReadBuf[0], &buf[0], length+1);
 #else
     cs_select(_pins.cs);
     spi_write_blocking(_spi, &reg, 1);
@@ -373,12 +384,12 @@ uint8_t BUS_SPI::writeRegister(uint8_t reg, const uint8_t* data, size_t length)
     (void)length;
 #else // defaults to FRAMEWORK_ARDUINO
     _spi.beginTransaction(SPISettings(_frequency, MSBFIRST, SPI_MODE0));
-    digitalWrite(_pins.cs, LOW);
+    CS_LOW();
     _spi.transfer(reg);
     for (size_t ii = 0; ii < length; ++ii) {
         _spi.transfer(data[ii]); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     }
-    digitalWrite(_pins.cs, HIGH);
+    CS_HIGH();
     _spi.endTransaction();
 #endif
     return 0;
@@ -387,9 +398,13 @@ uint8_t BUS_SPI::writeRegister(uint8_t reg, const uint8_t* data, size_t length)
 uint8_t BUS_SPI::writeBytes(const uint8_t* data, size_t length)
 {
 #if defined(FRAMEWORK_RPI_PICO)
+#if defined(MAP_CS_FOR_SPI)
+    spi_write_read_blocking(_spi, data, &_writeReadBuf[0], length);
+#else
     cs_select(_pins.cs);
     spi_write_blocking(_spi, data, length);
     cs_deselect(_pins.cs);
+#endif
 #elif defined(FRAMEWORK_ESPIDF)
     (void)data;
     (void)length;
@@ -398,11 +413,11 @@ uint8_t BUS_SPI::writeBytes(const uint8_t* data, size_t length)
     (void)length;
 #else // defaults to FRAMEWORK_ARDUINO
     _spi.beginTransaction(SPISettings(_frequency, MSBFIRST, SPI_MODE0));
-    digitalWrite(_pins.cs, LOW);
+    CS_LOW();
     for (size_t ii = 0; ii < length; ++ii) {
         _spi.transfer(data[ii]); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     }
-    digitalWrite(_pins.cs, HIGH);
+    CS_HIGH();
     _spi.endTransaction();
 #endif
     return 0;

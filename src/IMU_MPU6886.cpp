@@ -288,6 +288,11 @@ IMU_Base::gyroRPS_Acc_t IMU_MPU6886::readGyroRPS_Acc()
     return gyroRPS_AccFromRaw(_accTemperatureGyroData.value);
 }
 
+IMU_Base::gyroRPS_Acc_t IMU_MPU6886::getGyroRPS_Acc() const
+{
+    return gyroRPS_AccFromRaw(_accTemperatureGyroData.value);
+}
+
 int32_t IMU_MPU6886::readTemperatureRaw() const
 {
     std::array<uint8_t, 2> data;

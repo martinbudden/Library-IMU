@@ -53,6 +53,7 @@ public:
     virtual xyz_t readGyroDPS() override;
     virtual xyz_t readAcc() override;
     virtual gyroRPS_Acc_t readGyroRPS_Acc() override;
+    virtual gyroRPS_Acc_t getGyroRPS_Acc() const override;
 private:
     gyroRPS_Acc_t gyroRPS_AccFromRaw(const acc_gyro_data_t::value_t& data) const;
 private:

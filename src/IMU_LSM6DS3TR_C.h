@@ -55,6 +55,7 @@ public:
     virtual xyz_int32_t readGyroRaw() override;
     virtual xyz_int32_t readAccRaw() override;
     virtual gyroRPS_Acc_t readGyroRPS_Acc() override;
+    virtual gyroRPS_Acc_t getGyroRPS_Acc() const override;
 private:
     gyroRPS_Acc_t gyroRPS_AccFromRaw(const acc_gyro_data_t::value_t& data) const;
 private:
@@ -65,5 +66,5 @@ private:
 #endif
     //acc_gyro_data_t _accGyroData {};
     dma_acc_gyro_data_t _accGyroData {};
-    uint8_t _dmaSpiRegister {}; // register value used fro DMA transfer
+    uint8_t _dmaSpiRegister {}; // register value used for DMA transfer
 };

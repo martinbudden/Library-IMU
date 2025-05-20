@@ -151,6 +151,7 @@ public:
     virtual xyz_t readGyroDPS();
     virtual xyz_t readAcc();
     virtual gyroRPS_Acc_t readGyroRPS_Acc();
+    virtual gyroRPS_Acc_t getGyroRPS_Acc() const;
     virtual Quaternion readOrientation();
 
     // by default the FIFO is not enabled

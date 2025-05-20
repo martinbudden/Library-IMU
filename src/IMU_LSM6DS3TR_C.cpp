@@ -156,11 +156,7 @@ Gyroscope data rates up to 6.4 kHz, accelerometer up to 1.6 kHz
 #if defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_LSM6DSOX_SPI)
 IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_index_t SPI_index, const BUS_SPI::pins_t& pins) :
     IMU_Base(axisOrder),
-#if defined(USE_IMU_SPI_DMA)
-    _bus(frequency, SPI_index, pins, REG_OUTX_L_G, reinterpret_cast<uint8_t*>(&_accGyroData.spiReadStartByte), sizeof(acc_gyro_data_t)+1)
-#else
     _bus(frequency, SPI_index, pins)
-#endif
 {
     _dmaSpiRegister = REG_OUTX_L_G | BUS_SPI::READ_BIT;
 }
@@ -291,11 +287,6 @@ int IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSens
     return 0;
 }
 
-void IMU_LSM6DS3TR_C::setInterrupt(int userIrq)
-{
-    _bus.setInterrupt(userIrq);
-}
-
 IMU_Base::xyz_int32_t IMU_LSM6DS3TR_C::readGyroRaw()
 {
     mems_sensor_data_t gyro; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init,misc-const-correctness)
@@ -332,6 +323,19 @@ IMU_Base::gyroRPS_Acc_t IMU_LSM6DS3TR_C::readGyroRPS_Acc()
     _bus.readRegister(REG_OUTX_L_G, &_accGyroData.accGyro.data[0], sizeof(_accGyroData));
     i2cSemaphoreGive();
 
+    return gyroRPS_AccFromRaw(_accGyroData.accGyro.value);
+}
+
+void IMU_LSM6DS3TR_C::setInterrupt(int userIrq)
+{
+    _bus.setInterrupt(userIrq, REG_OUTX_L_G, &_accGyroData.accGyro.data[0], sizeof(_accGyroData));
+}
+
+/*!
+Return the gyroAcc data that was read in the ISR
+*/
+IMU_Base::gyroRPS_Acc_t IMU_LSM6DS3TR_C::getGyroRPS_Acc() const
+{
     return gyroRPS_AccFromRaw(_accGyroData.accGyro.value);
 }
 

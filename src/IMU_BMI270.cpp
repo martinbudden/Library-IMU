@@ -372,6 +372,11 @@ IMU_Base::gyroRPS_Acc_t IMU_BMI270::readGyroRPS_Acc()
     return gyroRPS_AccFromRaw(_accGyroData.value);
 }
 
+IMU_Base::gyroRPS_Acc_t IMU_BMI270::getGyroRPS_Acc() const
+{
+    return gyroRPS_AccFromRaw(_accGyroData.value);
+}
+
 IMU_Base::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromRaw(const acc_gyro_data_t::value_t& data) const
 {
 #if defined(IMU_BUILD_XPOS_YPOS_ZPOS)
