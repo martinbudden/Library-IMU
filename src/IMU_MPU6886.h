@@ -56,6 +56,11 @@ private:
             uint8_t gyro_z_l;
         } value;
     };
+    enum { SPI_BUFFER_SIZE = 2};
+    struct spi_acc_temperature_gyro_data_t {
+        std::array<uint8_t, SPI_BUFFER_SIZE> spiBuffer; // buffer for use when reading gyro by SPI
+        acc_temperature_gyro_data_t accGyro;
+    };
     union acc_temperature_gyro_array_t {
         enum { DATA_SIZE = 1036 };
         acc_temperature_gyro_data_t accTemperatureGyro[74];
@@ -63,6 +68,7 @@ private:
     };
 #pragma pack(pop)
 public:
+    virtual void setInterrupt(int userIrq) override;
     virtual void setGyroOffset(const xyz_int32_t& gyroOffset) override;
     virtual xyz_int32_t readGyroRaw() override;
     virtual xyz_int32_t readAccRaw() override;
@@ -92,6 +98,6 @@ private:
 #else
     BUS_I2C _bus; //!< I2C bus interface
 #endif
-    acc_temperature_gyro_data_t _accTemperatureGyroData {};
+    spi_acc_temperature_gyro_data_t _spiAccTemperatureGyroData {};
     acc_temperature_gyro_array_t _fifoBuffer {};
 };

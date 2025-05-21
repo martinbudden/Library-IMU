@@ -30,9 +30,9 @@ public:
             int16_t acc_z;
         } value;
     };
-    struct dma_acc_gyro_data_t {
-        uint8_t filler;
-        uint8_t spiReadStartByte; // dummy byte that receives data when imu register is written for DMA transfer
+    enum { SPI_BUFFER_SIZE = 2};
+    struct spi_acc_gyro_data_t {
+        std::array<uint8_t, SPI_BUFFER_SIZE> spiBuffer; // buffer for use when reading gyro by SPI
         acc_gyro_data_t accGyro;
     };
 #pragma pack(pop)
@@ -64,7 +64,6 @@ private:
 #else
     BUS_I2C _bus; //!< I2C bus interface
 #endif
-    //acc_gyro_data_t _accGyroData {};
-    dma_acc_gyro_data_t _accGyroData {};
+    spi_acc_gyro_data_t _spiAccGyroData {};
     uint8_t _dmaSpiRegister {}; // register value used for DMA transfer
 };

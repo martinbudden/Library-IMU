@@ -3,6 +3,11 @@
 #include <cstddef>
 #include <cstdint>
 
+#if defined(USE_FREERTOS)
+#include <freertos/FreeRTOS.h>
+#include <freertos/queue.h>
+#endif
+
 #if defined(FRAMEWORK_RPI_PICO)
 typedef struct i2c_inst i2c_inst_t;
 #elif defined(FRAMEWORK_ESPIDF)
@@ -27,13 +32,18 @@ class BUS_I2C {
 public:
     enum i2c_index_t { I2C_INDEX_0, I2C_INDEX_1, I2C_INDEX_2, I2C_INDEX_3 };
     enum { IRQ_NOT_SET = 0xFF };
-    enum { IRQ_LEVEL_LOW = 0x1U, IRQ_LEVEL_HIGH = 0x2U, IRQ_EDGE_FALL = 0x4U, IRQ_EDGE_RISE = 0x8U };
+#if defined(FRAMEWORK_RPI_PICO)
+    enum { IRQ_LEVEL_LOW = 0x1U, IRQ_LEVEL_HIGH = 0x2U, IRQ_EDGE_FALL = 0x4U, IRQ_EDGE_RISE = 0x8U, IRQ_EDGE_CHANGE = 0x4U|0x8U };
+#else
+    enum { IRQ_LEVEL_LOW = 0x04, IRQ_LEVEL_HIGH = 0x05, IRQ_EDGE_FALL = 0x02, IRQ_EDGE_RISE = 0x01, IRQ_EDGE_CHANGE = 0x03 };
+#endif
     struct pins_t {
         uint8_t sda;
         uint8_t scl;
         uint8_t irq;
         uint8_t irqLevel;
     };
+    enum { SPI_BUFFER_SIZE = 2}; // so read offsets are same s for BUS_SPI
 public:
     BUS_I2C(uint8_t I2C_address, i2c_index_t I2C_index);
     explicit BUS_I2C(uint8_t I2C_address) : BUS_I2C(I2C_address, I2C_INDEX_0) {}
@@ -56,9 +66,9 @@ private:
     static BUS_I2C* bus; //!< alias of `this` to be used in interrupt service routine
     i2c_index_t _I2C_index {};
     pins_t _pins;
-    uint8_t _readRegister;
-    uint8_t* _readBuf;
-    size_t _readLength;
+    uint8_t _readRegister {};
+    uint8_t* _readBuf {};
+    size_t _readLength {};
     int _userIrq {0};
 #if defined(FRAMEWORK_RPI_PICO)
     enum { RETAIN_CONTROL_OF_BUS = true };
@@ -72,8 +82,17 @@ private:
 #elif defined(FRAMEWORK_TEST)
     static INSTRUCTION_RAM_ATTR void dataReadyISR();
 #else // defaults to FRAMEWORK_ARDUINO
-    static INSTRUCTION_RAM_ATTR void dataReadyISR();
+    static INSTRUCTION_RAM_ATTR void dataReadyISR(); // cppcheck-suppress unusedPrivateFunction
     TwoWire& _wire;
 #endif
     uint8_t _I2C_address;
+#if defined(USE_FREERTOS)
+    QueueHandle_t _imuDataReadyQueue;
+    uint32_t _imuDataReadyQueueItem;
+public:
+    inline void UNLOCK_IMU_DATA_READY_FROM_ISR() const { xQueueSendFromISR(_imuDataReadyQueue, &_imuDataReadyQueueItem, nullptr); }
+#else
+public:
+    inline void UNLOCK_IMU_DATA_READY_FROM_ISR() const {}
+#endif
 };

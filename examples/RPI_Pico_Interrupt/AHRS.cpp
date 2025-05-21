@@ -1,9 +1,7 @@
 #include "AHRS.h"
-#if defined(FRAMEWORK_RPI_PICO)
 #include <boards/pico.h> // for PICO_DEFAULT_LED_PIN
 #include <hardware/gpio.h>
 #include <hardware/irq.h>
-#endif
 
 AHRS* AHRS::ahrs {nullptr};
 
@@ -26,8 +24,8 @@ AHRS::~AHRS()
     user_irq_unclaim(_userIrq);
 }
 
-AHRS::AHRS(IMU_Base& imuSensor) :
-    _IMU(imuSensor)
+AHRS::AHRS(IMU_Base& imu) :
+    _IMU(imu)
 {
     ahrs = this;
 

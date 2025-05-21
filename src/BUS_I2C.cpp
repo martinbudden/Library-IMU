@@ -1,9 +1,10 @@
 #include "BUS_I2C.h"
 
 #if defined(FRAMEWORK_RPI_PICO)
-#include "hardware/i2c.h"
-#include "pico/stdlib.h"
-#include "pico/binary_info.h"
+#include <hardware/i2c.h>
+#include <pico/stdlib.h>
+#include <pico/binary_info.h>
+#include <boards/pico.h> // for PICO_DEFAULT_LED_PIN
 #include <array>
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_TEST)
@@ -22,16 +23,20 @@ Currently support only one interrupt, but could index action off the gpio pin
 #if defined(FRAMEWORK_RPI_PICO)
 void BUS_I2C::dataReadyISR(unsigned int gpio, uint32_t events)
 {
+    //gpio_put(PICO_DEFAULT_LED_PIN, 1);
     // reading the register resets the interrupt
-    bus->readRegister(bus->_readRegister, bus->_readBuf, bus->_readLength);
-    // set the user IRQ so that the AHRS can process the data
+    bus->readRegister(bus->_readRegister, bus->_readBuf + SPI_BUFFER_SIZE, bus->_readLength - SPI_BUFFER_SIZE);
+    // trigger a software interrupt so that the AHRS can process the data
     irq_set_pending(bus->_userIrq);
 }
 #else
 INSTRUCTION_RAM_ATTR void BUS_I2C::dataReadyISR()
 {
     // reading the register resets the interrupt
-    bus->readRegister(bus->_readRegister, bus->_readBuf, bus->_readLength);
+    bus->readRegister(bus->_readRegister, bus->_readBuf + SPI_BUFFER_SIZE, bus->_readLength - SPI_BUFFER_SIZE);
+#if defined(USE_FREERTOS)
+    bus->UNLOCK_IMU_DATA_READY_FROM_ISR();
+#endif
 }
 #endif
 
@@ -137,11 +142,19 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, TwoWire& wire, const pins_t& pins) :
 
 void BUS_I2C::setInterrupt(int userIrq, uint8_t readRegister, uint8_t* readBuf, size_t readLength)
 {
-    _userIrq = userIrq;
     _readRegister = readRegister;
     _readBuf = readBuf;
     _readLength = readLength;
-#if defined(FRAMEWORK_RPI_PICO)
+
+#if defined(USE_FREERTOS)
+    _imuDataReadyQueue = reinterpret_cast<QueueHandle_t>(userIrq);
+#else
+    _userIrq = userIrq;
+#endif
+#if defined(USE_ARDUINO_ESP32)
+    pinMode(_pins.irq, INPUT);
+    //attachInterrupt(digitalPinToInterrupt(_pins.irq), &dataReadyISR, _pins.irqLevel); // esp32-hal-gpio.h
+#elif defined(FRAMEWORK_RPI_PICO)
     assert(_pins.irq != IRQ_NOT_SET);
     assert(_pins.irqLevel != 0);
     gpio_init(_pins.irq);

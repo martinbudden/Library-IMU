@@ -32,12 +32,17 @@ public:
             int16_t gyro_z;
         } value;
     };
+    enum { SPI_BUFFER_SIZE = 2};
+    struct spi_acc_gyro_data_t {
+        std::array<uint8_t, SPI_BUFFER_SIZE> spiBuffer; // buffer for use when reading gyro by SPI
+        acc_gyro_data_t accGyro;
+    };
 #pragma pack(pop)
 public:
 #if defined(USE_IMU_BMI270_SPI)
     // SPI constructors
     IMU_BMI270(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_index_t SPI_index, const BUS_SPI::pins_t& pins);
-#else    
+#else
     // I2C constructors
     IMU_BMI270(axis_order_t axisOrder, BUS_I2C::i2c_index_t I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address);
     IMU_BMI270(axis_order_t axisOrder, const BUS_I2C::pins_t& pins, uint8_t I2C_address) : IMU_BMI270(axisOrder, BUS_I2C::I2C_INDEX_0, pins, I2C_address) {}
@@ -46,6 +51,8 @@ public:
 public:
     virtual int init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex) override;
     void loadConfigurationData();
+    void UNLOCK_IMU_DATA_READY() { _bus.UNLOCK_IMU_DATA_READY_FROM_ISR(); } // for debugging
+    virtual void setInterrupt(int userIrq) override;
     virtual xyz_int32_t readGyroRaw() override;
     virtual xyz_int32_t readAccRaw() override;
 
@@ -62,5 +69,6 @@ private:
 #else
     BUS_I2C _bus; //!< I2C bus interface
 #endif
-    acc_gyro_data_t _accGyroData {};
+    spi_acc_gyro_data_t _spiAccGyroData {};
+    uint8_t _dmaSpiRegister {}; // register value used for DMA transfer
 };

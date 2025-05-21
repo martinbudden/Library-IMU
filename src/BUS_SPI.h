@@ -4,6 +4,11 @@
 #include <cstddef>
 #include <cstdint>
 
+#if defined(USE_FREERTOS)
+#include <freertos/FreeRTOS.h>
+#include <freertos/queue.h>
+#endif
+
 #if defined(FRAMEWORK_RPI_PICO)
 #if defined(USE_IMU_SPI_DMA)
 #include "hardware/dma.h"
@@ -30,7 +35,11 @@ class BUS_SPI {
 public:
     enum spi_index_t { SPI_INDEX_0, SPI_INDEX_1, SPI_INDEX_2, SPI_INDEX_3 };
     enum { IRQ_NOT_SET = 0xFF };
-    enum { IRQ_LEVEL_LOW = 0x1U, IRQ_LEVEL_HIGH = 0x2U, IRQ_EDGE_FALL = 0x4U, IRQ_EDGE_RISE = 0x8U };
+#if defined(FRAMEWORK_RPI_PICO)
+    enum { IRQ_LEVEL_LOW = 0x1U, IRQ_LEVEL_HIGH = 0x2U, IRQ_EDGE_FALL = 0x4U, IRQ_EDGE_RISE = 0x8U, IRQ_EDGE_CHANGE = 0x4U|0x8U };
+#else
+    enum { IRQ_LEVEL_LOW = 0x04, IRQ_LEVEL_HIGH = 0x05, IRQ_EDGE_FALL = 0x02, IRQ_EDGE_RISE = 0x01, IRQ_EDGE_CHANGE = 0x03 };
+#endif
     struct pins_t {
         uint8_t cs;
         uint8_t sck;
@@ -40,6 +49,7 @@ public:
         uint8_t irqLevel;
     };
     static constexpr uint8_t READ_BIT = 0x80;
+    enum { SPI_BUFFER_SIZE = 2};
 public:
 #if defined(USE_IMU_SPI_DMA)
     virtual ~BUS_SPI();
@@ -86,5 +96,14 @@ private:
     SPIClass& _spi;
     volatile uint32_t* _csOut {};
     uint32_t _csBit {};
+#endif
+#if defined(USE_FREERTOS)
+    QueueHandle_t _imuDataReadyQueue;
+    uint32_t _imuDataReadyQueueItem;
+public:
+    inline void UNLOCK_IMU_DATA_READY_FROM_ISR() const { xQueueSendFromISR(_imuDataReadyQueue, &_imuDataReadyQueueItem, nullptr); }
+#else
+public:
+    inline void UNLOCK_IMU_DATA_READY_FROM_ISR() const {}
 #endif
 };

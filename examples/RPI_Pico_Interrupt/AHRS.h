@@ -4,7 +4,7 @@
 class AHRS {
 public:
     ~AHRS();
-    explicit AHRS(IMU_Base& imuSensor);
+    explicit AHRS(IMU_Base& imu);
     static void imuDataReadyISR();
     inline void LOCK_IMU_DATA_READY() const { mutex_enter_blocking(&_imuDataReadyMutex); }
     inline uint32_t getImuDataReadyCount() const { return _imuDataReadyCount; }

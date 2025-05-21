@@ -165,6 +165,9 @@ IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_
     IMU_Base(axisOrder),
     _bus(frequency, SPI_index, pins)
 {
+    static_assert(SPI_BUFFER_SIZE == static_cast<int>(BUS_SPI::SPI_BUFFER_SIZE));
+    static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
+    static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
 }
 #else
 IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, BUS_I2C::i2c_index_t I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
@@ -366,15 +369,23 @@ xyz_t IMU_BMI270::readAcc()
 IMU_Base::gyroRPS_Acc_t IMU_BMI270::readGyroRPS_Acc()
 {
     i2cSemaphoreTake();
-    _bus.readRegister(REG_ACC_X_L, &_accGyroData.data[0], sizeof(_accGyroData));
+    _bus.readRegister(REG_ACC_X_L, &_spiAccGyroData.accGyro.data[0], sizeof(_spiAccGyroData.accGyro));
     i2cSemaphoreGive();
 
-    return gyroRPS_AccFromRaw(_accGyroData.value);
+    return gyroRPS_AccFromRaw(_spiAccGyroData.accGyro.value);
 }
 
+void IMU_BMI270::setInterrupt(int userIrq)
+{
+    _bus.setInterrupt(userIrq, REG_ACC_X_L, reinterpret_cast<uint8_t*>(&_spiAccGyroData), sizeof(_spiAccGyroData));
+}
+
+/*!
+Return the gyroAcc data that was read in the ISR
+*/
 IMU_Base::gyroRPS_Acc_t IMU_BMI270::getGyroRPS_Acc() const
 {
-    return gyroRPS_AccFromRaw(_accGyroData.value);
+    return gyroRPS_AccFromRaw(_spiAccGyroData.accGyro.value);
 }
 
 IMU_Base::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromRaw(const acc_gyro_data_t::value_t& data) const
