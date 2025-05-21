@@ -107,17 +107,17 @@ xyz_t IMU_Base::readAcc()
     });
 }
 
-IMU_Base::gyroRPS_Acc_t IMU_Base::readGyroRPS_Acc()
+IMU_Base::accGyroRPS_t IMU_Base::readAccGyroRPS()
 {
-    return gyroRPS_Acc_t {
+    return accGyroRPS_t {
         .gyroRPS = readGyroRPS(),
         .acc = readAcc()
     };
 }
 
-IMU_Base::gyroRPS_Acc_t IMU_Base::getGyroRPS_Acc() const
+IMU_Base::accGyroRPS_t IMU_Base::getAccGyroRPS() const
 {
-    return gyroRPS_Acc_t {
+    return accGyroRPS_t {
         .gyroRPS {},
         .acc {}
     };
@@ -347,10 +347,10 @@ size_t IMU_Base::readFIFO_ToBuffer()
     return 0;
 }
 
-IMU_Base::gyroRPS_Acc_t IMU_Base::readFIFO_Item(size_t index)
+IMU_Base::accGyroRPS_t IMU_Base::readFIFO_Item(size_t index)
 {
     (void)index;
 
-    const gyroRPS_Acc_t gyroAcc {};
+    const accGyroRPS_t gyroAcc {};
     return gyroAcc;
 }

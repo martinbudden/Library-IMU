@@ -76,11 +76,11 @@ public:
     virtual xyz_t readGyroRPS() override;
     virtual xyz_t readGyroDPS() override;
     virtual xyz_t readAcc() override;
-    virtual gyroRPS_Acc_t readGyroRPS_Acc() override;
-    virtual gyroRPS_Acc_t getGyroRPS_Acc() const override;
+    virtual accGyroRPS_t readAccGyroRPS() override;
+    virtual accGyroRPS_t getAccGyroRPS() const override;
 
     virtual size_t readFIFO_ToBuffer() override;
-    virtual gyroRPS_Acc_t readFIFO_Item(size_t index) override;
+    virtual accGyroRPS_t readFIFO_Item(size_t index) override;
 
     float readTemperature() const;
     int32_t readTemperatureRaw() const;
@@ -91,7 +91,7 @@ public:
 private:
     xyz_t gyroRPS_FromRaw(const mems_sensor_data_t::value_t& data) const;
     xyz_t accFromRaw(const mems_sensor_data_t::value_t& data) const;
-    gyroRPS_Acc_t gyroRPS_AccFromRaw(const acc_temperature_gyro_data_t::value_t& data) const;
+    accGyroRPS_t accGyroRPSFromRaw(const acc_temperature_gyro_data_t::value_t& data) const;
 private:
 #if defined(USE_IMU_MPU6886_SPI)
     BUS_SPI _bus; //!< SPI bus interface,

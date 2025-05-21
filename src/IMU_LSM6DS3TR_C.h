@@ -54,10 +54,10 @@ public:
     virtual void setInterrupt(int userIrq) override;
     virtual xyz_int32_t readGyroRaw() override;
     virtual xyz_int32_t readAccRaw() override;
-    virtual gyroRPS_Acc_t readGyroRPS_Acc() override;
-    virtual gyroRPS_Acc_t getGyroRPS_Acc() const override;
+    virtual accGyroRPS_t readAccGyroRPS() override;
+    virtual accGyroRPS_t getAccGyroRPS() const override;
 private:
-    gyroRPS_Acc_t gyroRPS_AccFromRaw(const acc_gyro_data_t::value_t& data) const;
+    accGyroRPS_t accGyroRPSFromRaw(const acc_gyro_data_t::value_t& data) const;
 private:
 #if defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_LSM6DSOX_SPI)
     BUS_SPI _bus; //!< SPI bus interface,

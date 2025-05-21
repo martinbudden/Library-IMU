@@ -52,9 +52,9 @@ void loop()
     Serial.print(ahrs->getImuDataReadyCount());
 
     // get the gyro data read in the Interrupt Service Routine
-    const IMU_Base::gyroRPS_Acc_t gyroRPS_Acc =  imu->getGyroRPS_Acc();
+    const IMU_Base::accGyroRPS_t accGyroRPS =  imu->getAccGyroRPS();
 
-    const xyz_t gyroDPS =  gyroRPS_Acc.gyroRPS * IMU_Base::radiansToDegrees;
+    const xyz_t gyroDPS =  accGyroRPS.gyroRPS * IMU_Base::radiansToDegrees;
     Serial.println();
     Serial.print("gyroX:");
     Serial.print(gyroDPS.x, 1);
@@ -64,7 +64,7 @@ void loop()
     Serial.println(gyroDPS.z, 1);
 
     // take an accelerometer reading
-    const xyz_t acc =  gyroRPS_Acc.acc;
+    const xyz_t acc =  accGyroRPS.acc;
 
     Serial.print("accX:");
     Serial.print(acc.x);

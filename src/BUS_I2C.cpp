@@ -33,7 +33,7 @@ void BUS_I2C::dataReadyISR(unsigned int gpio, uint32_t events)
 INSTRUCTION_RAM_ATTR void BUS_I2C::dataReadyISR()
 {
     // reading the register resets the interrupt
-    bus->readRegister(bus->_readRegister, bus->_readBuf + SPI_BUFFER_SIZE, bus->_readLength - SPI_BUFFER_SIZE);
+    bus->readRegister(bus->_readRegister, bus->_readBuf + SPI_BUFFER_SIZE, bus->_readLength - SPI_BUFFER_SIZE); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 #if defined(USE_FREERTOS)
     bus->UNLOCK_IMU_DATA_READY_FROM_ISR();
 #endif

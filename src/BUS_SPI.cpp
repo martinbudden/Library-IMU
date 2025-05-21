@@ -2,6 +2,8 @@
 
 //#define MAP_CS_FOR_SPI // not got this working, it's probably not worth the bother
 
+#include <cassert>
+
 #if defined(FRAMEWORK_RPI_PICO)
 #include <hardware/spi.h>
 #include <pico/stdlib.h>
@@ -53,7 +55,7 @@ INSTRUCTION_RAM_ATTR void BUS_SPI::dataReadyISR()
     static_assert(false);
 #else
     // for the moment, just read the predefined register into the predefined read buffer
-    bus->readRegister(bus->_readRegister, bus->_readBuf + SPI_BUFFER_SIZE, bus->_readLength - SPI_BUFFER_SIZE);
+    bus->readRegister(bus->_readRegister, bus->_readBuf + SPI_BUFFER_SIZE, bus->_readLength - SPI_BUFFER_SIZE); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 #if defined(USE_FREERTOS)
     bus->UNLOCK_IMU_DATA_READY_FROM_ISR();
 #endif

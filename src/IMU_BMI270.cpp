@@ -353,26 +353,26 @@ IMU_Base::xyz_int32_t IMU_BMI270::readAccRaw()
 
 xyz_t IMU_BMI270::readGyroRPS()
 {
-    return readGyroRPS_Acc().gyroRPS;
+    return readAccGyroRPS().gyroRPS;
 }
 
 xyz_t IMU_BMI270::readGyroDPS()
 {
-    return readGyroRPS_Acc().gyroRPS * radiansToDegrees;
+    return readAccGyroRPS().gyroRPS * radiansToDegrees;
 }
 
 xyz_t IMU_BMI270::readAcc()
 {
-    return readGyroRPS_Acc().acc;
+    return readAccGyroRPS().acc;
 }
 
-IMU_Base::gyroRPS_Acc_t IMU_BMI270::readGyroRPS_Acc()
+IMU_Base::accGyroRPS_t IMU_BMI270::readAccGyroRPS()
 {
     i2cSemaphoreTake();
     _bus.readRegister(REG_ACC_X_L, &_spiAccGyroData.accGyro.data[0], sizeof(_spiAccGyroData.accGyro));
     i2cSemaphoreGive();
 
-    return gyroRPS_AccFromRaw(_spiAccGyroData.accGyro.value);
+    return accGyroRPSFromRaw(_spiAccGyroData.accGyro.value);
 }
 
 void IMU_BMI270::setInterrupt(int userIrq)
@@ -383,15 +383,15 @@ void IMU_BMI270::setInterrupt(int userIrq)
 /*!
 Return the gyroAcc data that was read in the ISR
 */
-IMU_Base::gyroRPS_Acc_t IMU_BMI270::getGyroRPS_Acc() const
+IMU_Base::accGyroRPS_t IMU_BMI270::getAccGyroRPS() const
 {
-    return gyroRPS_AccFromRaw(_spiAccGyroData.accGyro.value);
+    return accGyroRPSFromRaw(_spiAccGyroData.accGyro.value);
 }
 
-IMU_Base::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromRaw(const acc_gyro_data_t::value_t& data) const
+IMU_Base::accGyroRPS_t IMU_BMI270::accGyroRPSFromRaw(const acc_gyro_data_t::value_t& data) const
 {
 #if defined(IMU_BUILD_XPOS_YPOS_ZPOS)
-    return gyroRPS_Acc_t {
+    return accGyroRPS_t {
         .gyroRPS = {
             .x =  static_cast<float>(data.gyro_x - _gyroOffset.x) * _gyroResolutionRPS,
             .y =  static_cast<float>(data.gyro_y - _gyroOffset.y) * _gyroResolutionRPS,
@@ -404,7 +404,7 @@ IMU_Base::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromRaw(const acc_gyro_data_t::va
         }
     };
 #elif defined(IMU_BUILD_YPOS_XNEG_ZPOS)
-    return gyroRPS_Acc_t {
+    return accGyroRPS_t {
         .gyroRPS = {
             .x =  static_cast<float>(data.gyro_y - _gyroOffset.y) * _gyroResolutionRPS,
             .y = -static_cast<float>(data.gyro_x - _gyroOffset.x) * _gyroResolutionRPS,
@@ -417,7 +417,7 @@ IMU_Base::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromRaw(const acc_gyro_data_t::va
         }
     };
 #elif defined(IMU_BUILD_XNEG_YNEG_ZPOS)
-    return gyroRPS_Acc_t {
+    return accGyroRPS_t {
         .gyroRPS = {
             .x = -static_cast<float>(data.gyro_x - _gyroOffset.x) * _gyroResolutionRPS,
             .y = -static_cast<float>(data.gyro_y - _gyroOffset.y) * _gyroResolutionRPS,
@@ -430,7 +430,7 @@ IMU_Base::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromRaw(const acc_gyro_data_t::va
         }
     };
 #elif defined(IMU_BUILD_YNEG_XPOS_ZPOS)
-    return gyroRPS_Acc_t {
+    return accGyroRPS_t {
         .gyroRPS = {
             .x = -static_cast<float>(data.gyro_y - _gyroOffset.y) * _gyroResolutionRPS,
             .y =  static_cast<float>(data.gyro_x - _gyroOffset.x) * _gyroResolutionRPS,
@@ -443,7 +443,7 @@ IMU_Base::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromRaw(const acc_gyro_data_t::va
         }
     };
 #elif defined(IMU_BUILD_XPOS_ZPOS_YNEG)
-    return gyroRPS_Acc_t {
+    return accGyroRPS_t {
         .gyroRPS = {
             .x =  static_cast<float>(data.gyro_x - _gyroOffset.x) * _gyroResolutionRPS,
             .y =  static_cast<float>(data.gyro_z - _gyroOffset.z) * _gyroResolutionRPS,
@@ -457,7 +457,7 @@ IMU_Base::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromRaw(const acc_gyro_data_t::va
     };
 #else
     // Axis order mapping done at run-time
-    const gyroRPS_Acc_t gyroRPS_Acc {
+    const accGyroRPS_t accGyroRPS {
         .gyroRPS = {
             .x =  static_cast<float>(data.gyro_x - _gyroOffset.x) * _gyroResolutionRPS,
             .y =  static_cast<float>(data.gyro_y - _gyroOffset.y) * _gyroResolutionRPS,
@@ -471,73 +471,73 @@ IMU_Base::gyroRPS_Acc_t IMU_BMI270::gyroRPS_AccFromRaw(const acc_gyro_data_t::va
     };
     switch (_axisOrder) {
     case XPOS_YPOS_ZPOS:
-        return gyroRPS_Acc;
+        return accGyroRPS;
         break;
     case YNEG_XPOS_ZPOS:
-        return gyroRPS_Acc_t {
+        return accGyroRPS_t {
             .gyroRPS = {
-                .x = -gyroRPS_Acc.gyroRPS.y,
-                .y =  gyroRPS_Acc.gyroRPS.x,
-                .z =  gyroRPS_Acc.gyroRPS.z
+                .x = -accGyroRPS.gyroRPS.y,
+                .y =  accGyroRPS.gyroRPS.x,
+                .z =  accGyroRPS.gyroRPS.z
             },
             .acc = {
-                .x = -gyroRPS_Acc.acc.y,
-                .y =  gyroRPS_Acc.acc.x,
-                .z =  gyroRPS_Acc.acc.z
+                .x = -accGyroRPS.acc.y,
+                .y =  accGyroRPS.acc.x,
+                .z =  accGyroRPS.acc.z
             }
         };
         break;
     case XNEG_YNEG_ZPOS:
-        return gyroRPS_Acc_t {
+        return accGyroRPS_t {
             .gyroRPS = {
-                .x = -gyroRPS_Acc.gyroRPS.x,
-                .y = -gyroRPS_Acc.gyroRPS.y,
-                .z =  gyroRPS_Acc.gyroRPS.z
+                .x = -accGyroRPS.gyroRPS.x,
+                .y = -accGyroRPS.gyroRPS.y,
+                .z =  accGyroRPS.gyroRPS.z
             },
             .acc = {
-                .x = -gyroRPS_Acc.acc.x,
-                .y = -gyroRPS_Acc.acc.y,
-                .z =  gyroRPS_Acc.acc.z
+                .x = -accGyroRPS.acc.x,
+                .y = -accGyroRPS.acc.y,
+                .z =  accGyroRPS.acc.z
             }
         };
         break;
     case YPOS_XNEG_ZPOS:
-        return gyroRPS_Acc_t {
+        return accGyroRPS_t {
             .gyroRPS = {
-                .x =  gyroRPS_Acc.gyroRPS.y,
-                .y = -gyroRPS_Acc.gyroRPS.x,
-                .z =  gyroRPS_Acc.gyroRPS.z
+                .x =  accGyroRPS.gyroRPS.y,
+                .y = -accGyroRPS.gyroRPS.x,
+                .z =  accGyroRPS.gyroRPS.z
             },
             .acc = {
-                .x =  gyroRPS_Acc.acc.y,
-                .y = -gyroRPS_Acc.acc.x,
-                .z =  gyroRPS_Acc.acc.z
+                .x =  accGyroRPS.acc.y,
+                .y = -accGyroRPS.acc.x,
+                .z =  accGyroRPS.acc.z
             }
         };
         break;
     case XPOS_ZPOS_YNEG:
-        return gyroRPS_Acc_t {
+        return accGyroRPS_t {
             .gyroRPS = {
-                .x =  gyroRPS_Acc.gyroRPS.x,
-                .y =  gyroRPS_Acc.gyroRPS.z,
-                .z = -gyroRPS_Acc.gyroRPS.y
+                .x =  accGyroRPS.gyroRPS.x,
+                .y =  accGyroRPS.gyroRPS.z,
+                .z = -accGyroRPS.gyroRPS.y
             },
             .acc = {
-                .x = -gyroRPS_Acc.acc.x,
-                .y =  gyroRPS_Acc.acc.z,
-                .z = -gyroRPS_Acc.acc.y
+                .x = -accGyroRPS.acc.x,
+                .y =  accGyroRPS.acc.z,
+                .z = -accGyroRPS.acc.y
             }
         };
         break;
     default:
-        return gyroRPS_Acc_t {
-            .gyroRPS = mapAxes(gyroRPS_Acc.gyroRPS),
-            .acc = mapAxes(gyroRPS_Acc.acc)
+        return accGyroRPS_t {
+            .gyroRPS = mapAxes(accGyroRPS.gyroRPS),
+            .acc = mapAxes(accGyroRPS.acc)
         };
         break;
     } // end switch
 
-    return gyroRPS_Acc;
+    return accGyroRPS;
 #endif
 }
 

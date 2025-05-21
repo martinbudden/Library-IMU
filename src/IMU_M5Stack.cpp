@@ -118,9 +118,9 @@ xyz_t IMU_M5_STACK::readGyroDPS()
     return mapAxes(gyroDPS);
 }
 
-IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::readGyroRPS_Acc()
+IMU_Base::accGyroRPS_t IMU_M5_STACK::readAccGyroRPS()
 {
-    const gyroRPS_Acc_t gyroAcc {
+    const accGyroRPS_t gyroAcc {
         .gyroRPS = readGyroRPS(),
         .acc = readAcc()
     };
@@ -139,20 +139,20 @@ size_t IMU_M5_STACK::readFIFO_ToBuffer()
     return fifoCount / acc_temperature_gyro_data_t::DATA_SIZE;
 }
 
-IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::readFIFO_Item(size_t index)
+IMU_Base::accGyroRPS_t IMU_M5_STACK::readFIFO_Item(size_t index)
 {
     const acc_temperature_gyro_data_t* imu_data = reinterpret_cast<acc_temperature_gyro_data_t*>(&_fifoBuffer[0]); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
     const acc_temperature_gyro_data_t& imuData = imu_data[index]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    const gyroRPS_Acc_t gyroAcc = IMU_M5_STACK::gyroRPS_AccFromRaw(imuData);
+    const accGyroRPS_t gyroAcc = IMU_M5_STACK::accGyroRPSFromRaw(imuData);
 
     return gyroAcc;
 }
 
-IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::gyroRPS_AccFromRaw(const acc_temperature_gyro_data_t& data) const
+IMU_Base::accGyroRPS_t IMU_M5_STACK::accGyroRPSFromRaw(const acc_temperature_gyro_data_t& data) const
 {
 // NOLINTBEGIN(hicpp-signed-bitwise)
 #if defined(IMU_BUILD_XPOS_YPOS_ZPOS)
-    return gyroRPS_Acc_t {
+    return accGyroRPS_t {
         .gyroRPS = {
             .x =  static_cast<float>(static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - _gyroOffset.x) * _gyroResolutionRPS,
             .y =  static_cast<float>(static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - _gyroOffset.y) * _gyroResolutionRPS,
@@ -165,7 +165,7 @@ IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::gyroRPS_AccFromRaw(const acc_temperature_g
         }
     };
 #elif defined(IMU_BUILD_YPOS_XNEG_ZPOS)
-    return gyroRPS_Acc_t {
+    return accGyroRPS_t {
         .gyroRPS = {
             .x =  static_cast<float>(static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - _gyroOffset.y) * _gyroResolutionRPS,
             .y = -static_cast<float>(static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - _gyroOffset.x) * _gyroResolutionRPS,
@@ -178,7 +178,7 @@ IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::gyroRPS_AccFromRaw(const acc_temperature_g
         }
     };
 #elif defined(IMU_BUILD_XNEG_YNEG_ZPOS)
-    return gyroRPS_Acc_t {
+    return accGyroRPS_t {
         .gyroRPS = {
             .x = -static_cast<float>(static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - _gyroOffset.x) * _gyroResolutionRPS,
             .y = -static_cast<float>(static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - _gyroOffset.y) * _gyroResolutionRPS,
@@ -191,7 +191,7 @@ IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::gyroRPS_AccFromRaw(const acc_temperature_g
         }
     };
 #elif defined(IMU_BUILD_YNEG_XPOS_ZPOS)
-    return gyroRPS_Acc_t {
+    return accGyroRPS_t {
         .gyroRPS = {
             .x = -static_cast<float>(static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - _gyroOffset.y) * _gyroResolutionRPS,
             .y =  static_cast<float>(static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - _gyroOffset.x) * _gyroResolutionRPS,
@@ -204,7 +204,7 @@ IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::gyroRPS_AccFromRaw(const acc_temperature_g
         }
     };
 #elif defined(IMU_BUILD_XPOS_ZPOS_YNEG)
-    return gyroRPS_Acc_t {
+    return accGyroRPS_t {
         .gyroRPS = {
             .x =  static_cast<float>(static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - _gyroOffset.x) * _gyroResolutionRPS,
             .y =  static_cast<float>(static_cast<int16_t>((data.gyro_z_h << 8) | data.gyro_z_l) - _gyroOffset.z) * _gyroResolutionRPS,
@@ -218,7 +218,7 @@ IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::gyroRPS_AccFromRaw(const acc_temperature_g
     };
 #else
     // Axis order mapping done at run-time
-    const gyroRPS_Acc_t gyroRPS_Acc {
+    const accGyroRPS_t accGyroRPS {
         .gyroRPS = {
             .x =  static_cast<float>(static_cast<int16_t>((data.gyro_x_h << 8) | data.gyro_x_l) - _gyroOffset.x) * _gyroResolutionRPS,
             .y =  static_cast<float>(static_cast<int16_t>((data.gyro_y_h << 8) | data.gyro_y_l) - _gyroOffset.y) * _gyroResolutionRPS,
@@ -233,73 +233,73 @@ IMU_Base::gyroRPS_Acc_t IMU_M5_STACK::gyroRPS_AccFromRaw(const acc_temperature_g
 
     switch (_axisOrder) {
     case XPOS_YPOS_ZPOS:
-        return gyroRPS_Acc;
+        return accGyroRPS;
         break;
     case YNEG_XPOS_ZPOS:
-        return gyroRPS_Acc_t {
+        return accGyroRPS_t {
             .gyroRPS = {
-                .x = -gyroRPS_Acc.gyroRPS.y,
-                .y =  gyroRPS_Acc.gyroRPS.x,
-                .z =  gyroRPS_Acc.gyroRPS.z
+                .x = -accGyroRPS.gyroRPS.y,
+                .y =  accGyroRPS.gyroRPS.x,
+                .z =  accGyroRPS.gyroRPS.z
             },
             .acc = {
-                .x = -gyroRPS_Acc.acc.y,
-                .y =  gyroRPS_Acc.acc.x,
-                .z =  gyroRPS_Acc.acc.z
+                .x = -accGyroRPS.acc.y,
+                .y =  accGyroRPS.acc.x,
+                .z =  accGyroRPS.acc.z
             }
         };
         break;
     case XNEG_YNEG_ZPOS:
-        return gyroRPS_Acc_t {
+        return accGyroRPS_t {
             .gyroRPS = {
-                .x = -gyroRPS_Acc.gyroRPS.x,
-                .y = -gyroRPS_Acc.gyroRPS.y,
-                .z =  gyroRPS_Acc.gyroRPS.z
+                .x = -accGyroRPS.gyroRPS.x,
+                .y = -accGyroRPS.gyroRPS.y,
+                .z =  accGyroRPS.gyroRPS.z
             },
             .acc = {
-                .x = -gyroRPS_Acc.acc.x,
-                .y = -gyroRPS_Acc.acc.y,
-                .z =  gyroRPS_Acc.acc.z
+                .x = -accGyroRPS.acc.x,
+                .y = -accGyroRPS.acc.y,
+                .z =  accGyroRPS.acc.z
             }
         };
         break;
     case YPOS_XNEG_ZPOS:
-        return gyroRPS_Acc_t {
+        return accGyroRPS_t {
             .gyroRPS = {
-                .x =  gyroRPS_Acc.gyroRPS.y,
-                .y = -gyroRPS_Acc.gyroRPS.x,
-                .z =  gyroRPS_Acc.gyroRPS.z
+                .x =  accGyroRPS.gyroRPS.y,
+                .y = -accGyroRPS.gyroRPS.x,
+                .z =  accGyroRPS.gyroRPS.z
             },
             .acc = {
-                .x =  gyroRPS_Acc.acc.y,
-                .y = -gyroRPS_Acc.acc.x,
-                .z =  gyroRPS_Acc.acc.z
+                .x =  accGyroRPS.acc.y,
+                .y = -accGyroRPS.acc.x,
+                .z =  accGyroRPS.acc.z
             }
         };
         break;
     case XPOS_ZPOS_YNEG:
-        return gyroRPS_Acc_t {
+        return accGyroRPS_t {
             .gyroRPS = {
-                .x =  gyroRPS_Acc.gyroRPS.x,
-                .y =  gyroRPS_Acc.gyroRPS.z,
-                .z = -gyroRPS_Acc.gyroRPS.y
+                .x =  accGyroRPS.gyroRPS.x,
+                .y =  accGyroRPS.gyroRPS.z,
+                .z = -accGyroRPS.gyroRPS.y
             },
             .acc = {
-                .x = -gyroRPS_Acc.acc.x,
-                .y =  gyroRPS_Acc.acc.z,
-                .z = -gyroRPS_Acc.acc.y
+                .x = -accGyroRPS.acc.x,
+                .y =  accGyroRPS.acc.z,
+                .z = -accGyroRPS.acc.y
             }
         };
         break;
     default:
-        return gyroRPS_Acc_t {
-            .gyroRPS = mapAxes(gyroRPS_Acc.gyroRPS),
-            .acc = mapAxes(gyroRPS_Acc.acc)
+        return accGyroRPS_t {
+            .gyroRPS = mapAxes(accGyroRPS.gyroRPS),
+            .acc = mapAxes(accGyroRPS.acc)
         };
         break;
     } // end switch
 
-    return gyroRPS_Acc;
+    return accGyroRPS;
 #endif
 // NOLINTEND(hicpp-signed-bitwise)
 }

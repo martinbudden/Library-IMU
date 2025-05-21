@@ -59,10 +59,10 @@ public:
     virtual xyz_t readGyroRPS() override;
     virtual xyz_t readGyroDPS() override;
     virtual xyz_t readAcc() override;
-    virtual gyroRPS_Acc_t readGyroRPS_Acc() override;
-    virtual gyroRPS_Acc_t getGyroRPS_Acc() const override;
+    virtual accGyroRPS_t readAccGyroRPS() override;
+    virtual accGyroRPS_t getAccGyroRPS() const override;
 private:
-    gyroRPS_Acc_t gyroRPS_AccFromRaw(const acc_gyro_data_t::value_t& data) const;
+    accGyroRPS_t accGyroRPSFromRaw(const acc_gyro_data_t::value_t& data) const;
 private:
 #if defined(USE_IMU_BMI270_SPI)
     BUS_SPI _bus; //!< SPI bus interface,

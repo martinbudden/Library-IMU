@@ -21,7 +21,7 @@ Gyroscope readings can be returned as raw values, in RPS (Radians Per Second), o
 
 Accelerometer readings are returned in units of standard gravity (g - 9.80665 meters per second squared).
 
-The gyro and accelerometer can be read together using readGyroRPS_Acc. For typical IMUs this involves reading 12 bytes of data:
+The gyro and accelerometer can be read together using readAccGyroRPS. For typical IMUs this involves reading 12 bytes of data:
 if the IMU is read via a 10 MHz  SPI bus this takes approximately 10 microseconds,
 if the IMU is read via a 400 kHz I2C bus this takes approximately 270 microseconds.
 */
@@ -122,7 +122,7 @@ public:
         int32_t y;
         int32_t z;
     };
-    struct gyroRPS_Acc_t {
+    struct accGyroRPS_t {
         xyz_t gyroRPS;
         xyz_t acc;
     };
@@ -150,13 +150,13 @@ public:
     virtual xyz_t readGyroRPS();
     virtual xyz_t readGyroDPS();
     virtual xyz_t readAcc();
-    virtual gyroRPS_Acc_t readGyroRPS_Acc();
-    virtual gyroRPS_Acc_t getGyroRPS_Acc() const;
+    virtual accGyroRPS_t readAccGyroRPS();
+    virtual accGyroRPS_t getAccGyroRPS() const;
     virtual Quaternion readOrientation();
 
     // by default the FIFO is not enabled
     virtual size_t readFIFO_ToBuffer();
-    virtual gyroRPS_Acc_t readFIFO_Item(size_t index);
+    virtual accGyroRPS_t readFIFO_Item(size_t index);
     inline axis_order_t getAxisOrder() const { return _axisOrder; }
     static xyz_t mapAxes(const xyz_t& data, axis_order_t axisOrder);
     inline xyz_t mapAxes(const xyz_t& data) const { return mapAxes(data, _axisOrder); }
