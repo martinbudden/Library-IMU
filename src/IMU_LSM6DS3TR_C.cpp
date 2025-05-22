@@ -158,7 +158,6 @@ IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint32_t frequency, BUS
     IMU_Base(axisOrder),
     _bus(frequency, SPI_index, pins)
 {
-    static_assert(SPI_BUFFER_SIZE == static_cast<int>(BUS_SPI::SPI_BUFFER_SIZE));
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
     _dmaSpiRegister = REG_OUTX_L_G | BUS_SPI::READ_BIT;
@@ -187,6 +186,8 @@ int IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSens
 #endif
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
+
+    _bus.setImuRegister(REG_OUTX_L_G, reinterpret_cast<uint8_t*>(&_spiAccGyroData), sizeof(_spiAccGyroData));
 
     _bus.writeRegister(REG_CTRL3_C, SW_RESET); // software reset
     delayMs(100);
@@ -323,7 +324,8 @@ IMU_Base::xyz_int32_t IMU_LSM6DS3TR_C::readAccRaw()
 IMU_Base::accGyroRPS_t IMU_LSM6DS3TR_C::readAccGyroRPS()
 {
     i2cSemaphoreTake();
-    _bus.readRegister(REG_OUTX_L_G, &_spiAccGyroData.accGyro.data[0], sizeof(_spiAccGyroData.accGyro));
+    //_bus.readRegister(REG_OUTX_L_G, &_spiAccGyroData.accGyro.data[0], sizeof(_spiAccGyroData.accGyro));
+    _bus.readImuRegister();
     i2cSemaphoreGive();
 
     return accGyroRPSFromRaw(_spiAccGyroData.accGyro.value);
@@ -331,7 +333,7 @@ IMU_Base::accGyroRPS_t IMU_LSM6DS3TR_C::readAccGyroRPS()
 
 void IMU_LSM6DS3TR_C::setInterrupt(int userIrq)
 {
-    _bus.setInterrupt(userIrq, REG_OUTX_L_G, reinterpret_cast<uint8_t*>(&_spiAccGyroData), sizeof(_spiAccGyroData));
+    _bus.setInterrupt(userIrq);
 }
 
 /*!

@@ -30,9 +30,8 @@ public:
             int16_t acc_z;
         } value;
     };
-    enum { SPI_BUFFER_SIZE = 2};
     struct spi_acc_gyro_data_t {
-        std::array<uint8_t, SPI_BUFFER_SIZE> spiBuffer; // buffer for use when reading gyro by SPI
+        std::array<uint8_t, BUS_BASE::SPI_BUFFER_SIZE> spiBuffer; // buffer for use when reading gyro by SPI
         acc_gyro_data_t accGyro;
     };
 #pragma pack(pop)

@@ -63,7 +63,6 @@ void loop()
     Serial.print(" gyroZ:");
     Serial.println(gyroDPS.z, 1);
 
-    // take an accelerometer reading
     const xyz_t acc =  accGyroRPS.acc;
 
     Serial.print("accX:");

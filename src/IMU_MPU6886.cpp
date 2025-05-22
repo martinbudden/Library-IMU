@@ -100,7 +100,6 @@ IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::sp
     IMU_Base(axisOrder),
     _bus(frequency, SPI_index, pins)
 {
-    static_assert(SPI_BUFFER_SIZE == static_cast<int>(BUS_SPI::SPI_BUFFER_SIZE));
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_temperature_gyro_data_t) == acc_temperature_gyro_data_t::DATA_SIZE);
     static_assert(sizeof(acc_temperature_gyro_array_t) == acc_temperature_gyro_array_t::DATA_SIZE);
@@ -126,6 +125,8 @@ int IMU_MPU6886::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitiv
 #else
     (void)i2cMutex;
 #endif
+
+    _bus.setImuRegister(REG_GYRO_XOUT_H, reinterpret_cast<uint8_t*>(&_spiAccTemperatureGyroData), sizeof(_spiAccTemperatureGyroData));
 
     i2cSemaphoreTake();
 
@@ -284,6 +285,7 @@ IMU_Base::accGyroRPS_t IMU_MPU6886::readAccGyroRPS()
 {
     i2cSemaphoreTake();
     _bus.readRegister(REG_ACCEL_XOUT_H, &_spiAccTemperatureGyroData.accGyro.data[0], sizeof(_spiAccTemperatureGyroData.accGyro));
+    //_bus.readImuRegister();
     i2cSemaphoreGive();
 
     return accGyroRPSFromRaw(_spiAccTemperatureGyroData.accGyro.value);
@@ -291,7 +293,7 @@ IMU_Base::accGyroRPS_t IMU_MPU6886::readAccGyroRPS()
 
 void IMU_MPU6886::setInterrupt(int userIrq)
 {
-    _bus.setInterrupt(userIrq, REG_GYRO_XOUT_H, reinterpret_cast<uint8_t*>(&_spiAccTemperatureGyroData), sizeof(_spiAccTemperatureGyroData));
+    _bus.setInterrupt(userIrq);
 }
 
 /*!

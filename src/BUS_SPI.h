@@ -1,13 +1,6 @@
 #pragma once
 
-#include <array>
-#include <cstddef>
-#include <cstdint>
-
-#if defined(USE_FREERTOS)
-#include <freertos/FreeRTOS.h>
-#include <freertos/queue.h>
-#endif
+#include "BUS_BASE.h"
 
 #if defined(FRAMEWORK_RPI_PICO)
 #if defined(USE_IMU_SPI_DMA)
@@ -31,15 +24,9 @@ typedef struct spi_inst spi_inst_t;
 #endif
 
 
-class BUS_SPI {
+class BUS_SPI : public BUS_BASE {
 public:
     enum spi_index_t { SPI_INDEX_0, SPI_INDEX_1, SPI_INDEX_2, SPI_INDEX_3 };
-    enum { IRQ_NOT_SET = 0xFF };
-#if defined(FRAMEWORK_RPI_PICO)
-    enum { IRQ_LEVEL_LOW = 0x1U, IRQ_LEVEL_HIGH = 0x2U, IRQ_EDGE_FALL = 0x4U, IRQ_EDGE_RISE = 0x8U, IRQ_EDGE_CHANGE = 0x4U|0x8U };
-#else
-    enum { IRQ_LEVEL_LOW = 0x04, IRQ_LEVEL_HIGH = 0x05, IRQ_EDGE_FALL = 0x02, IRQ_EDGE_RISE = 0x01, IRQ_EDGE_CHANGE = 0x03 };
-#endif
     struct pins_t {
         uint8_t cs;
         uint8_t sck;
@@ -49,7 +36,6 @@ public:
         uint8_t irqLevel;
     };
     static constexpr uint8_t READ_BIT = 0x80;
-    enum { SPI_BUFFER_SIZE = 2};
 public:
 #if defined(USE_IMU_SPI_DMA)
     virtual ~BUS_SPI();
@@ -58,11 +44,14 @@ public:
     BUS_SPI(uint32_t frequency, spi_index_t SPI_index, uint8_t CS_pin);
     BUS_SPI(uint32_t frequency, uint8_t CS_pin) : BUS_SPI(frequency, SPI_INDEX_0, CS_pin) {}
 public:
-    void setInterrupt(int userIrq, uint8_t readRegister, uint8_t* readBuf, size_t readLength);
+    void configureDMA();
+    void setInterrupt(int userIrq);
+    void setImuRegister(uint8_t imuRegister, uint8_t* readBuf, size_t readLength);
+    bool readImuRegister();
+    bool readImuRegisterDMA(); // for testing DMA
     uint8_t readRegister(uint8_t reg) const;
     uint8_t readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const;
     bool readRegister(uint8_t reg, uint8_t* data, size_t length) const;
-    bool readRegisterDMA(uint8_t reg, uint8_t* data, size_t length); // for testing DMA
     bool readBytes(uint8_t* data, size_t length) const;
     bool readBytesWithTimeout(uint8_t* data, size_t length, uint32_t timeoutMs) const;
     uint8_t writeRegister(uint8_t reg, uint8_t data);
@@ -74,19 +63,15 @@ private:
     uint32_t _frequency {1000000};
     spi_index_t _SPI_index {};
     pins_t _pins;
-    uint8_t _readRegister {};
-    uint8_t* _readBuf {};
-    size_t _readLength {};
-    int _userIrq {0};
 #if defined(FRAMEWORK_RPI_PICO)
     static void dataReadyISR(unsigned int gpio, uint32_t events);
     spi_inst_t* _spi;
-    //mutable std::array<uint8_t, 256> _writeReadBuf {};
+    mutable std::array<uint8_t, 256> _writeReadBuf {};
 #if defined(USE_IMU_SPI_DMA)
-    const uint32_t _dmaRx;
-    const uint32_t _dmaTx;
-    dma_channel_config _dmaRxConfig {};
-    dma_channel_config _dmaTxConfig {};
+    uint32_t _dmaRxChannel {};
+    uint32_t _dmaTxChannel {};
+    dma_channel_config _dmaRxChannelConfig {};
+    dma_channel_config _dmaTxChannelConfig {};
 #endif
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_TEST)
@@ -96,14 +81,5 @@ private:
     SPIClass& _spi;
     volatile uint32_t* _csOut {};
     uint32_t _csBit {};
-#endif
-#if defined(USE_FREERTOS)
-    QueueHandle_t _imuDataReadyQueue;
-    uint32_t _imuDataReadyQueueItem;
-public:
-    inline void UNLOCK_IMU_DATA_READY_FROM_ISR() const { xQueueSendFromISR(_imuDataReadyQueue, &_imuDataReadyQueueItem, nullptr); }
-#else
-public:
-    inline void UNLOCK_IMU_DATA_READY_FROM_ISR() const {}
 #endif
 };

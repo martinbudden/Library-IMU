@@ -1,8 +1,8 @@
 #pragma once
 
+#include "BUS_BASE.h"
+
 #include <Quaternion.h>
-#include <array>
-#include <cstdint>
 
 #if defined(I2C_MUTEX_REQUIRED)
 #if defined(USE_FREERTOS)

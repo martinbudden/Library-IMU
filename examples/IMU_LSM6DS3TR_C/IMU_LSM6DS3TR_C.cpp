@@ -5,6 +5,7 @@
 #endif
 
 static IMU_Base* imu;
+int ret;
 
 void setup()
 {
@@ -29,15 +30,26 @@ void setup()
 #endif
 #endif
     imu = &imuStatic;
+
+    delay(1000);
+    Serial.println("\r\n****Ready****\r\n");
+
     // initialize the IMU
-    imu->init();
+    ret = imu->init();
+    Serial.print("imuInit:");
+    Serial.println(ret);
 }
 
 void loop()
 {
-    // take a gyro reading
-    const xyz_t gyroDPS =  imu->readGyroDPS();
+    // take an IMU reading
+    const IMU_Base::accGyroRPS_t accGyroRPS =  imu->readAccGyroRPS();
 
+    // convert the gyro radians per second value to degrees per second
+    const xyz_t gyroDPS =  accGyroRPS.gyroRPS * IMU_Base::radiansToDegrees;
+
+    Serial.print("imuInit:");
+    Serial.println(ret);
     Serial.println();
     Serial.print("gyroX:");
     Serial.print(gyroDPS.x, 1);
@@ -46,8 +58,8 @@ void loop()
     Serial.print(" gyroZ:");
     Serial.println(gyroDPS.z, 1);
 
-    // take an accelerometer reading
-    const xyz_t acc =  imu->readAcc();
+    // get the acc part of the accGyro reading
+    const xyz_t acc =  accGyroRPS.acc;
 
     Serial.print("accX:");
     Serial.print(acc.x);

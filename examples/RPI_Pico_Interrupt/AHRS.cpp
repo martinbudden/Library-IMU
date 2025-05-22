@@ -16,7 +16,7 @@ void AHRS::imuDataReadyISR()
     // clear the interrupt
     irq_clear(ahrs->_userIrq);
     // unlock the data ready mutex
-    ahrs->UNLOCK_IMU_DATA_READY();
+    ahrs->UNLOCK_IMU_DATA_READY_FROM_ISR();
 }
 
 AHRS::~AHRS()
@@ -33,11 +33,11 @@ AHRS::AHRS(IMU_Base& imu) :
 
     enum { PANIC_IF_NONE_AVAILABLE = true };
     _userIrq = user_irq_claim_unused(PANIC_IF_NONE_AVAILABLE); // NOLINT(cppcoreguidelines-prefer-member-initializer)
-    irq_set_enabled(_userIrq, true);
 
     enum { IRQ_PRIORITY = 128 };
     //irq_add_shared_handler(_userIrq, &imuDataReadyISR, IRQ_PRIORITY);
     irq_set_exclusive_handler(_userIrq,  &imuDataReadyISR);
 
     _IMU.setInterrupt(_userIrq);
+    irq_set_enabled(_userIrq, true);
 }

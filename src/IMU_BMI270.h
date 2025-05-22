@@ -32,9 +32,8 @@ public:
             int16_t gyro_z;
         } value;
     };
-    enum { SPI_BUFFER_SIZE = 2};
     struct spi_acc_gyro_data_t {
-        std::array<uint8_t, SPI_BUFFER_SIZE> spiBuffer; // buffer for use when reading gyro by SPI
+        std::array<uint8_t, BUS_BASE::SPI_BUFFER_SIZE> spiBuffer; // buffer for use when reading gyro by SPI
         acc_gyro_data_t accGyro;
     };
 #pragma pack(pop)
@@ -51,7 +50,7 @@ public:
 public:
     virtual int init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex) override;
     void loadConfigurationData();
-    void UNLOCK_IMU_DATA_READY() { _bus.UNLOCK_IMU_DATA_READY_FROM_ISR(); } // for debugging
+    //void UNLOCK_IMU_DATA_READY_FROM_ISR() { _bus.UNLOCK_IMU_DATA_READY_FROM_ISR(); } // for debugging
     virtual void setInterrupt(int userIrq) override;
     virtual xyz_int32_t readGyroRaw() override;
     virtual xyz_int32_t readAccRaw() override;
