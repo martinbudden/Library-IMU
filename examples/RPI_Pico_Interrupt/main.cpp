@@ -15,6 +15,8 @@ static constexpr uint8_t IMU_SPI_IRQ_PIN=20;
 static constexpr uint8_t IMU_SPI_IRQ_LEVEL = BUS_SPI::IRQ_LEVEL_HIGH;
 static IMU_Base* imu;
 
+#define INTERRUPT_DRIVEN
+
 void setup()
 {
     Serial.begin(115200);
@@ -36,15 +38,19 @@ void setup()
 
     // initialize the IMU
     imu->init();
+#if defined(INTERRUPT_DRIVEN)
     imu->setInterruptDriven();
+#endif
 }
 
 void loop()
 {
     // wait for the IMU data ready interrupt
-    //imu->readAccGyroRPS();
-    //imu->UNLOCK_IMU_DATA_READY_FROM_ISR();
+#if defined(INTERRUPT_DRIVEN)
     imu->LOCK_IMU_DATA_READY();
+#else
+    imu->readAccGyroRPS();
+#endif
 
     //gpio_put(PICO_DEFAULT_LED_PIN, 0);
     Serial.println();

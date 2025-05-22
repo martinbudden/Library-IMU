@@ -25,4 +25,5 @@ The Arduino Framework and the Raspberry Pi Pico SDK Framework are supported.
 
 ## Dependencies
 
-This library uses the [VectorQuaternionMatrix library](https://github.com/martinbudden/Library-VectorQuaternionMatrix) for its `xyz_t`(3D vector) and `Quaternion` classes.
+This library uses the [VectorQuaternionMatrix library](https://github.com/martinbudden/Library-VectorQuaternionMatrix)
+ for its `xyz_t`(3D vector) and `Quaternion` classes.

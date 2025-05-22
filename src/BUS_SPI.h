@@ -68,6 +68,7 @@ private:
     spi_inst_t* _spi;
     mutable std::array<uint8_t, 256> _writeReadBuf {};
 #if defined(USE_IMU_SPI_DMA)
+    static void dmaRxCompleteISR();
     uint32_t _dmaRxChannel {};
     uint32_t _dmaTxChannel {};
     dma_channel_config _dmaRxChannelConfig {};

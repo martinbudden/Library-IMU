@@ -21,47 +21,7 @@
 #endif
 
 
-BUS_SPI* BUS_SPI::bus {nullptr};
-
-/*!
-Data ready interrupt service routine (ISR)
-
-Currently support only one interrupt, but could index action off gpio pin
-*/
-#if defined(FRAMEWORK_RPI_PICO)
-void BUS_SPI::dataReadyISR(unsigned int gpio, uint32_t events)
-{
-    // reading the register resets the interrupt
-    //gpio_put(PICO_DEFAULT_LED_PIN, 1);
-#if defined(USE_IMU_SPI_DMA)
-    // _dmaTxChannel configuration hasn't changed
-    const int start = SPI_BUFFER_SIZE - 1;
-    dma_channel_configure(bus->_dmaRxChannel, &bus->_dmaRxChannelConfig,
-                          bus->_readBuf + start, // destination, write SPI data to data
-                          &spi_get_hw(bus->_spi)->dr, // source, read data from SPI
-                          bus->_readLength - start, // element count (each element is 8 bits)
-                          false); // don't start yet
-    dma_start_channel_mask((1u << bus->_dmaTxChannel) | (1u << bus->_dmaRxChannel));
-    // wait for rx to complete
-    dma_channel_wait_for_finish_blocking(bus->_dmaRxChannel);
-#else
-    bus->readImuRegister();
-#endif
-    bus->UNLOCK_IMU_DATA_READY_FROM_ISR();
-}
-#else
-INSTRUCTION_RAM_ATTR void BUS_SPI::dataReadyISR()
-{
-#if defined(USE_IMU_SPI_DMA)
-    static_assert(false); // assert false until this is implemented
-#else
-    // for the moment, just read the predefined register into the predefined read buffer
-    bus->readImuRegister();
-    bus->UNLOCK_IMU_DATA_READY_FROM_ISR();
-#endif
-}
-#endif
-
+BUS_SPI* BUS_SPI::bus {nullptr}; // copy of this for use in ISRs
 
 #if defined(FRAMEWORK_RPI_PICO)
 static inline void cs_select(uint8_t CS_pin) {
@@ -83,14 +43,60 @@ static inline void cs_deselect(uint8_t CS_pin) {
     asm volatile("nop \n nop \n nop");
 #endif
 }
-#endif // FRAMEWORK_RPI_PICO
-
+#else
 #define CS_LOW() ({*_csOut &= ~_csBit;}) // NOLINT(cppcoreguidelines-macro-usage)
 #define CS_HIGH() ({*_csOut |= _csBit;}) // NOLINT(cppcoreguidelines-macro-usage)
 //#define CS_LOW() ({digitalWrite(_pins.cs, LOW);})
 //#define CS_HIGH() ({digitalWrite(_pins.cs, HIGH);})
+#endif // FRAMEWORK
 
+/*!
+Data ready interrupt service routine (ISR)
 
+Currently support only one interrupt, but could index action off gpio pin
+*/
+#if defined(FRAMEWORK_RPI_PICO)
+void BUS_SPI::dataReadyISR(unsigned int gpio, uint32_t events)
+{
+    // reading the register resets the interrupt
+    //gpio_put(PICO_DEFAULT_LED_PIN, 1);
+#if defined(USE_IMU_SPI_DMA_IN_ISR)
+    // data ready signalled in dmaRxCompleteISR
+    const int start = SPI_BUFFER_SIZE - 1;
+    enum { DONT_START = false };
+    dma_channel_set_trans_count(bus->_dmaTxChannel, bus->_readLength - start, DONT_START);
+    dma_channel_set_trans_count(bus->_dmaRxChannel, bus->_readLength - start, DONT_START);
+    dma_channel_set_write_addr(bus->_dmaRxChannel, bus->_readBuf + start, DONT_START);
+    cs_select(bus->_pins.cs);
+    dma_start_channel_mask((1u << bus->_dmaTxChannel) | (1u << bus->_dmaRxChannel));
+    // wait for rx to complete
+    dma_channel_wait_for_finish_blocking(bus->_dmaRxChannel);
+    cs_deselect(bus->_pins.cs);
+#else
+    bus->readImuRegisterDMA();
+    bus->UNLOCK_IMU_DATA_READY_FROM_ISR();
+#endif
+}
+
+void BUS_SPI::dmaRxCompleteISR()
+{
+    //gpio_put(PICO_DEFAULT_LED_PIN, 1);
+    dma_channel_acknowledge_irq0(bus->_dmaRxChannel);
+    //cs_deselect(bus->_pins.cs);
+    bus->UNLOCK_IMU_DATA_READY_FROM_ISR();
+}
+#else
+INSTRUCTION_RAM_ATTR void BUS_SPI::dataReadyISR()
+{
+#if defined(USE_IMU_SPI_DMA)
+    static_assert(false); // assert false until this is implemented
+#else
+    // for the moment, just read the predefined register into the predefined read buffer
+    bus->readImuRegister();
+    bus->UNLOCK_IMU_DATA_READY_FROM_ISR();
+#endif
+}
+#endif
 
 #if defined(USE_IMU_SPI_DMA)
 BUS_SPI::~BUS_SPI()
@@ -181,7 +187,9 @@ void BUS_SPI::configureDMA()
 {
 #if defined(USE_IMU_SPI_DMA)
 #if defined(FRAMEWORK_RPI_PICO)
+    enum { DONT_START = false };
     const int start = SPI_BUFFER_SIZE - 1;
+
     // DMA transmit channel, writes value of IMU register to SPI
     _dmaTxChannel = dma_claim_unused_channel(true);
     _dmaTxChannelConfig = dma_channel_get_default_config(_dmaTxChannel);
@@ -189,11 +197,12 @@ void BUS_SPI::configureDMA()
     channel_config_set_dreq(&_dmaTxChannelConfig, spi_get_dreq(_spi, true));
     channel_config_set_write_increment(&_dmaTxChannelConfig, false); // always write to SPI data register
     channel_config_set_read_increment(&_dmaTxChannelConfig, false); // don't increment, we value of IMU register each time
+    channel_config_set_irq_quiet(&_dmaTxChannelConfig, true); // no IRQs on transmit channel
     dma_channel_configure(_dmaTxChannel, &_dmaTxChannelConfig,
                         &spi_get_hw(_spi)->dr, // destination, write data to SPI data register
                         &_imuRegister, // source, send the value of the IMU register we want to read
                         _readLength - start, // number of bytes to read (each element is DMA_SIZE_8, ie 8 bits)
-                        false); // don't start yet
+                        DONT_START); // don't start yet
 
     // DMA receive channel, reads from SPI to _readBuf
     _dmaRxChannel = dma_claim_unused_channel(true);
@@ -202,11 +211,19 @@ void BUS_SPI::configureDMA()
     channel_config_set_dreq(&_dmaRxChannelConfig, spi_get_dreq(_spi, false));
     channel_config_set_write_increment(&_dmaRxChannelConfig, true);
     channel_config_set_read_increment(&_dmaRxChannelConfig, false); // always read from SPI data register
+#if defined(USE_IMU_SPI_DMA_IN_ISR)
+    channel_config_set_irq_quiet(&_dmaRxChannelConfig, false);
+    dma_channel_set_irq0_enabled(_dmaRxChannel, true);
+    irq_set_exclusive_handler(DMA_IRQ_0, dmaRxCompleteISR);
+    irq_set_enabled(DMA_IRQ_0, true);
+#else
+    channel_config_set_irq_quiet(&_dmaRxChannelConfig, true);
+#endif
     dma_channel_configure(_dmaRxChannel, &_dmaRxChannelConfig,
                         _readBuf + start, // destination, write data to readBuf
                         &spi_get_hw(_spi)->dr, // source, read data from SPI data register
                         _readLength - start, // number of bytes to read (each element is DMA_SIZE_8, ie 8 bits)
-                        false); // don't start yet
+                        DONT_START); // don't start yet
     //dma_timer_set_fraction( !!TODO, do we need to do this?
 #endif // FRAMEWORK_RPI_PICO
 #endif // USE_IMU_SPI_DMA
@@ -227,12 +244,6 @@ This routine sets the GPIO IRQ pin to input an attaches the dataReadyISR to be t
 */
 void BUS_SPI::setInterruptDriven()
 {
-//dma_channel_set_irq0_enabled(channel, enabled);
-//dma_channel_acknowledge_irq0(channel)
-//dma_channel_get_irq0_status (uint channel)
-//dma_channel_set_read_addr
-//dma_channel_set_write_addr
-//dma_channel_set_trans_count
     assert(_pins.irq != IRQ_NOT_SET);
 
 #if defined(USE_ARDUINO_ESP32)
@@ -280,19 +291,32 @@ uint8_t BUS_SPI::readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const
 
 bool BUS_SPI::readImuRegisterDMA()
 {
+//dma_channel_set_irq0_enabled(channel, enabled);
+//dma_channel_acknowledge_irq0(channel)
+//dma_channel_get_irq0_status (uint channel)
+//dma_channel_set_read_addr
+//dma_channel_set_write_addr
+//dma_channel_set_trans_count
 #if defined(USE_IMU_SPI_DMA)
 #if defined(FRAMEWORK_RPI_PICO)
+    //gpio_put(PICO_DEFAULT_LED_PIN, 1);
     const int start = SPI_BUFFER_SIZE - 1;
+    enum { DONT_START = false };
+    dma_channel_set_trans_count(_dmaTxChannel, _readLength - start, DONT_START);
+    dma_channel_set_trans_count(_dmaRxChannel, _readLength - start, DONT_START);
+    dma_channel_set_write_addr(_dmaRxChannel, _readBuf + start, DONT_START);
+#if 0
     dma_channel_configure(_dmaTxChannel, &_dmaTxChannelConfig,
                         &spi_get_hw(_spi)->dr, // destination, write data to SPI data register
                         &_imuRegister, // source, send the value of the IMU register we want to read
                         _readLength - start, // number of bytes to read (each element is DMA_SIZE_8, ie 8 bits)
-                        false); // don't start yet
+                        DONT_START); // don't start yet
     dma_channel_configure(_dmaRxChannel, &_dmaRxChannelConfig,
                           _readBuf + start, // destination, write SPI data to data
                           &spi_get_hw(_spi)->dr, // source, read data from SPI
                           _readLength - start, // element count (each element is 8 bits)
-                          false); // don't start yet
+                          DONT_START); // don't start yet
+#endif
     cs_select(_pins.cs);
     dma_start_channel_mask((1u << _dmaTxChannel) | (1u << _dmaRxChannel));
     // wait for rx to complete

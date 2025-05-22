@@ -326,6 +326,7 @@ IMU_Base::accGyroRPS_t IMU_LSM6DS3TR_C::readAccGyroRPS()
     i2cSemaphoreTake();
     //_bus.readRegister(REG_OUTX_L_G, &_spiAccGyroData.accGyro.data[0], sizeof(_spiAccGyroData.accGyro));
     _bus.readImuRegister();
+    //_bus.readImuRegisterDMA();
     i2cSemaphoreGive();
 
     return accGyroRPSFromRaw(_spiAccGyroData.accGyro.value);
