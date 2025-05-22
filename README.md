@@ -6,11 +6,11 @@ The following IMUs are currently implemented:
 
 | IMU                                                                                  | ID          | SPI Build Flag            |
 | -------------------------------------------------------------------------------------| ----------- | ------------------------- |
-| [Bosch BMI270](https://www.bosch-sensortec.com/products/motion-sensors/imus/bmi270/) | BMI270      | `USE_IMU_BMI270_SPI`      |
-| [CEVA BNO085](https://www.ceva-ip.com/product/bno-9-axis-imu/)                       | BNO085      | `USE_IMU_BNO085_SPI`      |
-| [ST LSM6DS3TR-C](https://www.st.com/en/mems-and-sensors/lsm6ds3tr-c.html)            | LSM6DS3TR_C | `USE_IMU_LSM6DS3TR_C_SPI` |
-| [ST ISM330DHCX](https://www.st.com/en/mems-and-sensors/ism330dhcx.html)              | ISM330DHCX  | `USE_IMU_ISM330DHCX_SPI`  |
-| [ST LSM6DSOX](https://www.st.com/en/mems-and-sensors/lsm6dsox.html)                  | LSM6DSOX    | `USE_LSM6DSOX_SPI`        |
+| Bosch [BMI270](https://www.bosch-sensortec.com/products/motion-sensors/imus/bmi270/) | BMI270      | `USE_IMU_BMI270_SPI`      |
+| CEVA [BNO085](https://www.ceva-ip.com/product/bno-9-axis-imu/)                       | BNO085      | `USE_IMU_BNO085_SPI`      |
+| ST [LSM6DS3TR-C](https://www.st.com/en/mems-and-sensors/lsm6ds3tr-c.html)            | LSM6DS3TR_C | `USE_IMU_LSM6DS3TR_C_SPI` |
+| ST [ISM330DHCX](https://www.st.com/en/mems-and-sensors/ism330dhcx.html)              | ISM330DHCX  | `USE_IMU_ISM330DHCX_SPI`  |
+| ST [LSM6DSOX](https://www.st.com/en/mems-and-sensors/lsm6dsox.html)                  | LSM6DSOX    | `USE_IMU_LSM6DSOX_SPI`        |
 | InvenSense MPU-6886                                                                  | MPU6886     | `USE_IMU_MPU6886_SPI`     |
 
 The LSM6DS3TR-C, ISM330DHCX, and LSM6DSOX are broadly compatible and share the same driver.

@@ -36,7 +36,7 @@ public:
     };
 #pragma pack(pop)
 public:
-#if defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_LSM6DSOX_SPI)
+#if defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_IMU_LSM6DSOX_SPI)
     // SPI constructor
     IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_index_t SPI_index, const BUS_SPI::pins_t& pins);
 #else
@@ -58,7 +58,7 @@ public:
 private:
     accGyroRPS_t accGyroRPSFromRaw(const acc_gyro_data_t::value_t& data) const;
 private:
-#if defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_LSM6DSOX_SPI)
+#if defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_IMU_LSM6DSOX_SPI)
     BUS_SPI _bus; //!< SPI bus interface,
 #else
     BUS_I2C _bus; //!< I2C bus interface

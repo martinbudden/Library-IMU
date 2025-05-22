@@ -153,7 +153,7 @@ constexpr uint8_t REG_OUTZ_H_ACC            = 0x2D;
 /*!
 Gyroscope data rates up to 6.4 kHz, accelerometer up to 1.6 kHz
 */
-#if defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_LSM6DSOX_SPI)
+#if defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_IMU_LSM6DSOX_SPI)
 IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_index_t SPI_index, const BUS_SPI::pins_t& pins) :
     IMU_Base(axisOrder, _bus),
     _bus(frequency, SPI_index, pins)
@@ -210,7 +210,7 @@ int IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSens
     delayMs(1);
     _bus.writeRegister(REG_CTRL3_C, BDU | IF_INC); // Block Data Update and automatically increment registers when read via serial interface (I2C or SPI)
     delayMs(1);
-#if defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_LSM6DSOX_SPI)
+#if defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_IMU_LSM6DSOX_SPI)
     _bus.writeRegister(REG_CTRL4_C, LPF1_SEL_G | I2C_DISABLE);
 #else
     _bus.writeRegister(REG_CTRL4_C, LPF1_SEL_G); // enable gyro LPF
