@@ -36,6 +36,7 @@
         "picotool",
         "pioenvs",
         "piolibdeps",
+        "POCI",
         "raspberrypi",
         "rpipico",
         "seeed",

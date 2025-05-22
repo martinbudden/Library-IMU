@@ -25,15 +25,15 @@ void BUS_I2C::dataReadyISR(unsigned int gpio, uint32_t events)
 {
     //gpio_put(PICO_DEFAULT_LED_PIN, 1);
     // reading the IMU register resets the interrupt
-    bus->readImuRegister();
-    bus->UNLOCK_IMU_DATA_READY_FROM_ISR();
+    bus->readDeviceRegister();
+    bus->SIGNAL_DATA_READY_FROM_ISR();
 }
 #else
 INSTRUCTION_RAM_ATTR void BUS_I2C::dataReadyISR()
 {
     // reading the IMU register resets the interrupt
-    bus->readImuRegister();
-    bus->UNLOCK_IMU_DATA_READY_FROM_ISR();
+    bus->readDeviceRegister();
+    bus->SIGNAL_DATA_READY_FROM_ISR();
 }
 #endif
 
@@ -52,6 +52,11 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_t I2C_index, const pins_t& pins)
     bus = this;
 
 #if defined(FRAMEWORK_RPI_PICO)
+    static_assert(static_cast<int>(IRQ_LEVEL_LOW) == GPIO_IRQ_LEVEL_LOW);
+    static_assert(static_cast<int>(IRQ_LEVEL_HIGH) == GPIO_IRQ_LEVEL_HIGH);
+    static_assert(static_cast<int>(IRQ_EDGE_FALL) == GPIO_IRQ_EDGE_FALL);
+    static_assert(static_cast<int>(IRQ_EDGE_RISE) == GPIO_IRQ_EDGE_RISE);
+
     i2c_init(_I2C, 400 * 1000);
     gpio_set_function(_pins.sda, GPIO_FUNC_I2C); // PICO_DEFAULT_I2C_SDA_PIN is GP4
     gpio_set_function(_pins.scl, GPIO_FUNC_I2C); // PICO_DEFAULT_I2C_SCL_PIN is GP5
@@ -59,7 +64,9 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_t I2C_index, const pins_t& pins)
     gpio_pull_up(_pins.scl);
     // Make the I2C pins available to pictooof
     bi_decl(bi_2pins_with_func(_pins.sda, _pins.scl, GPIO_FUNC_I2C));
+
 #elif defined(FRAMEWORK_ESPIDF)
+
     i2c_master_bus_config_t i2c_mst_config = {
         .i2c_port = 0,//TEST_I2C_PORT,
         .sda_io_num = static_cast<gpio_num_t>(_pins.sda),
@@ -87,32 +94,25 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_t I2C_index, const pins_t& pins)
     };
 
     ESP_ERROR_CHECK(i2c_master_bus_add_device(_bus_handle, &dev_cfg, &_dev_handle));
+
 #elif defined(FRAMEWORK_TEST)
+
 #else // defaults to FRAMEWORK_ARDUINO
+
 #if defined(USE_ARDUINO_ESP32) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)// ESP32, ARDUINO_ARCH_ESP32 defined in platform.txt
     _wire.begin(_pins.sda, _pins.scl);
 #else
     _wire.begin();
 #endif
-#endif
-}
 
-BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_t I2C_index)
-#if defined(FRAMEWORK_RPI_PICO)
-    : BUS_I2C(I2C_address, I2C_index,
-        I2C_index == I2C_INDEX_0 ? pins_t{.sda=PICO_DEFAULT_I2C_SDA_PIN, .scl=PICO_DEFAULT_I2C_SCL_PIN, .irq=IRQ_NOT_SET, .irqLevel=0} : pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET, .irqLevel=0})
-#elif defined(FRAMEWORK_ESPIDF)
-    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET, .irqLevel=0})
-#elif defined(FRAMEWORK_TEST)
-    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET, .irqLevel=0})
-#else // defaults to FRAMEWORK_ARDUINO
-#if defined(USE_ARDUINO_ESP32) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)// ESP32, ARDUINO_ARCH_ESP32 defined in platform.txt
-    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET, .irqLevel=0})
-#else
-    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET, .irqLevel=0})
+#if defined(USE_FREERTOS)
+    _dataReadyQueue = xQueueCreateStatic(IMU_DATA_READY_QUEUE_LENGTH, sizeof(_dataReadyQueueItem), &_dataReadyQueueStorageArea[0], &_dataReadyQueueStatic);
+    configASSERT(_dataReadyQueue);
+    const UBaseType_t messageCount = uxQueueMessagesWaiting(_dataReadyQueue);
+    assert(messageCount == 0);
 #endif
-#endif
-{
+
+#endif // FRAMEWORK
 }
 
 #if !defined(FRAMEWORK_RPI_PICO) && !defined(FRAMEWORK_ESPIDF) && !defined(FRAMEWORK_TEST)
@@ -124,29 +124,43 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, TwoWire& wire, const pins_t& pins) :
 {
     bus = this;
 
-#if defined(FRAMEWORK_RPI_PICO)
-    static_assert(static_cast<int>(IRQ_LEVEL_LOW) == GPIO_IRQ_LEVEL_LOW);
-    static_assert(static_cast<int>(IRQ_LEVEL_HIGH) == GPIO_IRQ_LEVEL_HIGH);
-    static_assert(static_cast<int>(IRQ_EDGE_FALL) == GPIO_IRQ_EDGE_FALL);
-    static_assert(static_cast<int>(IRQ_EDGE_RISE) == GPIO_IRQ_EDGE_RISE);
-#endif
-
 #if defined(USE_ARDUINO_ESP32) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)// ESP32, ARDUINO_ARCH_ESP32 defined in platform.txt
     _wire.begin(_pins.sda, _pins.scl);
 #else
     _wire.begin();
 #endif
+#if defined(USE_FREERTOS)
+    _dataReadyQueue = xQueueCreateStatic(IMU_DATA_READY_QUEUE_LENGTH, sizeof(_dataReadyQueueItem), &_dataReadyQueueStorageArea[0], &_dataReadyQueueStatic);
+    configASSERT(_dataReadyQueue);
+    const UBaseType_t messageCount = uxQueueMessagesWaiting(_dataReadyQueue);
+    assert(messageCount == 0);
+#endif
 }
 #endif
 
-void BUS_I2C::setImuRegister(uint8_t imuRegister, uint8_t* readBuf, size_t readLength)
+BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_t I2C_index)
+#if defined(FRAMEWORK_RPI_PICO)
+    : BUS_I2C(I2C_address, I2C_index,
+        I2C_index == I2C_INDEX_0 ? pins_t{.sda=PICO_DEFAULT_I2C_SDA_PIN, .scl=PICO_DEFAULT_I2C_SCL_PIN, .irq=IRQ_NOT_SET, .irqLevel=0} : pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET, .irqLevel=0})
+#elif defined(FRAMEWORK_ESPIDF)
+    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET, .irqLevel=0})
+#elif defined(FRAMEWORK_TEST)
+    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET, .irqLevel=0})
+#else // defaults to FRAMEWORK_ARDUINO
+    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET, .irqLevel=0})
+#endif // FRAMEWORK
 {
-    _imuRegister = imuRegister;
+}
+
+
+void BUS_I2C::setDeviceRegister(uint8_t deviceRegister, uint8_t* readBuf, size_t readLength)
+{
+    _deviceRegister = deviceRegister;
     _readBuf = readBuf;
     _readLength = readLength;
 }
 
-void BUS_I2C::setInterruptDriven()
+void BUS_I2C::setInterruptDriven() // NOLINT(readability-make-member-function-const)
 {
     assert(_pins.irq != IRQ_NOT_SET);
 
@@ -214,9 +228,9 @@ uint8_t BUS_I2C::readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const
     return 0;
 }
 
-bool BUS_I2C::readImuRegister()
+bool BUS_I2C::readDeviceRegister()
 {
-    return readRegister(_imuRegister, _readBuf + SPI_BUFFER_SIZE, _readLength - SPI_BUFFER_SIZE); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    return readRegister(_deviceRegister, _readBuf + SPI_BUFFER_SIZE, _readLength - SPI_BUFFER_SIZE); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 }
 
 bool BUS_I2C::readRegister(uint8_t reg, uint8_t* data, size_t length) const // NOLINT(readability-non-const-parameter)

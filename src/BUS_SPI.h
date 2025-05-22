@@ -30,8 +30,8 @@ public:
     struct pins_t {
         uint8_t cs;
         uint8_t sck;
-        uint8_t cipo; // MISO
-        uint8_t copi; // MOSI
+        uint8_t cipo; // RX, CIPO, MISO, POCI
+        uint8_t copi; // TX, COPI, MOSI, PICO
         uint8_t irq; // interrupt pin
         uint8_t irqLevel; // interrupt level, ie low, high, edge rise, edge fall, edge change
     };
@@ -46,9 +46,9 @@ public:
 public:
     void configureDMA();
     void setInterruptDriven();
-    void setImuRegister(uint8_t imuRegister, uint8_t* readBuf, size_t readLength);
-    bool readImuRegister();
-    bool readImuRegisterDMA(); // for testing DMA
+    void setDeviceRegister(uint8_t deviceRegister, uint8_t* readBuf, size_t readLength);
+    bool readDeviceRegister();
+    bool readDeviceRegisterDMA(); // for testing DMA
     uint8_t readRegister(uint8_t reg) const;
     uint8_t readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const;
     bool readRegister(uint8_t reg, uint8_t* data, size_t length) const;
@@ -66,14 +66,10 @@ private:
 #if defined(FRAMEWORK_RPI_PICO)
     static void dataReadyISR(unsigned int gpio, uint32_t events);
     spi_inst_t* _spi;
-    mutable std::array<uint8_t, 256> _writeReadBuf {};
-#if defined(USE_IMU_SPI_DMA)
+    //mutable std::array<uint8_t, 256> _writeReadBuf {};
     static void dmaRxCompleteISR();
     uint32_t _dmaRxChannel {};
     uint32_t _dmaTxChannel {};
-    dma_channel_config _dmaRxChannelConfig {};
-    dma_channel_config _dmaTxChannelConfig {};
-#endif
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_TEST)
     static INSTRUCTION_RAM_ATTR void dataReadyISR();

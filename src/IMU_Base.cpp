@@ -11,8 +11,7 @@
 #endif
 
 IMU_Base::IMU_Base(axis_order_t axisOrder) :
-    _axisOrder(axisOrder),
-    _busBase(nullptr)
+    _axisOrder(axisOrder)
 {
 }
 

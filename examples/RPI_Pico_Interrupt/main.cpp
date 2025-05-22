@@ -13,6 +13,7 @@ static constexpr uint8_t IMU_SPI_CIPO_PIN=16; // RX
 static constexpr uint8_t IMU_SPI_COPI_PIN=19; // TX
 static constexpr uint8_t IMU_SPI_IRQ_PIN=20;
 static constexpr uint8_t IMU_SPI_IRQ_LEVEL = BUS_SPI::IRQ_LEVEL_HIGH;
+
 static IMU_Base* imu;
 
 #define INTERRUPT_DRIVEN
@@ -30,7 +31,7 @@ void setup()
     const BUS_SPI::pins_t pins{.cs=IMU_SPI_CS_PIN, .sck=IMU_SPI_SCK_PIN, .cipo=IMU_SPI_CIPO_PIN, .copi=IMU_SPI_COPI_PIN, .irq=IMU_SPI_IRQ_PIN, .irqLevel=IMU_SPI_IRQ_LEVEL};
     static IMU_LSM6DS3TR_C imuStatic(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::SPI_INDEX_0, pins);
 #elif defined(USE_IMU_LSM6DS3TR_C_I2C)
-    const BUS_I2C::pins_t pins{.sda=IMU_I2C_SDA_PIN, .scl=IMU_I2C_SCL_PIN, .irq=IMU_I2C_IRQ_PIN, .irqLevel=BUS_I2C::IRQ_LEVEL_HIGH};
+    const BUS_I2C::pins_t pins{.sda=IMU_I2C_SDA_PIN, .scl=IMU_I2C_SCL_PIN, .irq=IMU_I2C_IRQ_PIN, .irqLevel=IMU_I2C_IRQ_LEVEL};
     static IMU_LSM6DS3TR_C imuStatic(IMU_Base::XPOS_YPOS_ZPOS, pins);
 #endif
 
@@ -47,7 +48,7 @@ void loop()
 {
     // wait for the IMU data ready interrupt
 #if defined(INTERRUPT_DRIVEN)
-    imu->LOCK_IMU_DATA_READY();
+    imu->WAIT_IMU_DATA_READY();
 #else
     imu->readAccGyroRPS();
 #endif
@@ -58,6 +59,7 @@ void loop()
     // get the gyro data read in the Interrupt Service Routine
     const IMU_Base::accGyroRPS_t accGyroRPS =  imu->getAccGyroRPS();
 
+    // convert the gyro data from radians per second to degrees per second
     const xyz_t gyroDPS =  accGyroRPS.gyroRPS * IMU_Base::radiansToDegrees;
     Serial.println();
     Serial.print("gyroX:");

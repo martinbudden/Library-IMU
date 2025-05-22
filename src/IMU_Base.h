@@ -138,8 +138,8 @@ public:
     virtual int init() final;
 
     virtual void setInterruptDriven();
-    void LOCK_IMU_DATA_READY() { _busBase->LOCK_IMU_DATA_READY(); }
-    void UNLOCK_IMU_DATA_READY_FROM_ISR() { _busBase->UNLOCK_IMU_DATA_READY_FROM_ISR(); } // should not be used, made public for debugging purposes
+    void WAIT_IMU_DATA_READY() { _busBase->WAIT_DATA_READY(); }
+    void SIGNAL_IMU_DATA_READY_FROM_ISR() { _busBase->SIGNAL_DATA_READY_FROM_ISR(); } // should not be used, made public for debugging purposes
 
     virtual xyz_int32_t getGyroOffset() const;
     virtual void setGyroOffset(const xyz_int32_t& gyroOffset);

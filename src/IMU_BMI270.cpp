@@ -187,7 +187,7 @@ int IMU_BMI270::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivi
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
 
-    _bus.setImuRegister(REG_ACC_X_L, reinterpret_cast<uint8_t*>(&_spiAccGyroData), sizeof(_spiAccGyroData));
+    _bus.setDeviceRegister(REG_ACC_X_L, reinterpret_cast<uint8_t*>(&_spiAccGyroData), sizeof(_spiAccGyroData));
 
     // Initialization sequence, see page 17 and following from BMI270 Datasheet
     _bus.readRegister(REG_CHIP_ID); // dummy read, required for SPI mode
@@ -371,7 +371,7 @@ IMU_Base::accGyroRPS_t IMU_BMI270::readAccGyroRPS()
 {
     i2cSemaphoreTake();
     _bus.readRegister(REG_ACC_X_L, &_spiAccGyroData.accGyro.data[0], sizeof(_spiAccGyroData.accGyro));
-    //_bus.readImuRegister();
+    //_bus.readDeviceRegister();
     i2cSemaphoreGive();
 
     return accGyroRPSFromRaw(_spiAccGyroData.accGyro.value);

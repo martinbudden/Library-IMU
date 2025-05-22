@@ -22,26 +22,26 @@ public:
     enum { IRQ_LEVEL_LOW = 0x04, IRQ_LEVEL_HIGH = 0x05, IRQ_EDGE_FALL = 0x02, IRQ_EDGE_RISE = 0x01, IRQ_EDGE_CHANGE = 0x03 };
 #endif
 protected:
-    uint8_t _imuRegister {}; // the IMU register that is read in the ISR
+    uint8_t _deviceRegister {}; // the device register that is read in the ISR
     uint8_t* _readBuf {};
     size_t _readLength {};
 #if defined(FRAMEWORK_RPI_PICO)
-    mutable mutex_t _imuDataReadyMutex{};
+    mutable mutex_t _dataReadyMutex{};
 public:
-    inline void LOCK_IMU_DATA_READY() const { mutex_enter_blocking(&_imuDataReadyMutex); }
-    inline void UNLOCK_IMU_DATA_READY_FROM_ISR() const { mutex_exit(&_imuDataReadyMutex); }
+    inline void WAIT_DATA_READY() const { mutex_enter_blocking(&_dataReadyMutex); }
+    inline void SIGNAL_DATA_READY_FROM_ISR() const { mutex_exit(&_dataReadyMutex); }
 #elif defined(USE_FREERTOS)
-    mutable uint32_t _imuDataReadyQueueItem {}; // this is just a dummy item whose value is not used
+    mutable uint32_t _dataReadyQueueItem {}; // this is just a dummy item whose value is not used
     enum { IMU_DATA_READY_QUEUE_LENGTH = 8 };
-    std::array<uint8_t, IMU_DATA_READY_QUEUE_LENGTH * sizeof(_imuDataReadyQueueItem)> _imuDataReadyQueueStorageArea {};
-    StaticQueue_t _imuDataReadyQueueStatic {};
-    QueueHandle_t _imuDataReadyQueue {};
+    std::array<uint8_t, IMU_DATA_READY_QUEUE_LENGTH * sizeof(_dataReadyQueueItem)> _dataReadyQueueStorageArea {};
+    StaticQueue_t _dataReadyQueueStatic {};
+    QueueHandle_t _dataReadyQueue {};
 public:
-    inline void LOCK_IMU_DATA_READY() const { xQueueReceive(_imuDataReadyQueue, &_imuDataReadyQueueItem, portMAX_DELAY); }
-    inline void UNLOCK_IMU_DATA_READY_FROM_ISR() const { xQueueSendFromISR(_imuDataReadyQueue, &_imuDataReadyQueueItem, nullptr); }
+    inline void WAIT_DATA_READY() const { xQueueReceive(_dataReadyQueue, &_dataReadyQueueItem, portMAX_DELAY); }
+    inline void SIGNAL_DATA_READY_FROM_ISR() const { xQueueSendFromISR(_dataReadyQueue, &_dataReadyQueueItem, nullptr); }
 #else
 public:
-    inline void LOCK_IMU_DATA_READY() const {}
-    inline void UNLOCK_IMU_DATA_READY_FROM_ISR() const {}
+    inline void WAIT_DATA_READY() const {}
+    inline void SIGNAL_DATA_READY_FROM_ISR() const {}
 #endif
 };
