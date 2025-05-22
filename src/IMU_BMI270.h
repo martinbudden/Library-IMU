@@ -50,8 +50,7 @@ public:
 public:
     virtual int init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex) override;
     void loadConfigurationData();
-    //void UNLOCK_IMU_DATA_READY_FROM_ISR() { _bus.UNLOCK_IMU_DATA_READY_FROM_ISR(); } // for debugging
-    virtual void setInterrupt(int userIrq) override;
+    virtual void setInterruptDriven() override;
     virtual xyz_int32_t readGyroRaw() override;
     virtual xyz_int32_t readAccRaw() override;
 

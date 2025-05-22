@@ -47,20 +47,17 @@ void BUS_SPI::dataReadyISR(unsigned int gpio, uint32_t events)
 #else
     bus->readImuRegister();
 #endif
-    // set the user IRQ so that the AHRS can process the data
-    irq_set_pending(bus->_userIrq);
+    bus->UNLOCK_IMU_DATA_READY_FROM_ISR();
 }
 #else
 INSTRUCTION_RAM_ATTR void BUS_SPI::dataReadyISR()
 {
 #if defined(USE_IMU_SPI_DMA)
-    static_assert(false);
+    static_assert(false); // assert false until this is implemented
 #else
     // for the moment, just read the predefined register into the predefined read buffer
     bus->readImuRegister();
-#if defined(USE_FREERTOS)
     bus->UNLOCK_IMU_DATA_READY_FROM_ISR();
-#endif
 #endif
 }
 #endif
@@ -165,16 +162,15 @@ BUS_SPI::BUS_SPI(uint32_t frequency, spi_index_t SPI_index, const pins_t& pins) 
 
 #else // defaults to FRAMEWORK_ARDUINO
     _spi.begin();
-    pinMode(_pins.cs, OUTPUT);
-    CS_HIGH();
-
     _csBit = digitalPinToBitMask(_pins.cs); // NOLINT(cppcoreguidelines-prefer-member-initializer)
     _csOut = portOutputRegister(digitalPinToPort(_pins.cs)); // NOLINT(cppcoreguidelines-prefer-member-initializer)
+    pinMode(_pins.cs, OUTPUT);
+    CS_HIGH();
 #if defined(USE_FREERTOS)
-    //_imuDataReadyQueue = xQueueCreateStatic(IMU_DATA_READY_QUEUE_LENGTH, sizeof(_imuDataReadyQueueItem), &_imuDataReadyQueueStorageArea[0], &_imuDataReadyQueueStatic);
-    //configASSERT(_imuDataReadyQueue);
-    //const UBaseType_t messageCount = uxQueueMessagesWaiting(_imuDataReadyQueue);
-    //assert(messageCount == 0);
+    _imuDataReadyQueue = xQueueCreateStatic(IMU_DATA_READY_QUEUE_LENGTH, sizeof(_imuDataReadyQueueItem), &_imuDataReadyQueueStorageArea[0], &_imuDataReadyQueueStatic);
+    configASSERT(_imuDataReadyQueue);
+    const UBaseType_t messageCount = uxQueueMessagesWaiting(_imuDataReadyQueue);
+    assert(messageCount == 0);
 #endif
 
 #endif // FRAMEWORK
@@ -223,7 +219,13 @@ void BUS_SPI::setImuRegister(uint8_t imuRegister, uint8_t* readBuf, size_t readL
     _readLength = readLength;
 }
 
-void BUS_SPI::setInterrupt(int userIrq)
+/*!
+Set this bus so reads interrupt driven.
+When the IMU interrupt pin indicates data ready, the dataReadyISR is called and the data is read in the ISR.
+
+This routine sets the GPIO IRQ pin to input an attaches the dataReadyISR to be triggered by that pin.
+*/
+void BUS_SPI::setInterruptDriven()
 {
 //dma_channel_set_irq0_enabled(channel, enabled);
 //dma_channel_acknowledge_irq0(channel)
@@ -233,18 +235,13 @@ void BUS_SPI::setInterrupt(int userIrq)
 //dma_channel_set_trans_count
     assert(_pins.irq != IRQ_NOT_SET);
 
-#if defined(USE_FREERTOS)
-    _imuDataReadyQueue = reinterpret_cast<QueueHandle_t>(userIrq);
-#else
-    _userIrq = userIrq;
-#endif
 #if defined(USE_ARDUINO_ESP32)
     pinMode(_pins.irq, INPUT);
     attachInterrupt(digitalPinToInterrupt(_pins.irq), &dataReadyISR, _pins.irqLevel); // esp32-hal-gpio.h
 #elif defined(FRAMEWORK_RPI_PICO)
     assert(_pins.irqLevel != 0);
     gpio_init(_pins.irq);
-    gpio_set_dir(_pins.cs, GPIO_IN);
+    gpio_set_dir(_pins.irq, GPIO_IN);
     enum { IRQ_ENABLED = true };
     gpio_set_irq_enabled_with_callback(_pins.irq, _pins.irqLevel, IRQ_ENABLED, &dataReadyISR);
 #endif

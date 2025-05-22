@@ -11,7 +11,14 @@
 #endif
 
 IMU_Base::IMU_Base(axis_order_t axisOrder) :
-    _axisOrder(axisOrder)
+    _axisOrder(axisOrder),
+    _busBase(nullptr)
+{
+}
+
+IMU_Base::IMU_Base(axis_order_t axisOrder, BUS_BASE& busBase) :
+    _axisOrder(axisOrder),
+    _busBase(&busBase)
 {
 }
 
@@ -47,9 +54,8 @@ void IMU_Base::delayMs(int ms)
 #endif
 }
 
-void IMU_Base::setInterrupt(int userIrq)
+void IMU_Base::setInterruptDriven()
 {
-    (void)userIrq;
 }
 
 IMU_Base::xyz_int32_t IMU_Base::getGyroOffset() const

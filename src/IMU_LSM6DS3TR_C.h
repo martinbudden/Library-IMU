@@ -50,7 +50,7 @@ public:
 #endif
 public:
     virtual int init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex) override;
-    virtual void setInterrupt(int userIrq) override;
+    virtual void setInterruptDriven() override;
     virtual xyz_int32_t readGyroRaw() override;
     virtual xyz_int32_t readAccRaw() override;
     virtual accGyroRPS_t readAccGyroRPS() override;

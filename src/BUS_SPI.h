@@ -30,10 +30,10 @@ public:
     struct pins_t {
         uint8_t cs;
         uint8_t sck;
-        uint8_t cipo;
-        uint8_t copi;
-        uint8_t irq;
-        uint8_t irqLevel;
+        uint8_t cipo; // MISO
+        uint8_t copi; // MOSI
+        uint8_t irq; // interrupt pin
+        uint8_t irqLevel; // interrupt level, ie low, high, edge rise, edge fall, edge change
     };
     static constexpr uint8_t READ_BIT = 0x80;
 public:
@@ -45,7 +45,7 @@ public:
     BUS_SPI(uint32_t frequency, uint8_t CS_pin) : BUS_SPI(frequency, SPI_INDEX_0, CS_pin) {}
 public:
     void configureDMA();
-    void setInterrupt(int userIrq);
+    void setInterruptDriven();
     void setImuRegister(uint8_t imuRegister, uint8_t* readBuf, size_t readLength);
     bool readImuRegister();
     bool readImuRegisterDMA(); // for testing DMA

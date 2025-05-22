@@ -1,4 +1,3 @@
-#include "AHRS.h"
 #include <Arduino.h>
 #include <IMU_LSM6DS3TR_C.h>
 #include <boards/pico.h>
@@ -15,13 +14,13 @@ static constexpr uint8_t IMU_SPI_COPI_PIN=19; // TX
 static constexpr uint8_t IMU_SPI_IRQ_PIN=20;
 static constexpr uint8_t IMU_SPI_IRQ_LEVEL = BUS_SPI::IRQ_LEVEL_HIGH;
 static IMU_Base* imu;
-static AHRS* ahrs;
 
 void setup()
 {
     Serial.begin(115200);
     gpio_init(PICO_DEFAULT_LED_PIN); // 25
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
+    gpio_put(PICO_DEFAULT_LED_PIN, 0);
 
     // statically allocate an LSM6DS3TR_C IMU object
 #if defined(USE_IMU_LSM6DS3TR_C_SPI)
@@ -37,19 +36,18 @@ void setup()
 
     // initialize the IMU
     imu->init();
-
-    static AHRS ahrsStatic(imuStatic);
-    ahrs = &ahrsStatic;
+    imu->setInterruptDriven();
 }
 
 void loop()
 {
     // wait for the IMU data ready interrupt
-    ahrs->LOCK_IMU_DATA_READY();
-    gpio_put(PICO_DEFAULT_LED_PIN, 0);
+    //imu->readAccGyroRPS();
+    //imu->UNLOCK_IMU_DATA_READY_FROM_ISR();
+    imu->LOCK_IMU_DATA_READY();
+
+    //gpio_put(PICO_DEFAULT_LED_PIN, 0);
     Serial.println();
-    Serial.print("dataReadyCount:");
-    Serial.print(ahrs->getImuDataReadyCount());
 
     // get the gyro data read in the Interrupt Service Routine
     const IMU_Base::accGyroRPS_t accGyroRPS =  imu->getAccGyroRPS();

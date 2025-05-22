@@ -97,7 +97,7 @@ constexpr uint8_t REG_ZA_OFFSET_L           = 0x7E;
 
 #if defined(USE_IMU_MPU6886_SPI)
 IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_index_t SPI_index, const BUS_SPI::pins_t& pins) :
-    IMU_Base(axisOrder),
+    IMU_Base(axisOrder, _bus),
     _bus(frequency, SPI_index, pins)
 {
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
@@ -106,7 +106,7 @@ IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::sp
 }
 #else
 IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder, BUS_I2C::i2c_index_t I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
-    IMU_Base(axisOrder),
+    IMU_Base(axisOrder, _bus),
     _bus(I2C_address, I2C_index, pins)
 {
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
@@ -291,9 +291,9 @@ IMU_Base::accGyroRPS_t IMU_MPU6886::readAccGyroRPS()
     return accGyroRPSFromRaw(_spiAccTemperatureGyroData.accGyro.value);
 }
 
-void IMU_MPU6886::setInterrupt(int userIrq)
+void IMU_MPU6886::setInterruptDriven()
 {
-    _bus.setInterrupt(userIrq);
+    _bus.setInterruptDriven();
 }
 
 /*!

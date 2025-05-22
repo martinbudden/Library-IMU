@@ -116,6 +116,7 @@ public:
 public:
     virtual ~IMU_Base() = default;
     explicit IMU_Base(axis_order_t axisOrder);
+    IMU_Base(axis_order_t axisOrder, BUS_BASE& busBase);
 public:
     struct xyz_int32_t {
         int32_t x;
@@ -135,7 +136,11 @@ public:
     virtual int init(uint32_t outputDataRateHz) final;
     virtual int init(void* i2cMutex) final;
     virtual int init() final;
-    virtual void setInterrupt(int userIrq);
+
+    virtual void setInterruptDriven();
+    void LOCK_IMU_DATA_READY() { _busBase->LOCK_IMU_DATA_READY(); }
+    void UNLOCK_IMU_DATA_READY_FROM_ISR() { _busBase->UNLOCK_IMU_DATA_READY_FROM_ISR(); } // should not be used, made public for debugging purposes
+
     virtual xyz_int32_t getGyroOffset() const;
     virtual void setGyroOffset(const xyz_int32_t& gyroOffset);
     virtual xyz_int32_t getAccOffset() const;
@@ -157,6 +162,7 @@ public:
     // by default the FIFO is not enabled
     virtual size_t readFIFO_ToBuffer();
     virtual accGyroRPS_t readFIFO_Item(size_t index);
+
     inline axis_order_t getAxisOrder() const { return _axisOrder; }
     static xyz_t mapAxes(const xyz_t& data, axis_order_t axisOrder);
     inline xyz_t mapAxes(const xyz_t& data) const { return mapAxes(data, _axisOrder); }
@@ -173,6 +179,7 @@ public:
 #endif
 protected:
     axis_order_t _axisOrder;
+    BUS_BASE* _busBase {};
     float _gyroResolutionRPS {};
     float _gyroResolutionDPS {};
     float _accResolution { 8.0F / 32768.0F };

@@ -67,7 +67,7 @@ private:
     };
 #pragma pack(pop)
 public:
-    virtual void setInterrupt(int userIrq) override;
+    virtual void setInterruptDriven() override;
     virtual void setGyroOffset(const xyz_int32_t& gyroOffset) override;
     virtual xyz_int32_t readGyroRaw() override;
     virtual xyz_int32_t readAccRaw() override;

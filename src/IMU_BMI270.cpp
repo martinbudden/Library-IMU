@@ -162,7 +162,7 @@ Gyroscope data rates up to 6.4 kHz, accelerometer up to 1.6 kHz
 */
 #if defined(USE_IMU_BMI270_SPI)
 IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_index_t SPI_index, const BUS_SPI::pins_t& pins) :
-    IMU_Base(axisOrder),
+    IMU_Base(axisOrder, _bus),
     _bus(frequency, SPI_index, pins)
 {
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
@@ -170,7 +170,7 @@ IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_
 }
 #else
 IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, BUS_I2C::i2c_index_t I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
-    IMU_Base(axisOrder),
+    IMU_Base(axisOrder, _bus),
     _bus(I2C_address, I2C_index, pins)
 {
 }
@@ -377,9 +377,9 @@ IMU_Base::accGyroRPS_t IMU_BMI270::readAccGyroRPS()
     return accGyroRPSFromRaw(_spiAccGyroData.accGyro.value);
 }
 
-void IMU_BMI270::setInterrupt(int userIrq)
+void IMU_BMI270::setInterruptDriven()
 {
-    _bus.setInterrupt(userIrq);
+    _bus.setInterruptDriven();
 }
 
 /*!

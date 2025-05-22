@@ -155,7 +155,7 @@ Gyroscope data rates up to 6.4 kHz, accelerometer up to 1.6 kHz
 */
 #if defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_LSM6DSOX_SPI)
 IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_index_t SPI_index, const BUS_SPI::pins_t& pins) :
-    IMU_Base(axisOrder),
+    IMU_Base(axisOrder, _bus),
     _bus(frequency, SPI_index, pins)
 {
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
@@ -164,13 +164,13 @@ IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint32_t frequency, BUS
 }
 #else
 IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, BUS_I2C::i2c_index_t I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
-    IMU_Base(axisOrder),
+    IMU_Base(axisOrder, _bus),
     _bus(I2C_address, I2C_index, pins)
 {
 }
 #if !defined(FRAMEWORK_RPI_PICO) && !defined(FRAMEWORK_ESPIDF) && !defined(FRAMEWORK_TEST)
 IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, TwoWire& wire, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
-    IMU_Base(axisOrder),
+    IMU_Base(axisOrder, _bus),
     _bus(I2C_address, wire, pins)
 {
 }
@@ -331,9 +331,9 @@ IMU_Base::accGyroRPS_t IMU_LSM6DS3TR_C::readAccGyroRPS()
     return accGyroRPSFromRaw(_spiAccGyroData.accGyro.value);
 }
 
-void IMU_LSM6DS3TR_C::setInterrupt(int userIrq)
+void IMU_LSM6DS3TR_C::setInterruptDriven()
 {
-    _bus.setInterrupt(userIrq);
+    _bus.setInterruptDriven();
 }
 
 /*!

@@ -40,7 +40,7 @@ public:
     BUS_I2C(uint8_t I2C_address, TwoWire& wire, const pins_t& pins);
 #endif
 public:
-    void setInterrupt(int userIrq);
+    void setInterruptDriven();
     void setImuRegister(uint8_t imuRegister, uint8_t* readBuf, size_t readLength);
     bool readImuRegister();
     uint8_t readRegister(uint8_t reg) const;

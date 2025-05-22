@@ -26,17 +26,14 @@ void BUS_I2C::dataReadyISR(unsigned int gpio, uint32_t events)
     //gpio_put(PICO_DEFAULT_LED_PIN, 1);
     // reading the IMU register resets the interrupt
     bus->readImuRegister();
-    // trigger a software interrupt so that the AHRS can process the data
-    irq_set_pending(bus->_userIrq);
+    bus->UNLOCK_IMU_DATA_READY_FROM_ISR();
 }
 #else
 INSTRUCTION_RAM_ATTR void BUS_I2C::dataReadyISR()
 {
     // reading the IMU register resets the interrupt
     bus->readImuRegister();
-#if defined(USE_FREERTOS)
     bus->UNLOCK_IMU_DATA_READY_FROM_ISR();
-#endif
 }
 #endif
 
@@ -149,22 +146,18 @@ void BUS_I2C::setImuRegister(uint8_t imuRegister, uint8_t* readBuf, size_t readL
     _readLength = readLength;
 }
 
-void BUS_I2C::setInterrupt(int userIrq)
+void BUS_I2C::setInterruptDriven()
 {
     assert(_pins.irq != IRQ_NOT_SET);
 
 #if defined(FRAMEWORK_RPI_PICO)
-    _userIrq = userIrq;
     assert(_pins.irqLevel != 0);
     gpio_init(_pins.irq);
     enum { IRQ_ENABLED = true };
     gpio_set_irq_enabled_with_callback(_pins.irq, _pins.irqLevel, IRQ_ENABLED, &dataReadyISR);
 #elif defined(USE_ARDUINO_ESP32)
-    _imuDataReadyQueue = reinterpret_cast<QueueHandle_t>(userIrq);
     //pinMode(_pins.irq, INPUT);
     //attachInterrupt(digitalPinToInterrupt(_pins.irq), &dataReadyISR, _pins.irqLevel); // esp32-hal-gpio.h
-#else
-    _userIrq = userIrq;
 #endif
 }
 
