@@ -161,7 +161,7 @@ extern const std::array<uint8_t, 8192> imu_bmi270_config_data;
 Gyroscope data rates up to 6.4 kHz, accelerometer up to 1.6 kHz
 */
 #if defined(USE_IMU_BMI270_SPI)
-IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_index_t SPI_index, const BUS_SPI::pins_t& pins) :
+IMU_BMI270::IMU_BMI270(axis_order_e axisOrder, uint32_t frequency, BUS_SPI::spi_index_e SPI_index, const BUS_SPI::pins_t& pins) :
     IMU_Base(axisOrder, _bus),
     _bus(frequency, SPI_index, pins)
 {
@@ -169,14 +169,14 @@ IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
 }
 #else
-IMU_BMI270::IMU_BMI270(axis_order_t axisOrder, BUS_I2C::i2c_index_t I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
+IMU_BMI270::IMU_BMI270(axis_order_e axisOrder, BUS_I2C::i2c_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
     IMU_Base(axisOrder, _bus),
     _bus(I2C_address, I2C_index, pins)
 {
 }
 #endif
 
-int IMU_BMI270::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex) // NOLINT(readability-function-cognitive-complexity)
+int IMU_BMI270::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) // NOLINT(readability-function-cognitive-complexity)
 {
 #if defined(I2C_MUTEX_REQUIRED)
     _i2cMutex = static_cast<SemaphoreHandle_t>(i2cMutex);
@@ -186,6 +186,8 @@ int IMU_BMI270::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivi
 
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
+
+    _ID = 17; // same value as BETAFLIGHT GYRO_BMI270
 
     _bus.setDeviceRegister(REG_ACC_X_L, reinterpret_cast<uint8_t*>(&_spiAccGyroData), sizeof(_spiAccGyroData));
 
@@ -236,6 +238,14 @@ int IMU_BMI270::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivi
         outputDataRateHz > 100 ? GYRO_ODR_200_HZ :
         outputDataRateHz > 50 ? GYRO_ODR_100_HZ :
         outputDataRateHz > 25 ? GYRO_ODR_50_HZ : GYRO_ODR_25_HZ;
+    _gyroSampleRateHz =
+        outputDataRateHz == GYRO_ODR_3200_HZ  ? 3200 :
+        outputDataRateHz == GYRO_ODR_1600_HZ ? 1600 :
+        outputDataRateHz == GYRO_ODR_800_HZ ? 800 :
+        outputDataRateHz == GYRO_ODR_400_HZ ? 400 :
+        outputDataRateHz == GYRO_ODR_200_HZ ? 200 :
+        outputDataRateHz == GYRO_ODR_100_HZ ? 100 :
+        outputDataRateHz == GYRO_ODR_50_HZ ? 50 : 25;
 
     _bus.writeRegister(REG_GYR_CONF, GYRO_FILTER_PERFORMANCE_OPTIMIZED | GYRO_OSR4 | gyroOutputDataRate); // cppcheck-suppress badBitmaskCheck
     delayMs(1);
@@ -273,6 +283,12 @@ int IMU_BMI270::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivi
         outputDataRateHz > 100 ? ACC_ODR_200_HZ :
         outputDataRateHz > 50 ? ACC_ODR_100_HZ :
         outputDataRateHz > 25 ? ACC_ODR_50_HZ : ACC_ODR_25_HZ;
+    _accSampleRateHz =
+        outputDataRateHz == ACC_ODR_800_HZ ? 800 :
+        outputDataRateHz == ACC_ODR_400_HZ ? 400 :
+        outputDataRateHz == ACC_ODR_200_HZ ? 200 :
+        outputDataRateHz == ACC_ODR_100_HZ ? 100 :
+        outputDataRateHz == ACC_ODR_50_HZ ? 50 : 25;
 
     _bus.writeRegister(REG_ACC_CONF, ACC_FILTER_PERFORMANCE_OPTIMIZED | ACC_OSR4_AVG1 | accOutputDataRate); // cppcheck-suppress badBitmaskCheck
     delayMs(1);

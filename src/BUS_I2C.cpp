@@ -37,7 +37,7 @@ INSTRUCTION_RAM_ATTR void BUS_I2C::dataReadyISR()
 }
 #endif
 
-BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_t I2C_index, const pins_t& pins) :
+BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_e I2C_index, const pins_t& pins) :
     _I2C_index(I2C_index),
     _pins(pins),
 #if defined(FRAMEWORK_RPI_PICO)
@@ -138,7 +138,7 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, TwoWire& wire, const pins_t& pins) :
 }
 #endif
 
-BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_t I2C_index)
+BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_e I2C_index)
 #if defined(FRAMEWORK_RPI_PICO)
     : BUS_I2C(I2C_address, I2C_index,
         I2C_index == I2C_INDEX_0 ? pins_t{.sda=PICO_DEFAULT_I2C_SDA_PIN, .scl=PICO_DEFAULT_I2C_SCL_PIN, .irq=IRQ_NOT_SET, .irqLevel=0} : pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET, .irqLevel=0})

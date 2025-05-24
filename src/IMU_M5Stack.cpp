@@ -9,15 +9,17 @@ constexpr float ACC_8G_RES { 8.0 / 32768.0 };
 } // end namespace
 
 
-IMU_M5_STACK::IMU_M5_STACK(axis_order_t axisOrder) :
+IMU_M5_STACK::IMU_M5_STACK(axis_order_e axisOrder) :
     IMU_Base(axisOrder)
 {
     _gyroResolutionDPS = GYRO_2000DPS_RES;
     _gyroResolutionRPS = GYRO_2000DPS_RES * degreesToRadians;
     _accResolution = ACC_8G_RES;
+    _gyroSampleRateHz = 500;
+    _accSampleRateHz = 500;
 }
 
-int IMU_M5_STACK::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex)
+int IMU_M5_STACK::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex)
 {
     (void)outputDataRateHz;
     (void)gyroSensitivity;

@@ -37,7 +37,7 @@ public:
     sensor y-axis points right, the sensor X-axis points back, and the sensor Z-axis points up,
     then the axis order is YPOS_XNEG_ZPOS
     */
-   enum axis_order_t {
+   enum axis_order_e {
         XPOS_YPOS_ZPOS,
         YPOS_XNEG_ZPOS,
         XNEG_YNEG_ZPOS,
@@ -68,7 +68,7 @@ public:
         ZNEG_XPOS_YNEG,
         XPOS_ZPOS_YNEG
     };
-    enum gyro_sensitivity_t {
+    enum gyro_sensitivity_e {
         GYRO_FULL_SCALE_MAX,
         GYRO_FULL_SCALE_125_DPS,
         GYRO_FULL_SCALE_250_DPS,
@@ -77,7 +77,7 @@ public:
         GYRO_FULL_SCALE_2000_DPS,
         GYRO_FULL_SCALE_4000_DPS,
     };
-    enum acc_sensitivity_t {
+    enum acc_sensitivity_e {
         ACC_FULL_SCALE_MAX,
         ACC_FULL_SCALE_1G,
         ACC_FULL_SCALE_2G,
@@ -115,9 +115,14 @@ public:
     };
 public:
     virtual ~IMU_Base() = default;
-    explicit IMU_Base(axis_order_t axisOrder);
-    IMU_Base(axis_order_t axisOrder, BUS_BASE& busBase);
+    explicit IMU_Base(axis_order_e axisOrder);
+    IMU_Base(axis_order_e axisOrder, BUS_BASE& busBase);
 public:
+    struct xyz_alignment_t {
+        int16_t x;
+        int16_t y;
+        int16_t z;
+    };
     struct xyz_int32_t {
         int32_t x;
         int32_t y;
@@ -131,11 +136,17 @@ public:
     static constexpr float radiansToDegrees = static_cast<float>(180.0 / M_PI);
 public:
     static void delayMs(int ms);
-    virtual int init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex) = 0;
+    virtual int init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) = 0;
     virtual int init(uint32_t outputDataRateHz, void* i2cMutex) final;
     virtual int init(uint32_t outputDataRateHz) final;
     virtual int init(void* i2cMutex) final;
     virtual int init() final;
+
+    float getGyroResolutionDPS() const { return _gyroResolutionDPS; }
+    float getAccResolution() const { return _accResolution; }
+    uint32_t getGyroSampleRateHz() const { return _gyroSampleRateHz; }
+    uint32_t getAccSampleRateHz() const { return _accSampleRateHz; }
+    uint16_t getID() const { return _ID; }
 
     virtual void setInterruptDriven();
     void WAIT_IMU_DATA_READY() { _busBase->WAIT_DATA_READY(); }
@@ -163,10 +174,12 @@ public:
     virtual size_t readFIFO_ToBuffer();
     virtual accGyroRPS_t readFIFO_Item(size_t index);
 
-    inline axis_order_t getAxisOrder() const { return _axisOrder; }
-    static xyz_t mapAxes(const xyz_t& data, axis_order_t axisOrder);
+    inline axis_order_e getAxisOrder() const { return _axisOrder; }
+    static xyz_t mapAxes(const xyz_t& data, axis_order_e axisOrder);
     inline xyz_t mapAxes(const xyz_t& data) const { return mapAxes(data, _axisOrder); }
-    static axis_order_t axisOrderInverse(axis_order_t axisOrder);
+    static axis_order_e axisOrderInverse(axis_order_e axisOrder);
+    static xyz_alignment_t alignmentFromAxisOrder(axis_order_e axisOrder);
+    static axis_order_e axisOrderFromAlignment(const xyz_alignment_t& alignment);
 #if defined(I2C_MUTEX_REQUIRED)
 #if defined(USE_FREERTOS)
     inline void i2cSemaphoreTake() const { xSemaphoreTake(_i2cMutex, portMAX_DELAY); }
@@ -178,11 +191,14 @@ public:
     inline void i2cSemaphoreGive() const {}
 #endif
 protected:
-    axis_order_t _axisOrder;
+    axis_order_e _axisOrder;
     BUS_BASE* _busBase {};
     float _gyroResolutionRPS {};
     float _gyroResolutionDPS {};
     float _accResolution { 8.0F / 32768.0F };
+    uint32_t _gyroSampleRateHz {};
+    uint32_t _accSampleRateHz {};
     xyz_int32_t _gyroOffset {};
     xyz_int32_t _accOffset {};
+    uint16_t _ID {};
 };

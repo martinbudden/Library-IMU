@@ -10,12 +10,12 @@
 #include <Arduino.h>
 #endif
 
-IMU_Base::IMU_Base(axis_order_t axisOrder) :
+IMU_Base::IMU_Base(axis_order_e axisOrder) :
     _axisOrder(axisOrder)
 {
 }
 
-IMU_Base::IMU_Base(axis_order_t axisOrder, BUS_BASE& busBase) :
+IMU_Base::IMU_Base(axis_order_e axisOrder, BUS_BASE& busBase) :
     _axisOrder(axisOrder),
     _busBase(&busBase)
 {
@@ -55,6 +55,19 @@ void IMU_Base::delayMs(int ms)
 
 void IMU_Base::setInterruptDriven()
 {
+}
+
+size_t IMU_Base::readFIFO_ToBuffer()
+{
+    return 0;
+}
+
+IMU_Base::accGyroRPS_t IMU_Base::readFIFO_Item(size_t index)
+{
+    (void)index;
+
+    const accGyroRPS_t gyroAcc {};
+    return gyroAcc;
 }
 
 IMU_Base::xyz_int32_t IMU_Base::getGyroOffset() const
@@ -130,7 +143,7 @@ Quaternion IMU_Base::readOrientation()
     return Quaternion {};
 }
 
-xyz_t IMU_Base::mapAxes(const xyz_t& data, axis_order_t axisOrder)
+xyz_t IMU_Base::mapAxes(const xyz_t& data, axis_order_e axisOrder)
 {
 // NOLINTBEGIN(bugprone-branch-clone) false positive
     switch (axisOrder) {
@@ -307,7 +320,7 @@ xyz_t IMU_Base::mapAxes(const xyz_t& data, axis_order_t axisOrder)
     return data;
 }
 
-IMU_Base::axis_order_t IMU_Base::axisOrderInverse(axis_order_t axisOrder)
+IMU_Base::axis_order_e IMU_Base::axisOrderInverse(axis_order_e axisOrder)
 {
     switch (axisOrder) {
     case YPOS_XNEG_ZPOS:
@@ -344,15 +357,20 @@ IMU_Base::axis_order_t IMU_Base::axisOrderInverse(axis_order_t axisOrder)
     }
 }
 
-size_t IMU_Base::readFIFO_ToBuffer()
+IMU_Base::xyz_alignment_t IMU_Base::alignmentFromAxisOrder(axis_order_e axisOrder)
 {
-    return 0;
+    (void)axisOrder;
+    xyz_alignment_t alignment {
+        .x = 0,
+        .y = 0,
+        .z = 0
+    };
+    return alignment;
 }
 
-IMU_Base::accGyroRPS_t IMU_Base::readFIFO_Item(size_t index)
+IMU_Base::axis_order_e IMU_Base::axisOrderFromAlignment(const xyz_alignment_t& alignment)
 {
-    (void)index;
-
-    const accGyroRPS_t gyroAcc {};
-    return gyroAcc;
+    (void)alignment;
+    return XPOS_YPOS_ZPOS;
 }
+

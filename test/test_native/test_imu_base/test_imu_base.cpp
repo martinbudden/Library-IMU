@@ -10,14 +10,14 @@ public:
     IMU_Test(IMU_Test&&) = delete;
     IMU_Test& operator=(IMU_Test&&) = delete;
     IMU_Test() = default;
-    explicit IMU_Test(axis_order_t axisOrder) : IMU_Base(axisOrder) {}
-    virtual int init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex) override;
+    explicit IMU_Test(axis_order_e axisOrder) : IMU_Base(axisOrder) {}
+    virtual int init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) override;
     virtual xyz_int32_t readGyroRaw() override;
     virtual xyz_int32_t readAccRaw() override;
 // NOLINTEND(cppcoreguidelines-explicit-virtual-functions,hicpp-use-override,modernize-use-override)
 };
 
-int IMU_Test::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex)
+int IMU_Test::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex)
 {
     (void)outputDataRateHz;
     (void)gyroSensitivity;
@@ -207,7 +207,7 @@ void test_map_axes_inversion()
     const xyz_t input { .x =3, .y = 5, .z = 7 };
 
     for (int ii = IMU_Base::XPOS_YPOS_ZPOS; ii <= IMU_Base::XPOS_ZPOS_YNEG; ++ii) {
-        const auto axisOrder = static_cast<IMU_Base::axis_order_t>(ii);
+        const auto axisOrder = static_cast<IMU_Base::axis_order_e>(ii);
         const xyz_t intermediate = IMU_Base::mapAxes(input, axisOrder);
         const xyz_t output =       IMU_Base::mapAxes(intermediate, IMU_Base::axisOrderInverse(axisOrder));
         TEST_ASSERT_EQUAL(input.x, output.x);

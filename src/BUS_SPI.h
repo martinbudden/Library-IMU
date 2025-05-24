@@ -26,7 +26,7 @@ typedef struct spi_inst spi_inst_t;
 
 class BUS_SPI : public BUS_BASE {
 public:
-    enum spi_index_t { SPI_INDEX_0, SPI_INDEX_1, SPI_INDEX_2, SPI_INDEX_3 };
+    enum spi_index_e { SPI_INDEX_0, SPI_INDEX_1, SPI_INDEX_2, SPI_INDEX_3 };
     struct pins_t {
         uint8_t cs;
         uint8_t sck;
@@ -40,8 +40,8 @@ public:
 #if defined(USE_IMU_SPI_DMA)
     virtual ~BUS_SPI();
 #endif
-    BUS_SPI(uint32_t frequency, spi_index_t SPI_index, const pins_t& pins);
-    BUS_SPI(uint32_t frequency, spi_index_t SPI_index, uint8_t CS_pin);
+    BUS_SPI(uint32_t frequency, spi_index_e SPI_index, const pins_t& pins);
+    BUS_SPI(uint32_t frequency, spi_index_e SPI_index, uint8_t CS_pin);
     BUS_SPI(uint32_t frequency, uint8_t CS_pin) : BUS_SPI(frequency, SPI_INDEX_0, CS_pin) {}
 public:
     void configureDMA();
@@ -61,7 +61,7 @@ private:
     static BUS_SPI* bus; //!< alias of `this` to be used in interrupt service routine
     uint32_t _clockDivider {1};
     uint32_t _frequency {1000000};
-    spi_index_t _SPI_index {};
+    spi_index_e _SPI_index {};
     pins_t _pins;
 #if defined(FRAMEWORK_RPI_PICO)
     static void dataReadyISR(unsigned int gpio, uint32_t events);

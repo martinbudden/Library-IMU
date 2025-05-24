@@ -4,16 +4,19 @@
 #include <IMU_M5Unified.h>
 #include <cassert>
 
-IMU_M5_UNIFIED::IMU_M5_UNIFIED(axis_order_t axisOrder) :
+IMU_M5_UNIFIED::IMU_M5_UNIFIED(axis_order_e axisOrder) :
     IMU_Base(axisOrder)
 {
 }
 
-int IMU_M5_UNIFIED::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex)
+int IMU_M5_UNIFIED::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex)
 {
     (void)outputDataRateHz;
     (void)gyroSensitivity;
     (void)accSensitivity;
+    _gyroSampleRateHz = 500;
+    _accSampleRateHz = 500;
+
 #if defined(I2C_MUTEX_REQUIRED)
     _i2cMutex = static_cast<SemaphoreHandle_t>(i2cMutex);
 #else

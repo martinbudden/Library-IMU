@@ -154,7 +154,7 @@ constexpr uint8_t REG_OUTZ_H_ACC            = 0x2D;
 Gyroscope data rates up to 6.4 kHz, accelerometer up to 1.6 kHz
 */
 #if defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_IMU_LSM6DSOX_SPI)
-IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_index_t SPI_index, const BUS_SPI::pins_t& pins) :
+IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_e axisOrder, uint32_t frequency, BUS_SPI::spi_index_e SPI_index, const BUS_SPI::pins_t& pins) :
     IMU_Base(axisOrder, _bus),
     _bus(frequency, SPI_index, pins)
 {
@@ -163,13 +163,13 @@ IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, uint32_t frequency, BUS
     _dmaSpiRegister = REG_OUTX_L_G | BUS_SPI::READ_BIT;
 }
 #else
-IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, BUS_I2C::i2c_index_t I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
+IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_e axisOrder, BUS_I2C::i2c_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
     IMU_Base(axisOrder, _bus),
     _bus(I2C_address, I2C_index, pins)
 {
 }
 #if !defined(FRAMEWORK_RPI_PICO) && !defined(FRAMEWORK_ESPIDF) && !defined(FRAMEWORK_TEST)
-IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, TwoWire& wire, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
+IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_e axisOrder, TwoWire& wire, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
     IMU_Base(axisOrder, _bus),
     _bus(I2C_address, wire, pins)
 {
@@ -177,7 +177,7 @@ IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_t axisOrder, TwoWire& wire, const BU
 #endif
 #endif
 
-int IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex) // NOLINT(readability-function-cognitive-complexity)
+int IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) // NOLINT(readability-function-cognitive-complexity)
 {
 #if defined(I2C_MUTEX_REQUIRED)
     _i2cMutex = static_cast<SemaphoreHandle_t>(i2cMutex);
@@ -186,6 +186,8 @@ int IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSens
 #endif
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
+
+    _ID = 18; // same value as BETAFLIGHT GYRO_LSM6DSO
 
     _bus.setDeviceRegister(REG_OUTX_L_G, reinterpret_cast<uint8_t*>(&_spiAccGyroData), sizeof(_spiAccGyroData));
 
@@ -230,6 +232,17 @@ int IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSens
         outputDataRateHz > 52 ? GYRO_ODR_104_HZ :
         outputDataRateHz > 26 ? GYRO_ODR_52_HZ :
         outputDataRateHz > 13 ? GYRO_ODR_26_HZ : GYRO_ODR_12p5_HZ;
+    _gyroSampleRateHz =
+        outputDataRateHz == GYRO_ODR_6664_HZ ? 6664 :
+        outputDataRateHz == GYRO_ODR_3332_HZ ? 3332 :
+        outputDataRateHz == GYRO_ODR_1666_HZ ? 1666 :
+        outputDataRateHz == GYRO_ODR_833_HZ ? 833 :
+        outputDataRateHz == GYRO_ODR_416_HZ ? 416 :
+        outputDataRateHz == GYRO_ODR_208_HZ ? 208 :
+        outputDataRateHz == GYRO_ODR_104_HZ ? 104:
+        outputDataRateHz == GYRO_ODR_52_HZ ? 52 :
+        outputDataRateHz == GYRO_ODR_26_HZ ? 26 : 12;
+
     switch (gyroSensitivity) {
     case GYRO_FULL_SCALE_125_DPS: // NOLINT(bugprone-branch-clone) false positive
         _bus.writeRegister(REG_CTRL2_G, GYRO_RANGE_125_DPS | gyroOutputDataRate);
@@ -268,6 +281,17 @@ int IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSens
         outputDataRateHz > 52 ? ACC_ODR_104_HZ :
         outputDataRateHz > 26 ? ACC_ODR_52_HZ :
         outputDataRateHz > 13 ? ACC_ODR_26_HZ : ACC_ODR_12p5_HZ;
+    _accSampleRateHz =
+        outputDataRateHz == ACC_ODR_6664_HZ ? 6664 :
+        outputDataRateHz == ACC_ODR_3332_HZ ? 3332 :
+        outputDataRateHz == ACC_ODR_1666_HZ ? 1666 :
+        outputDataRateHz == ACC_ODR_833_HZ ? 833 :
+        outputDataRateHz == ACC_ODR_416_HZ ? 416 :
+        outputDataRateHz == ACC_ODR_208_HZ ? 208 :
+        outputDataRateHz == ACC_ODR_104_HZ ? 104:
+        outputDataRateHz == ACC_ODR_52_HZ ? 52 :
+        outputDataRateHz == ACC_ODR_26_HZ ? 26 : 12;
+
     switch (accSensitivity) {
     case ACC_FULL_SCALE_2G:
         _bus.writeRegister(REG_CTRL1_XL, ACC_RANGE_2G | accOutputDataRate); // cppcheck-suppress badBitmaskCheck

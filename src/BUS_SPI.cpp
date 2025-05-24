@@ -111,7 +111,7 @@ BUS_SPI::~BUS_SPI()
 }
 #endif
 
-BUS_SPI::BUS_SPI(uint32_t frequency, spi_index_t SPI_index, uint8_t CS_pin)
+BUS_SPI::BUS_SPI(uint32_t frequency, spi_index_e SPI_index, uint8_t CS_pin)
 #if defined(FRAMEWORK_RPI_PICO)
     : BUS_SPI(frequency, SPI_index, { .cs=CS_pin, .sck=PICO_DEFAULT_SPI_SCK_PIN, .cipo=PICO_DEFAULT_SPI_RX_PIN, .copi=PICO_DEFAULT_SPI_TX_PIN, .irq=IRQ_NOT_SET, .irqLevel=0})
     // there is also PICO_DEFAULT_SPI_CSN_PIN
@@ -123,7 +123,7 @@ BUS_SPI::BUS_SPI(uint32_t frequency, spi_index_t SPI_index, uint8_t CS_pin)
 {
 }
 
-BUS_SPI::BUS_SPI(uint32_t frequency, spi_index_t SPI_index, const pins_t& pins) :
+BUS_SPI::BUS_SPI(uint32_t frequency, spi_index_e SPI_index, const pins_t& pins) :
     _frequency(frequency)
     ,_SPI_index(SPI_index)
     ,_pins(pins)

@@ -24,7 +24,7 @@ typedef struct i2c_inst i2c_inst_t;
 
 class BUS_I2C  : public BUS_BASE {
 public:
-    enum i2c_index_t { I2C_INDEX_0, I2C_INDEX_1, I2C_INDEX_2, I2C_INDEX_3 };
+    enum i2c_index_e { I2C_INDEX_0, I2C_INDEX_1, I2C_INDEX_2, I2C_INDEX_3 };
     struct pins_t {
         uint8_t sda;
         uint8_t scl;
@@ -32,9 +32,9 @@ public:
         uint8_t irqLevel;
     };
 public:
-    BUS_I2C(uint8_t I2C_address, i2c_index_t I2C_index);
+    BUS_I2C(uint8_t I2C_address, i2c_index_e I2C_index);
     explicit BUS_I2C(uint8_t I2C_address) : BUS_I2C(I2C_address, I2C_INDEX_0) {}
-    BUS_I2C(uint8_t I2C_address, i2c_index_t I2C_index, const pins_t& pins);
+    BUS_I2C(uint8_t I2C_address, i2c_index_e I2C_index, const pins_t& pins);
     BUS_I2C(uint8_t I2C_address, const pins_t& pins) : BUS_I2C(I2C_address, I2C_INDEX_0, pins) {}
 #if !defined(FRAMEWORK_RPI_PICO) && !defined(FRAMEWORK_ESPIDF) && !defined(FRAMEWORK_TEST)
     BUS_I2C(uint8_t I2C_address, TwoWire& wire, const pins_t& pins);
@@ -53,7 +53,7 @@ public:
     uint8_t writeBytes(const uint8_t* data, size_t length);
 private:
     static BUS_I2C* bus; //!< alias of `this` to be used in interrupt service routine
-    i2c_index_t _I2C_index {};
+    i2c_index_e _I2C_index {};
     pins_t _pins;
 #if defined(FRAMEWORK_RPI_PICO)
     enum { RETAIN_CONTROL_OF_BUS = true };

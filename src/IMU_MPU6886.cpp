@@ -96,7 +96,7 @@ constexpr uint8_t REG_ZA_OFFSET_L           = 0x7E;
 // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers,hicpp-signed-bitwise)
 
 #if defined(USE_IMU_MPU6886_SPI)
-IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::spi_index_t SPI_index, const BUS_SPI::pins_t& pins) :
+IMU_MPU6886::IMU_MPU6886(axis_order_e axisOrder, uint32_t frequency, BUS_SPI::spi_index_e SPI_index, const BUS_SPI::pins_t& pins) :
     IMU_Base(axisOrder, _bus),
     _bus(frequency, SPI_index, pins)
 {
@@ -105,7 +105,7 @@ IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder, uint32_t frequency, BUS_SPI::sp
     static_assert(sizeof(acc_temperature_gyro_array_t) == acc_temperature_gyro_array_t::DATA_SIZE);
 }
 #else
-IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder, BUS_I2C::i2c_index_t I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
+IMU_MPU6886::IMU_MPU6886(axis_order_e axisOrder, BUS_I2C::i2c_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
     IMU_Base(axisOrder, _bus),
     _bus(I2C_address, I2C_index, pins)
 {
@@ -115,7 +115,7 @@ IMU_MPU6886::IMU_MPU6886(axis_order_t axisOrder, BUS_I2C::i2c_index_t I2C_index,
 }
 #endif
 
-int IMU_MPU6886::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex)
+int IMU_MPU6886::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex)
 {
     (void)outputDataRateHz;
     (void)gyroSensitivity;
@@ -172,6 +172,8 @@ int IMU_MPU6886::init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitiv
     // M5Stack default divider is two, giving 500Hz output rate
     _bus.writeRegister(REG_SAMPLE_RATE_DIVIDER, DIVIDE_BY_2);
     delayMs(1);
+    _gyroSampleRateHz = 500;
+    _accSampleRateHz = 500;
 
     _bus.writeRegister(REG_FIFO_ENABLE, 0x00); // FIFO disabled
     delayMs(1);

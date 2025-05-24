@@ -5,9 +5,9 @@
 
 class IMU_M5_STACK : public IMU_Base {
 public:
-    explicit IMU_M5_STACK(axis_order_t axisOrder);
+    explicit IMU_M5_STACK(axis_order_e axisOrder);
 public:
-    virtual int init(uint32_t outputDataRateHz, gyro_sensitivity_t gyroSensitivity, acc_sensitivity_t accSensitivity, void* i2cMutex) override;
+    virtual int init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) override;
     virtual xyz_int32_t readGyroRaw() override;
     virtual xyz_int32_t readAccRaw() override;
 
