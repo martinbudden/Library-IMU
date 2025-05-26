@@ -17,7 +17,7 @@
         }
     ],
     "license": "MIT",
-    "version": "0.7.1",
+    "version": "0.7.2",
     "frameworks": "*",
     "platforms": "*",
     "headers": ["BUS_I2C.h", "BUS_SPI.h", "IMU_Base.h", "IMU_BMI270.h", "IMU_BNO085.h", "IMU_LSM6DS3TR_C.h", "IMU_M5Stack.h", "IMU_M5Unified.h", "IMU_MPU6886.h"]

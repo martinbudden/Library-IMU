@@ -175,6 +175,7 @@ public:
     virtual accGyroRPS_t readFIFO_Item(size_t index);
 
     inline axis_order_e getAxisOrder() const { return _axisOrder; }
+    inline void setAxisOrder(axis_order_e axisOrder) { _axisOrder = axisOrder; }
     static xyz_t mapAxes(const xyz_t& data, axis_order_e axisOrder);
     inline xyz_t mapAxes(const xyz_t& data) const { return mapAxes(data, _axisOrder); }
     static axis_order_e axisOrderInverse(axis_order_e axisOrder);
