@@ -117,11 +117,11 @@ constexpr uint8_t REG_CTRL4_C               = 0x13;
 constexpr uint8_t REG_CTRL5_C               = 0x14;
 constexpr uint8_t REG_CTRL6_C               = 0x15;
     constexpr uint8_t XL_HM_MODE_DISABLE    = 0b00010000;
-    constexpr uint8_t LPF1_MHI              = 0x00;   // (bits 2:0) gyro LPF1 cutoff at 6667 Hz - LSM6DS3TR_C: 351Hz, ISM330DHCX: 297Hz, LSM6DSOX: 335.5Hz
-    constexpr uint8_t LPF1_MLO              = 0x01;   // (bits 2:0) gyro LPF1 cutoff at 6667 Hz - LSM6DS3TR_C: 237Hz, ISM330DHCX: 223Hz, LSM6DSOX: 232.0Hz
+    constexpr uint8_t LPF1_MEDIUM_HI        = 0x00;   // (bits 2:0) gyro LPF1 cutoff at 6667 Hz - LSM6DS3TR_C: 351Hz, ISM330DHCX: 297Hz, LSM6DSOX: 335.5Hz
+    constexpr uint8_t LPF1_MEDIUM_LO        = 0x01;   // (bits 2:0) gyro LPF1 cutoff at 6667 Hz - LSM6DS3TR_C: 237Hz, ISM330DHCX: 223Hz, LSM6DSOX: 232.0Hz
     constexpr uint8_t LPF1_LO               = 0x02;   // (bits 2:0) gyro LPF1 cutoff at 6667 Hz - LSM6DS3TR_C: 172Hz, ISM330DHCX: 154Hz, LSM6DSOX: 171.1Hz
     constexpr uint8_t LPF1_HI               = 0x03;   // (bits 2:0) gyro LPF1 cutoff at 6667 Hz   LSM6DS3TR_C: 937Hz, ISM330DHCX: 470Hz, LSM6DSOX: 609.0Hz
-constexpr uint8_t REG_CTRL7_G               = 0x16;
+constexpr uint8_t REG_CTRL7_G               = 0x16; // this includes high pass filter (HPF)
 constexpr uint8_t REG_CTRL8_XL              = 0x17;
 constexpr uint8_t REG_CTRL9_XL              = 0x18;
 constexpr uint8_t REG_CTRL10_C              = 0x19;
@@ -177,7 +177,7 @@ IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_e axisOrder, TwoWire& wire, const BU
 #endif
 #endif
 
-int IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) // NOLINT(readability-function-cognitive-complexity)
+int IMU_LSM6DS3TR_C::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) // NOLINT(readability-function-cognitive-complexity)
 {
 #if defined(I2C_MUTEX_REQUIRED)
     _i2cMutex = static_cast<SemaphoreHandle_t>(i2cMutex);
@@ -187,7 +187,9 @@ int IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSens
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
 
-    _ID = 18; // same value as BETAFLIGHT GYRO_LSM6DSO
+    // MSP compatible gyro and acc identifiers
+    _gyroIdMSP = 18;
+    _accIdMSP = 19;
 
     _bus.setDeviceRegister(REG_OUTX_L_G, reinterpret_cast<uint8_t*>(&_spiAccGyroData), sizeof(_spiAccGyroData));
 
@@ -213,100 +215,106 @@ int IMU_LSM6DS3TR_C::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSens
     _bus.writeRegister(REG_CTRL3_C, BDU | IF_INC); // Block Data Update and automatically increment registers when read via serial interface (I2C or SPI)
     delayMs(1);
 #if defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_IMU_LSM6DSOX_SPI)
-    _bus.writeRegister(REG_CTRL4_C, LPF1_SEL_G | I2C_DISABLE);
+    _bus.writeRegister(REG_CTRL4_C, LPF1_SEL_G | I2C_DISABLE);  // enable gyro LPF, disable I2C
 #else
     _bus.writeRegister(REG_CTRL4_C, LPF1_SEL_G); // enable gyro LPF
 #endif
     delayMs(1);
-    _bus.writeRegister(REG_CTRL6_C, LPF1_HI);
-    delayMs(1);
 
-    const uint8_t gyroOutputDataRate =
-        outputDataRateHz == 0 ? GYRO_ODR_6664_HZ :
-        outputDataRateHz > 3332 ? GYRO_ODR_6664_HZ :
-        outputDataRateHz > 1666 ? GYRO_ODR_3332_HZ :
-        outputDataRateHz > 833 ? GYRO_ODR_1666_HZ :
-        outputDataRateHz > 416 ? GYRO_ODR_833_HZ :
-        outputDataRateHz > 208 ? GYRO_ODR_416_HZ :
-        outputDataRateHz > 104 ? GYRO_ODR_208_HZ :
-        outputDataRateHz > 52 ? GYRO_ODR_104_HZ :
-        outputDataRateHz > 26 ? GYRO_ODR_52_HZ :
-        outputDataRateHz > 13 ? GYRO_ODR_26_HZ : GYRO_ODR_12p5_HZ;
+    // calculate the GYRO_ODR bit values to write to the REG_CTRL2_G register
+    const uint8_t GYRO_ODR =
+        targetOutputDataRateHz == 0 ? GYRO_ODR_6664_HZ :
+        targetOutputDataRateHz > 3332 ? GYRO_ODR_6664_HZ :
+        targetOutputDataRateHz > 1666 ? GYRO_ODR_3332_HZ :
+        targetOutputDataRateHz > 833 ? GYRO_ODR_1666_HZ :
+        targetOutputDataRateHz > 416 ? GYRO_ODR_833_HZ :
+        targetOutputDataRateHz > 208 ? GYRO_ODR_416_HZ :
+        targetOutputDataRateHz > 104 ? GYRO_ODR_208_HZ :
+        targetOutputDataRateHz > 52 ? GYRO_ODR_104_HZ :
+        targetOutputDataRateHz > 26 ? GYRO_ODR_52_HZ :
+        targetOutputDataRateHz > 13 ? GYRO_ODR_26_HZ : GYRO_ODR_12p5_HZ;
+    // report the value that was actually set
     _gyroSampleRateHz =
-        outputDataRateHz == GYRO_ODR_6664_HZ ? 6664 :
-        outputDataRateHz == GYRO_ODR_3332_HZ ? 3332 :
-        outputDataRateHz == GYRO_ODR_1666_HZ ? 1666 :
-        outputDataRateHz == GYRO_ODR_833_HZ ? 833 :
-        outputDataRateHz == GYRO_ODR_416_HZ ? 416 :
-        outputDataRateHz == GYRO_ODR_208_HZ ? 208 :
-        outputDataRateHz == GYRO_ODR_104_HZ ? 104:
-        outputDataRateHz == GYRO_ODR_52_HZ ? 52 :
-        outputDataRateHz == GYRO_ODR_26_HZ ? 26 : 12;
+        GYRO_ODR == GYRO_ODR_6664_HZ ? 6664 :
+        GYRO_ODR == GYRO_ODR_3332_HZ ? 3332 :
+        GYRO_ODR == GYRO_ODR_1666_HZ ? 1666 :
+        GYRO_ODR == GYRO_ODR_833_HZ ? 833 :
+        GYRO_ODR == GYRO_ODR_416_HZ ? 416 :
+        GYRO_ODR == GYRO_ODR_208_HZ ? 208 :
+        GYRO_ODR == GYRO_ODR_104_HZ ? 104:
+        GYRO_ODR == GYRO_ODR_52_HZ ? 52 :
+        GYRO_ODR == GYRO_ODR_26_HZ ? 26 : 12;
+
+    // set the anti-alias LPF filter according to the gyro sampling rate
+    _bus.writeRegister(REG_CTRL6_C, _gyroSampleRateHz > 3000 ? LPF1_HI : LPF1_MEDIUM_HI);
+    delayMs(1);
 
     switch (gyroSensitivity) {
     case GYRO_FULL_SCALE_125_DPS: // NOLINT(bugprone-branch-clone) false positive
-        _bus.writeRegister(REG_CTRL2_G, GYRO_RANGE_125_DPS | gyroOutputDataRate);
+        _bus.writeRegister(REG_CTRL2_G, GYRO_RANGE_125_DPS | GYRO_ODR);
         _gyroResolutionDPS = 245.0F / 32768.0F;
         break;
     case GYRO_FULL_SCALE_250_DPS:
-        _bus.writeRegister(REG_CTRL2_G, GYRO_RANGE_245_DPS | gyroOutputDataRate); // cppcheck-suppress badBitmaskCheck
+        _bus.writeRegister(REG_CTRL2_G, GYRO_RANGE_245_DPS | GYRO_ODR); // cppcheck-suppress badBitmaskCheck
         _gyroResolutionDPS = 245.0F / 32768.0F;
         break;
     case GYRO_FULL_SCALE_500_DPS:
-        _bus.writeRegister(REG_CTRL2_G, GYRO_RANGE_500_DPS | gyroOutputDataRate);
+        _bus.writeRegister(REG_CTRL2_G, GYRO_RANGE_500_DPS | GYRO_ODR);
         _gyroResolutionDPS = 500.0F / 32768.0F;
         break;
     case GYRO_FULL_SCALE_1000_DPS:
-        _bus.writeRegister(REG_CTRL2_G, GYRO_RANGE_1000_DPS | gyroOutputDataRate);
+        _bus.writeRegister(REG_CTRL2_G, GYRO_RANGE_1000_DPS | GYRO_ODR);
         _gyroResolutionDPS = 1000.0F / 32768.0F;
         break;
     case GYRO_FULL_SCALE_2000_DPS:
         [[fallthrough]];
     default:
-        _bus.writeRegister(REG_CTRL2_G, GYRO_RANGE_2000_DPS | gyroOutputDataRate);
+        _bus.writeRegister(REG_CTRL2_G, GYRO_RANGE_2000_DPS | GYRO_ODR);
         _gyroResolutionDPS = 2000.0F / 32768.0F;
         break;
     }
     _gyroResolutionRPS = _gyroResolutionDPS * degreesToRadians;
     delayMs(1);
 
-    const uint8_t accOutputDataRate =
-        outputDataRateHz == 0 ? ACC_ODR_6664_HZ :
-        outputDataRateHz > 3332 ? ACC_ODR_6664_HZ :
-        outputDataRateHz > 1666 ? ACC_ODR_3332_HZ :
-        outputDataRateHz > 833 ? ACC_ODR_1666_HZ :
-        outputDataRateHz > 416 ? ACC_ODR_833_HZ :
-        outputDataRateHz > 208 ? ACC_ODR_416_HZ :
-        outputDataRateHz > 104 ? ACC_ODR_208_HZ :
-        outputDataRateHz > 52 ? ACC_ODR_104_HZ :
-        outputDataRateHz > 26 ? ACC_ODR_52_HZ :
-        outputDataRateHz > 13 ? ACC_ODR_26_HZ : ACC_ODR_12p5_HZ;
+    // calculate the ACC_ODR bit values to write to the REG_CTRL1_XL register
+    const uint8_t ACC_ODR =
+        targetOutputDataRateHz == 0 ? ACC_ODR_6664_HZ :
+        targetOutputDataRateHz > 3332 ? ACC_ODR_6664_HZ :
+        targetOutputDataRateHz > 1666 ? ACC_ODR_3332_HZ :
+        targetOutputDataRateHz > 833 ? ACC_ODR_1666_HZ :
+        targetOutputDataRateHz > 416 ? ACC_ODR_833_HZ :
+        targetOutputDataRateHz > 208 ? ACC_ODR_416_HZ :
+        targetOutputDataRateHz > 104 ? ACC_ODR_208_HZ :
+        targetOutputDataRateHz > 52 ? ACC_ODR_104_HZ :
+        targetOutputDataRateHz > 26 ? ACC_ODR_52_HZ :
+        targetOutputDataRateHz > 13 ? ACC_ODR_26_HZ : ACC_ODR_12p5_HZ;
+    // report the value that was actually set
     _accSampleRateHz =
-        outputDataRateHz == ACC_ODR_6664_HZ ? 6664 :
-        outputDataRateHz == ACC_ODR_3332_HZ ? 3332 :
-        outputDataRateHz == ACC_ODR_1666_HZ ? 1666 :
-        outputDataRateHz == ACC_ODR_833_HZ ? 833 :
-        outputDataRateHz == ACC_ODR_416_HZ ? 416 :
-        outputDataRateHz == ACC_ODR_208_HZ ? 208 :
-        outputDataRateHz == ACC_ODR_104_HZ ? 104:
-        outputDataRateHz == ACC_ODR_52_HZ ? 52 :
-        outputDataRateHz == ACC_ODR_26_HZ ? 26 : 12;
+        ACC_ODR == ACC_ODR_6664_HZ ? 6664 :
+        ACC_ODR == ACC_ODR_3332_HZ ? 3332 :
+        ACC_ODR == ACC_ODR_1666_HZ ? 1666 :
+        ACC_ODR == ACC_ODR_833_HZ ? 833 :
+        ACC_ODR == ACC_ODR_416_HZ ? 416 :
+        ACC_ODR == ACC_ODR_208_HZ ? 208 :
+        ACC_ODR == ACC_ODR_104_HZ ? 104:
+        ACC_ODR == ACC_ODR_52_HZ ? 52 :
+        ACC_ODR == ACC_ODR_26_HZ ? 26 : 12;
 
     switch (accSensitivity) {
     case ACC_FULL_SCALE_2G:
-        _bus.writeRegister(REG_CTRL1_XL, ACC_RANGE_2G | accOutputDataRate); // cppcheck-suppress badBitmaskCheck
+        _bus.writeRegister(REG_CTRL1_XL, ACC_RANGE_2G | ACC_ODR); // cppcheck-suppress badBitmaskCheck
         _accResolution = 2.0F / 32768.0F;
         break;
     case ACC_FULL_SCALE_4G:
-        _bus.writeRegister(REG_CTRL1_XL, ACC_RANGE_4G | accOutputDataRate);
+        _bus.writeRegister(REG_CTRL1_XL, ACC_RANGE_4G | ACC_ODR);
         _accResolution = 4.0F / 32768.0F;
         break;
     case ACC_FULL_SCALE_8G:
-        _bus.writeRegister(REG_CTRL1_XL, ACC_RANGE_8G | accOutputDataRate);
+        _bus.writeRegister(REG_CTRL1_XL, ACC_RANGE_8G | ACC_ODR);
         _accResolution = 8.0F / 32768.0F;
         break;
     default:
-        _bus.writeRegister(REG_CTRL1_XL, ACC_RANGE_16G | accOutputDataRate);
+        _bus.writeRegister(REG_CTRL1_XL, ACC_RANGE_16G | ACC_ODR);
         _accResolution = 16.0F / 32768.0F;
         break;
     }

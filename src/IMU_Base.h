@@ -86,6 +86,11 @@ public:
         ACC_FULL_SCALE_16G,
         ACC_FULL_SCALE_32G,
     };
+    enum {
+        MSP_GYRO_ID_NONE = 0, MSP_GYRO_ID_DEFAULT = 1, MSP_GYRO_ID_VIRTUAL = 20,
+        MSP_ACC_ID_DEFAULT = 0, MSP_ACC_ID_NONE = 1 , MSP_ACC_ID_VIRTUAL = 21
+    };
+
     static constexpr float sin45f = 0.7071067811865475F;
     const std::array<Quaternion, 24> axisOrientations = {
         Quaternion(  1.0F,    0.0F,    0.0F,    0.0F ),
@@ -136,9 +141,9 @@ public:
     static constexpr float radiansToDegrees = static_cast<float>(180.0 / M_PI);
 public:
     static void delayMs(int ms);
-    virtual int init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) = 0;
-    virtual int init(uint32_t outputDataRateHz, void* i2cMutex) final;
-    virtual int init(uint32_t outputDataRateHz) final;
+    virtual int init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) = 0;
+    virtual int init(uint32_t targetOutputDataRateHz, void* i2cMutex) final;
+    virtual int init(uint32_t targetOutputDataRateHz) final;
     virtual int init(void* i2cMutex) final;
     virtual int init() final;
 
@@ -146,7 +151,8 @@ public:
     float getAccResolution() const { return _accResolution; }
     uint32_t getGyroSampleRateHz() const { return _gyroSampleRateHz; }
     uint32_t getAccSampleRateHz() const { return _accSampleRateHz; }
-    uint16_t getID() const { return _ID; }
+    uint16_t getGyroIdMSP() const { return _gyroIdMSP; }
+    uint16_t getAccIdMSP() const { return _accIdMSP; }
 
     virtual void setInterruptDriven();
     void WAIT_IMU_DATA_READY() { _busBase->WAIT_DATA_READY(); }
@@ -201,5 +207,6 @@ protected:
     uint32_t _accSampleRateHz {};
     xyz_int32_t _gyroOffset {};
     xyz_int32_t _accOffset {};
-    uint16_t _ID {};
+    uint16_t _gyroIdMSP {};
+    uint16_t _accIdMSP {};
 };

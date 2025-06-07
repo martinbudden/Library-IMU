@@ -132,7 +132,7 @@ public:
     IMU_BNO085(axis_order_e axisOrder, const BUS_I2C::pins_t& pins) : IMU_BNO085(axisOrder, pins, I2C_ADDRESS) {}
 #endif
 public:
-    virtual int init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) override;
+    virtual int init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) override;
     void setFeatureCommand(uint8_t reportID, uint32_t timeBetweenReportsUs, uint32_t specificConfig);
     virtual xyz_int32_t readGyroRaw() override;
     virtual xyz_int32_t readAccRaw() override;

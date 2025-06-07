@@ -176,7 +176,7 @@ IMU_BMI270::IMU_BMI270(axis_order_e axisOrder, BUS_I2C::i2c_index_e I2C_index, c
 }
 #endif
 
-int IMU_BMI270::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) // NOLINT(readability-function-cognitive-complexity)
+int IMU_BMI270::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) // NOLINT(readability-function-cognitive-complexity)
 {
 #if defined(I2C_MUTEX_REQUIRED)
     _i2cMutex = static_cast<SemaphoreHandle_t>(i2cMutex);
@@ -187,7 +187,9 @@ int IMU_BMI270::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivi
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
 
-    _ID = 17; // same value as BETAFLIGHT GYRO_BMI270
+    // MSP compatible gyro and acc identifiers
+    _gyroIdMSP = 17;
+    _accIdMSP = 18;
 
     _bus.setDeviceRegister(REG_ACC_X_L, reinterpret_cast<uint8_t*>(&_spiAccGyroData), sizeof(_spiAccGyroData));
 
@@ -229,25 +231,27 @@ int IMU_BMI270::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivi
     _bus.writeRegister(REG_INT2_IO_CTRL, 0b00000100); // input disabled, output enabled, push-pull, active low
     delayMs(1);
 
-    const uint8_t gyroOutputDataRate =
-        outputDataRateHz == 0 ? GYRO_ODR_3200_HZ :
-        outputDataRateHz > 1600 ? GYRO_ODR_3200_HZ :
-        outputDataRateHz > 800 ? GYRO_ODR_1600_HZ :
-        outputDataRateHz > 400 ? GYRO_ODR_800_HZ :
-        outputDataRateHz > 200 ? GYRO_ODR_400_HZ :
-        outputDataRateHz > 100 ? GYRO_ODR_200_HZ :
-        outputDataRateHz > 50 ? GYRO_ODR_100_HZ :
-        outputDataRateHz > 25 ? GYRO_ODR_50_HZ : GYRO_ODR_25_HZ;
+    // calculate the GYRO_ODR bit values to write to the REG_GYR_CONF register
+    const uint8_t GYRO_ODR =
+        targetOutputDataRateHz == 0 ? GYRO_ODR_3200_HZ :
+        targetOutputDataRateHz > 1600 ? GYRO_ODR_3200_HZ :
+        targetOutputDataRateHz > 800 ? GYRO_ODR_1600_HZ :
+        targetOutputDataRateHz > 400 ? GYRO_ODR_800_HZ :
+        targetOutputDataRateHz > 200 ? GYRO_ODR_400_HZ :
+        targetOutputDataRateHz > 100 ? GYRO_ODR_200_HZ :
+        targetOutputDataRateHz > 50 ? GYRO_ODR_100_HZ :
+        targetOutputDataRateHz > 25 ? GYRO_ODR_50_HZ : GYRO_ODR_25_HZ;
+    // report the value that was actually set
     _gyroSampleRateHz =
-        outputDataRateHz == GYRO_ODR_3200_HZ  ? 3200 :
-        outputDataRateHz == GYRO_ODR_1600_HZ ? 1600 :
-        outputDataRateHz == GYRO_ODR_800_HZ ? 800 :
-        outputDataRateHz == GYRO_ODR_400_HZ ? 400 :
-        outputDataRateHz == GYRO_ODR_200_HZ ? 200 :
-        outputDataRateHz == GYRO_ODR_100_HZ ? 100 :
-        outputDataRateHz == GYRO_ODR_50_HZ ? 50 : 25;
+        GYRO_ODR == GYRO_ODR_3200_HZ  ? 3200 :
+        GYRO_ODR == GYRO_ODR_1600_HZ ? 1600 :
+        GYRO_ODR == GYRO_ODR_800_HZ ? 800 :
+        GYRO_ODR == GYRO_ODR_400_HZ ? 400 :
+        GYRO_ODR == GYRO_ODR_200_HZ ? 200 :
+        GYRO_ODR == GYRO_ODR_100_HZ ? 100 :
+        GYRO_ODR == GYRO_ODR_50_HZ ? 50 : 25;
 
-    _bus.writeRegister(REG_GYR_CONF, GYRO_FILTER_PERFORMANCE_OPTIMIZED | GYRO_OSR4 | gyroOutputDataRate); // cppcheck-suppress badBitmaskCheck
+    _bus.writeRegister(REG_GYR_CONF, GYRO_FILTER_PERFORMANCE_OPTIMIZED | GYRO_OSR4 | GYRO_ODR); // cppcheck-suppress badBitmaskCheck
     delayMs(1);
 
     switch (gyroSensitivity) {
@@ -275,22 +279,24 @@ int IMU_BMI270::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivi
     _gyroResolutionRPS = _gyroResolutionDPS * degreesToRadians;
     delayMs(1);
 
-    const uint8_t accOutputDataRate =
-        outputDataRateHz == 0 ? ACC_ODR_1600_HZ :
-        outputDataRateHz > 800 ? ACC_ODR_1600_HZ :
-        outputDataRateHz > 400 ? ACC_ODR_800_HZ :
-        outputDataRateHz > 200 ? ACC_ODR_400_HZ :
-        outputDataRateHz > 100 ? ACC_ODR_200_HZ :
-        outputDataRateHz > 50 ? ACC_ODR_100_HZ :
-        outputDataRateHz > 25 ? ACC_ODR_50_HZ : ACC_ODR_25_HZ;
+    // calculate the ACC_ODR bit values to write to the REG_ACC_CONF register
+    const uint8_t ACC_ODR =
+        targetOutputDataRateHz == 0 ? ACC_ODR_1600_HZ :
+        targetOutputDataRateHz > 800 ? ACC_ODR_1600_HZ :
+        targetOutputDataRateHz > 400 ? ACC_ODR_800_HZ :
+        targetOutputDataRateHz > 200 ? ACC_ODR_400_HZ :
+        targetOutputDataRateHz > 100 ? ACC_ODR_200_HZ :
+        targetOutputDataRateHz > 50 ? ACC_ODR_100_HZ :
+        targetOutputDataRateHz > 25 ? ACC_ODR_50_HZ : ACC_ODR_25_HZ;
+    // report the value that was actually set
     _accSampleRateHz =
-        outputDataRateHz == ACC_ODR_800_HZ ? 800 :
-        outputDataRateHz == ACC_ODR_400_HZ ? 400 :
-        outputDataRateHz == ACC_ODR_200_HZ ? 200 :
-        outputDataRateHz == ACC_ODR_100_HZ ? 100 :
-        outputDataRateHz == ACC_ODR_50_HZ ? 50 : 25;
+        GYRO_ODR == ACC_ODR_800_HZ ? 800 :
+        ACC_ODR == ACC_ODR_400_HZ ? 400 :
+        ACC_ODR == ACC_ODR_200_HZ ? 200 :
+        ACC_ODR == ACC_ODR_100_HZ ? 100 :
+        ACC_ODR == ACC_ODR_50_HZ ? 50 : 25;
 
-    _bus.writeRegister(REG_ACC_CONF, ACC_FILTER_PERFORMANCE_OPTIMIZED | ACC_OSR4_AVG1 | accOutputDataRate); // cppcheck-suppress badBitmaskCheck
+    _bus.writeRegister(REG_ACC_CONF, ACC_FILTER_PERFORMANCE_OPTIMIZED | ACC_OSR4_AVG1 | ACC_ODR); // cppcheck-suppress badBitmaskCheck
     delayMs(1);
 
     switch (accSensitivity) {

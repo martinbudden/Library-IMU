@@ -17,7 +17,7 @@ public:
     IMU_MPU6886(axis_order_e axisOrder, const BUS_I2C::pins_t& pins) : IMU_MPU6886(axisOrder, pins, I2C_ADDRESS) {}
 #endif
 public:
-    virtual int init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) override;
+    virtual int init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) override;
 public:
     static constexpr uint8_t I2C_ADDRESS = 0x68;
     enum acc_scale_e { AFS_2G = 0, AFS_4G, AFS_8G, AFS_16G };

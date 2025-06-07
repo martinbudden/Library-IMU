@@ -24,6 +24,11 @@ int IMU_M5_STACK::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensiti
     (void)outputDataRateHz;
     (void)gyroSensitivity;
     (void)accSensitivity;
+
+    // MSP compatible gyro and acc identifiers, use defaults, since no MSP value for MPU6886
+    _gyroIdMSP = MSP_GYRO_ID_DEFAULT;
+    _accIdMSP = MSP_ACC_ID_DEFAULT;
+
 #if defined(I2C_MUTEX_REQUIRED)
     _i2cMutex = static_cast<SemaphoreHandle_t>(i2cMutex);
 #else

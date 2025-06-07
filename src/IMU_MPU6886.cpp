@@ -115,9 +115,9 @@ IMU_MPU6886::IMU_MPU6886(axis_order_e axisOrder, BUS_I2C::i2c_index_e I2C_index,
 }
 #endif
 
-int IMU_MPU6886::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex)
+int IMU_MPU6886::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex)
 {
-    (void)outputDataRateHz;
+    (void)targetOutputDataRateHz;
     (void)gyroSensitivity;
     (void)accSensitivity;
 #if defined(I2C_MUTEX_REQUIRED)
@@ -125,6 +125,10 @@ int IMU_MPU6886::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitiv
 #else
     (void)i2cMutex;
 #endif
+
+    // MSP compatible gyro and acc identifiers, use defaults, since no MSP value for MPU6886
+    _gyroIdMSP = MSP_GYRO_ID_DEFAULT;
+    _accIdMSP = MSP_ACC_ID_DEFAULT;
 
     _bus.setDeviceRegister(REG_GYRO_XOUT_H, reinterpret_cast<uint8_t*>(&_spiAccTemperatureGyroData), sizeof(_spiAccTemperatureGyroData));
 

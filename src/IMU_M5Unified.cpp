@@ -14,6 +14,11 @@ int IMU_M5_UNIFIED::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensi
     (void)outputDataRateHz;
     (void)gyroSensitivity;
     (void)accSensitivity;
+
+    // MSP compatible gyro and acc identifiers, use defaults, since no MSP value for MPU6886
+    _gyroIdMSP = MSP_GYRO_ID_DEFAULT;
+    _accIdMSP = MSP_ACC_ID_DEFAULT;
+
     _gyroSampleRateHz = 500;
     _accSampleRateHz = 500;
 

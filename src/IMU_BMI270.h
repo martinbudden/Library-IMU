@@ -48,7 +48,7 @@ public:
     IMU_BMI270(axis_order_e axisOrder, const BUS_I2C::pins_t& pins) : IMU_BMI270(axisOrder, pins, I2C_ADDRESS) {}
 #endif
 public:
-    virtual int init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) override;
+    virtual int init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) override;
     void loadConfigurationData();
     virtual void setInterruptDriven() override;
     virtual xyz_int32_t readGyroRaw() override;

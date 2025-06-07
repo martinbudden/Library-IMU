@@ -69,6 +69,11 @@ int IMU_BNO085::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivi
     assert(outputDataRateHz <= 400);
     (void)gyroSensitivity;
     (void)accSensitivity;
+
+    // MSP compatible gyro and acc identifiers, use defaults, since no MSP value for BNO085
+    _gyroIdMSP = MSP_GYRO_ID_DEFAULT;
+    _accIdMSP = MSP_ACC_ID_DEFAULT;
+
     _gyroSampleRateHz = outputDataRateHz;
     _accSampleRateHz = outputDataRateHz;
 #if defined(I2C_MUTEX_REQUIRED)

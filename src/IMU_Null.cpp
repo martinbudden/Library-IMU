@@ -1,12 +1,16 @@
 #include "IMU_Null.h"
 
 
-int IMU_Null::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex)
+int IMU_Null::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex)
 {
-    (void)outputDataRateHz;
+    (void)targetOutputDataRateHz;
     (void)gyroSensitivity;
     (void)accSensitivity;
     (void)i2cMutex;
+
+    _gyroIdMSP = MSP_GYRO_ID_VIRTUAL;
+    _accIdMSP = MSP_ACC_ID_VIRTUAL;
+
     return 0;
 }
 

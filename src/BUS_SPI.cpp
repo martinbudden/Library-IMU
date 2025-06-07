@@ -240,7 +240,7 @@ void BUS_SPI::setDeviceRegister(uint8_t deviceRegister, uint8_t* readBuf, size_t
 Set this bus so reads interrupt driven.
 When the IMU interrupt pin indicates data ready, the dataReadyISR is called and the data is read in the ISR.
 
-This routine sets the GPIO IRQ pin to input an attaches the dataReadyISR to be triggered by that pin.
+This routine sets the GPIO IRQ pin to input and attaches the dataReadyISR to be triggered by that pin.
 */
 void BUS_SPI::setInterruptDriven() // NOLINT(readability-make-member-function-const)
 {
