@@ -4,11 +4,9 @@
 
 #include <Quaternion.h>
 
-#if defined(I2C_MUTEX_REQUIRED)
 #if defined(USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
-#endif
 #endif
 
 
@@ -187,16 +185,25 @@ public:
     static axis_order_e axisOrderInverse(axis_order_e axisOrder);
     static xyz_alignment_t alignmentFromAxisOrder(axis_order_e axisOrder);
     static axis_order_e axisOrderFromAlignment(const xyz_alignment_t& alignment);
-#if defined(I2C_MUTEX_REQUIRED)
 #if defined(USE_FREERTOS)
+#if defined(I2C_MUTEX_REQUIRED)
     inline void i2cSemaphoreTake() const { xSemaphoreTake(_i2cMutex, portMAX_DELAY); }
     inline void i2cSemaphoreGive() const { xSemaphoreGive(_i2cMutex); }
-    SemaphoreHandle_t _i2cMutex {};
-#endif
 #else
     inline void i2cSemaphoreTake() const {}
     inline void i2cSemaphoreGive() const {}
 #endif
+    // functions to allow an IMU implementation to do run time checking if a mutex is required. Used by M5Stack implementations.
+    inline void i2cSemaphoreTake(SemaphoreHandle_t i2cMutex) const { if (i2cMutex) {xSemaphoreTake(i2cMutex, portMAX_DELAY);}  }
+    inline void i2cSemaphoreGive(SemaphoreHandle_t i2cMutex) const { if (i2cMutex) {xSemaphoreGive(i2cMutex);} }
+    SemaphoreHandle_t _i2cMutex {};
+#else
+    inline void i2cSemaphoreTake() const {}
+    inline void i2cSemaphoreGive() const {}
+    inline void i2cSemaphoreTake(void* i2cMutex) const { (void)i2cMutex; }
+    inline void i2cSemaphoreGive(void* i2cMutex) const { (void)i2cMutex; }
+    void* _i2cMutex {};
+#endif // USE_FREERTOS
 protected:
     axis_order_e _axisOrder;
     BUS_BASE* _busBase {};

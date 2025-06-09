@@ -29,7 +29,7 @@ void BUS_I2C::dataReadyISR(unsigned int gpio, uint32_t events)
     bus->SIGNAL_DATA_READY_FROM_ISR();
 }
 #else
-INSTRUCTION_RAM_ATTR void BUS_I2C::dataReadyISR()
+IRAM_ATTR void BUS_I2C::dataReadyISR()
 {
     // reading the IMU register resets the interrupt
     bus->readDeviceRegister();
@@ -175,7 +175,7 @@ void BUS_I2C::setInterruptDriven() // NOLINT(readability-make-member-function-co
 #endif
 }
 
-uint8_t BUS_I2C::readRegister(uint8_t reg) const
+IRAM_ATTR uint8_t BUS_I2C::readRegister(uint8_t reg) const
 {
 #if defined(FRAMEWORK_RPI_PICO)
     i2c_write_blocking(_I2C, _I2C_address, &reg, 1, RETAIN_CONTROL_OF_BUS);
@@ -199,7 +199,7 @@ uint8_t BUS_I2C::readRegister(uint8_t reg) const
     return 0;
 }
 
-uint8_t BUS_I2C::readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const
+IRAM_ATTR uint8_t BUS_I2C::readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const
 {
 #if defined(FRAMEWORK_RPI_PICO)
     i2c_write_blocking(_I2C, _I2C_address, &reg, 1, RETAIN_CONTROL_OF_BUS);
@@ -228,12 +228,12 @@ uint8_t BUS_I2C::readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const
     return 0;
 }
 
-bool BUS_I2C::readDeviceRegister()
+IRAM_ATTR bool BUS_I2C::readDeviceRegister()
 {
     return readRegister(_deviceRegister, _readBuf + SPI_BUFFER_SIZE, _readLength - SPI_BUFFER_SIZE); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 }
 
-bool BUS_I2C::readRegister(uint8_t reg, uint8_t* data, size_t length) const // NOLINT(readability-non-const-parameter)
+IRAM_ATTR bool BUS_I2C::readRegister(uint8_t reg, uint8_t* data, size_t length) const // NOLINT(readability-non-const-parameter)
 {
 #if defined(FRAMEWORK_RPI_PICO)
     i2c_write_blocking(_I2C, _I2C_address, &reg, 1, RETAIN_CONTROL_OF_BUS);
@@ -256,7 +256,7 @@ bool BUS_I2C::readRegister(uint8_t reg, uint8_t* data, size_t length) const // N
     return false;
 }
 
-bool BUS_I2C::readBytes(uint8_t* data, size_t length) const // NOLINT(readability-non-const-parameter)
+IRAM_ATTR bool BUS_I2C::readBytes(uint8_t* data, size_t length) const // NOLINT(readability-non-const-parameter)
 {
 #if defined(FRAMEWORK_RPI_PICO)
     i2c_read_blocking(_I2C, _I2C_address, data, length, false);
@@ -278,7 +278,7 @@ bool BUS_I2C::readBytes(uint8_t* data, size_t length) const // NOLINT(readabilit
     return false;
 }
 
-bool BUS_I2C::readBytesWithTimeout(uint8_t* data, size_t length, uint32_t timeoutMs) const // NOLINT(readability-non-const-parameter)
+IRAM_ATTR bool BUS_I2C::readBytesWithTimeout(uint8_t* data, size_t length, uint32_t timeoutMs) const // NOLINT(readability-non-const-parameter)
 {
 #if defined(FRAMEWORK_RPI_PICO)
     i2c_read_timeout_us(_I2C, _I2C_address, data, length, false, timeoutMs *1000);
@@ -307,7 +307,7 @@ bool BUS_I2C::readBytesWithTimeout(uint8_t* data, size_t length, uint32_t timeou
     return false;
 }
 
-uint8_t BUS_I2C::writeRegister(uint8_t reg, uint8_t data)
+IRAM_ATTR uint8_t BUS_I2C::writeRegister(uint8_t reg, uint8_t data)
 {
 #if defined(FRAMEWORK_RPI_PICO)
     std::array<uint8_t, 2> buf = { reg, data };
@@ -328,7 +328,7 @@ uint8_t BUS_I2C::writeRegister(uint8_t reg, uint8_t data)
     return 0;
 }
 
-uint8_t BUS_I2C::writeRegister(uint8_t reg, const uint8_t* data, size_t length)
+IRAM_ATTR uint8_t BUS_I2C::writeRegister(uint8_t reg, const uint8_t* data, size_t length)
 {
 #if defined(FRAMEWORK_RPI_PICO)
     i2c_write_blocking(_I2C, _I2C_address, &reg, 1, false);
@@ -350,7 +350,7 @@ uint8_t BUS_I2C::writeRegister(uint8_t reg, const uint8_t* data, size_t length)
     return 0;
 }
 
-uint8_t BUS_I2C::writeBytes(const uint8_t* data, size_t length)
+IRAM_ATTR uint8_t BUS_I2C::writeBytes(const uint8_t* data, size_t length)
 {
 #if defined(FRAMEWORK_RPI_PICO)
     return i2c_write_blocking(_I2C, _I2C_address, data, length, false);

@@ -389,7 +389,7 @@ xyz_t IMU_BMI270::readAcc()
     return readAccGyroRPS().acc;
 }
 
-IMU_Base::accGyroRPS_t IMU_BMI270::readAccGyroRPS()
+IRAM_ATTR IMU_Base::accGyroRPS_t IMU_BMI270::readAccGyroRPS()
 {
     i2cSemaphoreTake();
     _bus.readRegister(REG_ACC_X_L, &_spiAccGyroData.accGyro.data[0], sizeof(_spiAccGyroData.accGyro));
@@ -407,7 +407,7 @@ void IMU_BMI270::setInterruptDriven()
 /*!
 Return the gyroAcc data that was read in the ISR
 */
-IMU_Base::accGyroRPS_t IMU_BMI270::getAccGyroRPS() const
+IRAM_ATTR IMU_Base::accGyroRPS_t IMU_BMI270::getAccGyroRPS() const
 {
     return accGyroRPSFromRaw(_spiAccGyroData.accGyro.value);
 }

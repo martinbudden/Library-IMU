@@ -53,8 +53,8 @@ public:
     virtual void setInterruptDriven() override;
     virtual xyz_int32_t readGyroRaw() override;
     virtual xyz_int32_t readAccRaw() override;
-    virtual accGyroRPS_t readAccGyroRPS() override;
-    virtual accGyroRPS_t getAccGyroRPS() const override;
+    IRAM_ATTR virtual accGyroRPS_t readAccGyroRPS() override;
+    IRAM_ATTR virtual accGyroRPS_t getAccGyroRPS() const override;
 private:
     accGyroRPS_t accGyroRPSFromRaw(const acc_gyro_data_t::value_t& data) const;
 private:

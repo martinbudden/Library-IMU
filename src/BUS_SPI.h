@@ -8,19 +8,13 @@
 #endif
 typedef struct spi_inst spi_inst_t;
 #elif defined(FRAMEWORK_ESPIDF)
-#if !defined(INSTRUCTION_RAM_ATTR)
-#define INSTRUCTION_RAM_ATTR IRAM_ATTR
-#endif
 #elif defined(FRAMEWORK_TEST)
 #else // defaults to FRAMEWORK_ARDUINO
 #include <SPI.h>
-#if defined(USE_ARDUINO_ESP32) && !defined(INSTRUCTION_RAM_ATTR)
-#define INSTRUCTION_RAM_ATTR IRAM_ATTR
-#endif
 #endif // FRAMEWORK
 
-#if !defined(INSTRUCTION_RAM_ATTR)
-#define INSTRUCTION_RAM_ATTR
+#if !defined(IRAM_ATTR)
+#define IRAM_ATTR
 #endif
 
 
@@ -35,7 +29,7 @@ public:
         uint8_t irq; // interrupt pin
         uint8_t irqLevel; // interrupt level, ie low, high, edge rise, edge fall, edge change
     };
-    static constexpr uint8_t READ_BIT = 0x80;
+    static constexpr uint8_t READ_BIT = 0x80U;
 public:
 #if defined(USE_IMU_SPI_DMA)
     virtual ~BUS_SPI();
@@ -47,16 +41,16 @@ public:
     void configureDMA();
     void setInterruptDriven();
     void setDeviceRegister(uint8_t deviceRegister, uint8_t* readBuf, size_t readLength);
-    bool readDeviceRegister();
-    bool readDeviceRegisterDMA(); // for testing DMA
-    uint8_t readRegister(uint8_t reg) const;
-    uint8_t readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const;
-    bool readRegister(uint8_t reg, uint8_t* data, size_t length) const;
-    bool readBytes(uint8_t* data, size_t length) const;
-    bool readBytesWithTimeout(uint8_t* data, size_t length, uint32_t timeoutMs) const;
-    uint8_t writeRegister(uint8_t reg, uint8_t data);
-    uint8_t writeRegister(uint8_t reg, const uint8_t* data, size_t length);
-    uint8_t writeBytes(const uint8_t* data, size_t length);
+    IRAM_ATTR bool readDeviceRegister();
+    IRAM_ATTR bool readDeviceRegisterDMA(); // for testing DMA
+    IRAM_ATTR uint8_t readRegister(uint8_t reg) const;
+    IRAM_ATTR uint8_t readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const;
+    IRAM_ATTR bool readRegister(uint8_t reg, uint8_t* data, size_t length) const;
+    IRAM_ATTR bool readBytes(uint8_t* data, size_t length) const;
+    IRAM_ATTR bool readBytesWithTimeout(uint8_t* data, size_t length, uint32_t timeoutMs) const;
+    IRAM_ATTR uint8_t writeRegister(uint8_t reg, uint8_t data);
+    IRAM_ATTR uint8_t writeRegister(uint8_t reg, const uint8_t* data, size_t length);
+    IRAM_ATTR uint8_t writeBytes(const uint8_t* data, size_t length);
 private:
     static BUS_SPI* bus; //!< alias of `this` to be used in interrupt service routine
     uint32_t _clockDivider {1};
@@ -71,10 +65,11 @@ private:
     uint32_t _dmaRxChannel {};
     uint32_t _dmaTxChannel {};
 #elif defined(FRAMEWORK_ESPIDF)
+    IRAM_ATTR static void dataReadyISR();
 #elif defined(FRAMEWORK_TEST)
-    static INSTRUCTION_RAM_ATTR void dataReadyISR();
+    static void dataReadyISR();
 #else // defaults to FRAMEWORK_ARDUINO
-    static INSTRUCTION_RAM_ATTR void dataReadyISR();// cppcheck-suppress unusedPrivateFunction
+    IRAM_ATTR static void dataReadyISR();// cppcheck-suppress unusedPrivateFunction
     SPIClass& _spi;
     volatile uint32_t* _csOut {};
     uint32_t _csBit {};

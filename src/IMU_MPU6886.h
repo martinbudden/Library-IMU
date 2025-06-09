@@ -75,8 +75,8 @@ public:
     virtual xyz_t readGyroRPS() override;
     virtual xyz_t readGyroDPS() override;
     virtual xyz_t readAcc() override;
-    virtual accGyroRPS_t readAccGyroRPS() override;
-    virtual accGyroRPS_t getAccGyroRPS() const override;
+    IRAM_ATTR virtual accGyroRPS_t readAccGyroRPS() override;
+    IRAM_ATTR virtual accGyroRPS_t getAccGyroRPS() const override;
 
     virtual size_t readFIFO_ToBuffer() override;
     virtual accGyroRPS_t readFIFO_Item(size_t index) override;

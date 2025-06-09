@@ -87,7 +87,7 @@ void BUS_SPI::dmaRxCompleteISR()
     bus->SIGNAL_DATA_READY_FROM_ISR();
 }
 #else
-INSTRUCTION_RAM_ATTR void BUS_SPI::dataReadyISR()
+IRAM_ATTR void BUS_SPI::dataReadyISR()
 {
 #if defined(USE_IMU_SPI_DMA)
     static_assert(false); // assert false until this is implemented
@@ -258,11 +258,11 @@ void BUS_SPI::setInterruptDriven() // NOLINT(readability-make-member-function-co
 #endif
 }
 
-uint8_t BUS_SPI::readRegister(uint8_t reg) const
+IRAM_ATTR uint8_t BUS_SPI::readRegister(uint8_t reg) const
 {
 #if defined(FRAMEWORK_RPI_PICO)
     cs_select(_pins.cs);
-    std::array<uint8_t, 2> outBuf = { reg | READ_BIT, 0 };
+    std::array<uint8_t, 2> outBuf = { static_cast<uint8_t>(reg | READ_BIT), 0 };
     std::array<uint8_t, 2> inBuf;
     spi_write_read_blocking(_spi, &outBuf[0], &inBuf[0], 2);
     reg = inBuf[1];
@@ -284,13 +284,13 @@ uint8_t BUS_SPI::readRegister(uint8_t reg) const
     return 0;
 }
 
-uint8_t BUS_SPI::readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const
+IRAM_ATTR uint8_t BUS_SPI::readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const
 {
     (void)timeoutMs;
     return readRegister(reg);
 }
 
-bool BUS_SPI::readDeviceRegisterDMA()
+IRAM_ATTR bool BUS_SPI::readDeviceRegisterDMA()
 {
 //dma_channel_set_irq0_enabled(channel, enabled);
 //dma_channel_acknowledge_irq0(channel)
@@ -332,7 +332,7 @@ bool BUS_SPI::readDeviceRegisterDMA()
 #endif // USE_IMU_SPI_DMA
 }
 
-bool BUS_SPI::readDeviceRegister()
+IRAM_ATTR bool BUS_SPI::readDeviceRegister()
 {
 #if defined(FRAMEWORK_RPI_PICO)
     cs_select(_pins.cs);
@@ -346,7 +346,7 @@ bool BUS_SPI::readDeviceRegister()
 #endif
 }
 
-bool BUS_SPI::readRegister(uint8_t reg, uint8_t* data, size_t length) const
+IRAM_ATTR bool BUS_SPI::readRegister(uint8_t reg, uint8_t* data, size_t length) const
 {
 #if defined(FRAMEWORK_RPI_PICO)
     reg |= READ_BIT;
@@ -384,7 +384,7 @@ bool BUS_SPI::readRegister(uint8_t reg, uint8_t* data, size_t length) const
     return false;
 }
 
-bool BUS_SPI::readBytes(uint8_t* data, size_t length) const
+IRAM_ATTR bool BUS_SPI::readBytes(uint8_t* data, size_t length) const
 {
 #if defined(FRAMEWORK_RPI_PICO)
 #if defined(MAP_CS_FOR_SPI_WRITE_READ)
@@ -414,16 +414,16 @@ bool BUS_SPI::readBytes(uint8_t* data, size_t length) const
     return false;
 }
 
-bool BUS_SPI::readBytesWithTimeout(uint8_t* data, size_t length, uint32_t timeoutMs) const
+IRAM_ATTR bool BUS_SPI::readBytesWithTimeout(uint8_t* data, size_t length, uint32_t timeoutMs) const
 {
     (void)timeoutMs;
     return readBytes(data, length);
 }
 
-uint8_t BUS_SPI::writeRegister(uint8_t reg, uint8_t data)
+IRAM_ATTR uint8_t BUS_SPI::writeRegister(uint8_t reg, uint8_t data)
 {
 #if defined(FRAMEWORK_RPI_PICO)
-    std::array<uint8_t, 2> outBuf = { reg & 0x7FU, data }; // remove read bit as this is a write
+    std::array<uint8_t, 2> outBuf = { static_cast<uint8_t>(reg & 0x7FU), data }; // remove read bit as this is a write
     std::array<uint8_t, 2> inBuf;
     cs_select(_pins.cs);
     spi_write_read_blocking(_spi, &outBuf[0], &inBuf[0], 2);
@@ -445,7 +445,7 @@ uint8_t BUS_SPI::writeRegister(uint8_t reg, uint8_t data)
     return 0;
 }
 
-uint8_t BUS_SPI::writeRegister(uint8_t reg, const uint8_t* data, size_t length)
+IRAM_ATTR uint8_t BUS_SPI::writeRegister(uint8_t reg, const uint8_t* data, size_t length)
 {
 #if defined(FRAMEWORK_RPI_PICO)
     reg &= 0x7FU;
@@ -481,7 +481,7 @@ uint8_t BUS_SPI::writeRegister(uint8_t reg, const uint8_t* data, size_t length)
     return 0;
 }
 
-uint8_t BUS_SPI::writeBytes(const uint8_t* data, size_t length)
+IRAM_ATTR uint8_t BUS_SPI::writeBytes(const uint8_t* data, size_t length)
 {
 #if defined(FRAMEWORK_RPI_PICO)
 #if defined(MAP_CS_FOR_SPI_WRITE_READ)

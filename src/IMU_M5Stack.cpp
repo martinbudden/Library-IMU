@@ -29,18 +29,18 @@ int IMU_M5_STACK::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensiti
     _gyroIdMSP = MSP_GYRO_ID_DEFAULT;
     _accIdMSP = MSP_ACC_ID_DEFAULT;
 
-#if defined(I2C_MUTEX_REQUIRED)
+#if defined(USE_FREERTOS)
     _i2cMutex = static_cast<SemaphoreHandle_t>(i2cMutex);
 #else
-    (void)i2cMutex;
+    _i2cMutex = i2cMutex;
 #endif
 
     // Set up FIFO for IMU
     // IMU data frequency is 500Hz
-    i2cSemaphoreTake();
+    i2cSemaphoreTake(_i2cMutex);
     M5.IMU.setFIFOEnable(true);
     M5.IMU.RestFIFO();
-    i2cSemaphoreGive();
+    i2cSemaphoreGive(_i2cMutex);
 
     return 0;
 }
@@ -51,9 +51,9 @@ IMU_Base::xyz_int32_t IMU_M5_STACK::readAccRaw()
     int16_t y {};
     int16_t z {};
 
-    i2cSemaphoreTake();
+    i2cSemaphoreTake(_i2cMutex);
     M5.IMU.getAccelAdc(&x, &y, &z);
-    i2cSemaphoreGive();
+    i2cSemaphoreGive(_i2cMutex);
 
     return xyz_int32_t {.x = x, .y = y, .z = z };
 }
@@ -64,9 +64,9 @@ xyz_t IMU_M5_STACK::readAcc()
     int16_t y {};
     int16_t z {};
 
-    i2cSemaphoreTake();
+    i2cSemaphoreTake(_i2cMutex);
     M5.IMU.getAccelAdc(&x, &y, &z);
-    i2cSemaphoreGive();
+    i2cSemaphoreGive(_i2cMutex);
 
     const xyz_t acc {
         .x = static_cast<float>(x - _accOffset.x) * _accResolution,
@@ -82,9 +82,9 @@ IMU_Base::xyz_int32_t IMU_M5_STACK::readGyroRaw()
     int16_t y {};
     int16_t z {};
 
-    i2cSemaphoreTake();
+    i2cSemaphoreTake(_i2cMutex);
     M5.IMU.getGyroAdc(&x, &y, &z);
-    i2cSemaphoreGive();
+    i2cSemaphoreGive(_i2cMutex);
 
     return xyz_int32_t {.x = x, .y = y, .z = z };
 }
@@ -95,9 +95,9 @@ xyz_t IMU_M5_STACK::readGyroRPS()
     int16_t y {};
     int16_t z {};
 
-    i2cSemaphoreTake();
+    i2cSemaphoreTake(_i2cMutex);
     M5.IMU.getGyroAdc(&x, &y, &z);
-    i2cSemaphoreGive();
+    i2cSemaphoreGive(_i2cMutex);
 
     const xyz_t gyroRPS {
         .x = static_cast<float>(x - _gyroOffset.x) * _gyroResolutionRPS,
@@ -113,9 +113,9 @@ xyz_t IMU_M5_STACK::readGyroDPS()
     int16_t y {};
     int16_t z {};
 
-    i2cSemaphoreTake();
+    i2cSemaphoreTake(_i2cMutex);
     M5.IMU.getGyroAdc(&x, &y, &z);
-    i2cSemaphoreGive();
+    i2cSemaphoreGive(_i2cMutex);
 
     const xyz_t gyroDPS {
         .x = static_cast<float>(x - _gyroOffset.x) * _gyroResolutionDPS,
@@ -125,7 +125,7 @@ xyz_t IMU_M5_STACK::readGyroDPS()
     return mapAxes(gyroDPS);
 }
 
-IMU_Base::accGyroRPS_t IMU_M5_STACK::readAccGyroRPS()
+IRAM_ATTR IMU_Base::accGyroRPS_t IMU_M5_STACK::readAccGyroRPS()
 {
     const accGyroRPS_t gyroAcc {
         .gyroRPS = readGyroRPS(),
@@ -137,12 +137,12 @@ IMU_Base::accGyroRPS_t IMU_M5_STACK::readAccGyroRPS()
 
 size_t IMU_M5_STACK::readFIFO_ToBuffer()
 {
-    i2cSemaphoreTake();
+    i2cSemaphoreTake(_i2cMutex);
     const uint32_t fifoCount = M5.IMU.ReadFIFOCount();
     if (fifoCount != 0) {
         M5.IMU.ReadFIFOBuff(&_fifoBuffer[0], fifoCount);
     }
-    i2cSemaphoreGive();
+    i2cSemaphoreGive(_i2cMutex);
     return fifoCount / acc_temperature_gyro_data_t::DATA_SIZE;
 }
 
