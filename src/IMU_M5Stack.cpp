@@ -10,7 +10,7 @@ constexpr float ACC_8G_RES { 8.0 / 32768.0 };
 
 
 IMU_M5_STACK::IMU_M5_STACK(axis_order_e axisOrder) :
-    IMU_Base(axisOrder)
+    IMU_Base(axisOrder, IMU_AUTO_CALIBRATES)
 {
     _gyroResolutionDPS = GYRO_2000DPS_RES;
     _gyroResolutionRPS = GYRO_2000DPS_RES * degreesToRadians;

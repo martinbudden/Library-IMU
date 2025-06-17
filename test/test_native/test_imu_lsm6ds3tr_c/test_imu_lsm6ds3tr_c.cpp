@@ -22,6 +22,7 @@ void test_lsm6ds3tr_c()
     const IMU_LSM6DS3TR_C imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{.sda=IMU_I2C_SDA_PIN, .scl=IMU_I2C_SCL_PIN});
 #endif
     TEST_ASSERT_EQUAL(4096, imu.getAccOneG_Raw());
+    TEST_ASSERT_EQUAL(0, imu.getFlags());
 }
 // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-init-variables,readability-magic-numbers)
 

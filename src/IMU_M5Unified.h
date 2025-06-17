@@ -14,8 +14,7 @@ public:
     virtual xyz_t readGyroRPS() override;
     virtual xyz_t readGyroDPS() override;
     virtual xyz_t readAcc() override;
-    IRAM_ATTR virtual accGyroRPS_t readAccGyroRPS() override;
+    virtual accGyroRPS_t readAccGyroRPS() override;
 
-private:
-    uint8_t _fifoBuffer[1024] {};
+    void setAxisOrder(axis_order_e axisOrder);
 };

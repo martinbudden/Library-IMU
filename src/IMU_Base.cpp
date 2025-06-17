@@ -10,14 +10,28 @@
 #include <Arduino.h>
 #endif
 
-IMU_Base::IMU_Base(axis_order_e axisOrder) :
-    _axisOrder(axisOrder)
+
+IMU_Base::IMU_Base(axis_order_e axisOrder, BUS_BASE& busBase, uint32_t flags) :
+    _axisOrder(axisOrder),
+    _busBase(&busBase),
+    _flags(flags)
 {
 }
 
 IMU_Base::IMU_Base(axis_order_e axisOrder, BUS_BASE& busBase) :
+    IMU_Base(axisOrder, busBase, 0)
+{
+}
+
+IMU_Base::IMU_Base(axis_order_e axisOrder, uint32_t flags):
     _axisOrder(axisOrder),
-    _busBase(&busBase)
+    _busBase(nullptr),
+    _flags(flags)
+{
+}
+
+IMU_Base::IMU_Base(axis_order_e axisOrder) :
+    IMU_Base(axisOrder, 0)
 {
 }
 
@@ -373,4 +387,3 @@ IMU_Base::axis_order_e IMU_Base::axisOrderFromAlignment(const xyz_alignment_t& a
     (void)alignment;
     return XPOS_YPOS_ZPOS;
 }
-

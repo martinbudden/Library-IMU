@@ -84,10 +84,14 @@ public:
         ACC_FULL_SCALE_16G,
         ACC_FULL_SCALE_32G,
     };
+    // Values for reporting gyro and acc type back to MSP (MultiWii Serial Protocol)
     enum {
         MSP_GYRO_ID_NONE = 0, MSP_GYRO_ID_DEFAULT = 1, MSP_GYRO_ID_VIRTUAL = 20,
         MSP_ACC_ID_DEFAULT = 0, MSP_ACC_ID_NONE = 1 , MSP_ACC_ID_VIRTUAL = 21
     };
+
+    // IMU characteristics flag values
+    enum : uint32_t { IMU_AUTO_CALIBRATES = 0x01, IMU_PERFORMS_SENSOR_FUSION = 0x02 };
 
     static constexpr float sin45f = 0.7071067811865475F;
     const std::array<Quaternion, 24> axisOrientations = {
@@ -118,8 +122,10 @@ public:
     };
 public:
     virtual ~IMU_Base() = default;
-    explicit IMU_Base(axis_order_e axisOrder);
+    IMU_Base(axis_order_e axisOrder, BUS_BASE& busBase, uint32_t flags);
     IMU_Base(axis_order_e axisOrder, BUS_BASE& busBase);
+    IMU_Base(axis_order_e axisOrder, uint32_t flags);
+    explicit IMU_Base(axis_order_e axisOrder);
 public:
     struct xyz_alignment_t {
         int16_t x;
@@ -185,6 +191,8 @@ public:
     static axis_order_e axisOrderInverse(axis_order_e axisOrder);
     static xyz_alignment_t alignmentFromAxisOrder(axis_order_e axisOrder);
     static axis_order_e axisOrderFromAlignment(const xyz_alignment_t& alignment);
+
+    inline uint32_t getFlags() const { return _flags; }
 #if defined(USE_FREERTOS)
 #if defined(I2C_MUTEX_REQUIRED)
     inline void i2cSemaphoreTake() const { xSemaphoreTake(_i2cMutex, portMAX_DELAY); }
@@ -206,7 +214,8 @@ public:
 #endif // USE_FREERTOS
 protected:
     axis_order_e _axisOrder;
-    BUS_BASE* _busBase {};
+    BUS_BASE* _busBase;
+    const uint32_t _flags; //!< Flags for describing IMU characteristics
     float _gyroResolutionRPS {};
     float _gyroResolutionDPS {};
     float _accResolution { 8.0F / 32768.0F };

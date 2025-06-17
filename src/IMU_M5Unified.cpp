@@ -5,7 +5,7 @@
 #include <cassert>
 
 IMU_M5_UNIFIED::IMU_M5_UNIFIED(axis_order_e axisOrder) :
-    IMU_Base(axisOrder)
+    IMU_Base(axisOrder, IMU_AUTO_CALIBRATES)
 {
 }
 
@@ -28,7 +28,6 @@ int IMU_M5_UNIFIED::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensi
     _i2cMutex = i2cMutex;
 #endif
 
-    i2cSemaphoreTake(_i2cMutex);
 #if defined(IMU_BUILD_YNEG_XPOS_ZPOS)
     M5.Imu.setAxisOrder(m5::IMU_Class::axis_y_neg, m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_z_pos);
 #elif defined(IMU_BUILD_YPOS_XNEG_ZPOS)
@@ -40,7 +39,16 @@ int IMU_M5_UNIFIED::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensi
 #elif defined(IMU_BUILD_ZPOS_XNEG_YNEG)
     M5.Imu.setAxisOrder(m5::IMU_Class::axis_z_pos, m5::IMU_Class::axis_x_neg, m5::IMU_Class::axis_y_neg);
 #else
-    switch (_axisOrder) {
+    setAxisOrder(_axisOrder);
+#endif
+
+    return 0;
+}
+
+void IMU_M5_UNIFIED::setAxisOrder(axis_order_e axisOrder)
+{
+    _axisOrder = axisOrder;
+    switch (axisOrder) {
     case XPOS_YPOS_ZPOS:
         M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_y_pos, m5::IMU_Class::axis_z_pos);
         break;
@@ -60,10 +68,6 @@ int IMU_M5_UNIFIED::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensi
         assert(false && "IMU orientation not implemented for M5Unified.");
         break;
     }
-#endif
-    i2cSemaphoreGive(_i2cMutex);
-
-    return 0;
 }
 
 IMU_Base::xyz_int32_t IMU_M5_UNIFIED::readAccRaw()

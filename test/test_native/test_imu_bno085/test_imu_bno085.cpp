@@ -129,6 +129,7 @@ void test_bno085()
     static const IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{.sda=IMU_I2C_SDA_PIN, .scl=IMU_I2C_SCL_PIN, .irq=BUS_I2C::IRQ_NOT_SET, .irqLevel=0});
 #endif
     TEST_ASSERT_EQUAL(4096, imu.getAccOneG_Raw());
+    TEST_ASSERT_EQUAL(IMU_Base::IMU_AUTO_CALIBRATES | IMU_Base::IMU_PERFORMS_SENSOR_FUSION, imu.getFlags());
 }
 // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-init-variables,readability-magic-numbers)
 

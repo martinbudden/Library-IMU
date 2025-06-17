@@ -31,6 +31,7 @@ void test_mpu_6886()
     static const IMU_MPU6886 imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{.sda=IMU_I2C_SDA_PIN, .scl=IMU_I2C_SCL_PIN});
 #endif
     TEST_ASSERT_EQUAL(4096, imu.getAccOneG_Raw());
+    TEST_ASSERT_EQUAL(0, imu.getFlags());
 }
 // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-init-variables,readability-magic-numbers)
 
