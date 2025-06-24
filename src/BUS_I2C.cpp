@@ -23,6 +23,8 @@ Currently support only one interrupt, but could index action off the gpio pin
 #if defined(FRAMEWORK_RPI_PICO)
 void BUS_I2C::dataReadyISR(unsigned int gpio, uint32_t events)
 {
+    (void)gpio;
+    (void)events;
     //gpio_put(PICO_DEFAULT_LED_PIN, 1);
     // reading the IMU register resets the interrupt
     bus->readDeviceRegister();

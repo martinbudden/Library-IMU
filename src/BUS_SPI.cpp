@@ -59,6 +59,8 @@ Currently support only one interrupt, but could index action off gpio pin
 #if defined(FRAMEWORK_RPI_PICO)
 void BUS_SPI::dataReadyISR(unsigned int gpio, uint32_t events)
 {
+    (void)gpio;
+    (void)events;
     // reading the register resets the interrupt
     //gpio_put(PICO_DEFAULT_LED_PIN, 1);
 #if defined(USE_IMU_SPI_DMA_IN_ISR)

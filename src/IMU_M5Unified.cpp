@@ -48,33 +48,95 @@ int IMU_M5_UNIFIED::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensi
 void IMU_M5_UNIFIED::setAxisOrder(axis_order_e axisOrder)
 {
     _axisOrder = axisOrder;
+
     switch (axisOrder) {
     case XPOS_YPOS_ZPOS:
         M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_y_pos, m5::IMU_Class::axis_z_pos);
         break;
+    case YPOS_XNEG_ZPOS:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_y_pos, m5::IMU_Class::axis_x_neg, m5::IMU_Class::axis_z_pos);
+        break;
+    case XNEG_YNEG_ZPOS:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_neg, m5::IMU_Class::axis_y_neg, m5::IMU_Class::axis_z_pos);
+        break;
     case YNEG_XPOS_ZPOS:
         M5.Imu.setAxisOrder(m5::IMU_Class::axis_y_neg, m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_z_pos);
         break;
-    case YPOS_XNEG_ZPOS:
-        M5.Imu.setAxisOrder(m5::IMU_Class::axis_y_pos, m5::IMU_Class::axis_x_neg, m5::IMU_Class::axis_z_pos);
+
+    case XPOS_YNEG_ZNEG:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_y_neg, m5::IMU_Class::axis_z_neg);
+        break;
+    case YPOS_XPOS_ZNEG:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_y_pos, m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_z_neg);
+        break;
+    case XNEG_YPOS_ZNEG:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_neg, m5::IMU_Class::axis_y_pos, m5::IMU_Class::axis_z_neg);
+        break;
+    case YNEG_XNEG_ZNEG:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_y_neg, m5::IMU_Class::axis_x_neg, m5::IMU_Class::axis_z_neg);
+        break;
+
+    case ZPOS_YNEG_XPOS:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_z_pos, m5::IMU_Class::axis_y_neg, m5::IMU_Class::axis_x_pos);
+        break;
+    case YPOS_ZPOS_XPOS:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_y_pos, m5::IMU_Class::axis_z_pos, m5::IMU_Class::axis_x_pos);
+        break;
+    case ZNEG_YPOS_XPOS:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_z_neg, m5::IMU_Class::axis_y_pos, m5::IMU_Class::axis_x_pos);
+        break;
+    case YNEG_ZNEG_XPOS:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_y_neg, m5::IMU_Class::axis_z_neg, m5::IMU_Class::axis_x_pos);
+        break;
+
+    case ZPOS_YPOS_XNEG:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_z_pos, m5::IMU_Class::axis_y_pos, m5::IMU_Class::axis_x_neg);
+        break;
+    case YPOS_ZNEG_XNEG:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_y_pos, m5::IMU_Class::axis_z_neg, m5::IMU_Class::axis_x_neg);
+        break;
+    case ZNEG_YNEG_XNEG:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_z_neg, m5::IMU_Class::axis_y_neg, m5::IMU_Class::axis_x_neg);
+        break;
+    case YNEG_ZPOS_XNEG:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_y_neg, m5::IMU_Class::axis_z_pos, m5::IMU_Class::axis_x_neg);
+        break;
+
+    case ZPOS_XPOS_YPOS:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_z_pos, m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_y_pos);
+        break;
+    case XNEG_ZPOS_YPOS:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_neg, m5::IMU_Class::axis_z_pos, m5::IMU_Class::axis_y_pos);
+        break;
+    case ZNEG_XNEG_YPOS:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_z_neg, m5::IMU_Class::axis_x_neg, m5::IMU_Class::axis_y_pos);
+        break;
+    case XPOS_ZNEG_YPOS:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_z_neg, m5::IMU_Class::axis_y_pos);
+        break;
+
+    case ZPOS_XNEG_YNEG:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_z_pos, m5::IMU_Class::axis_x_neg, m5::IMU_Class::axis_y_neg);
+        break;
+    case XNEG_ZNEG_YNEG:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_neg, m5::IMU_Class::axis_z_neg, m5::IMU_Class::axis_y_neg);
+        break;
+    case ZNEG_XPOS_YNEG:
+        M5.Imu.setAxisOrder(m5::IMU_Class::axis_z_neg, m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_y_neg);
         break;
     case XPOS_ZPOS_YNEG:
         M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_z_pos, m5::IMU_Class::axis_y_neg);
         break;
-    case ZPOS_XNEG_YNEG:
-        M5.Imu.setAxisOrder(m5::IMU_Class::axis_z_pos, m5::IMU_Class::axis_x_neg, m5::IMU_Class::axis_y_neg);
-        break;
+
     default:
-        assert(false && "IMU orientation not implemented for M5Unified.");
+        assert(false && "IMU orientation invalid.");
         break;
     }
 }
 
-IMU_Base::xyz_int32_t IMU_M5_UNIFIED::readAccRaw()
+[[noreturn]] IMU_Base::xyz_int32_t IMU_M5_UNIFIED::readAccRaw()
 {
-    xyz_int32_t acc {};
     assert(false && ("M5Unified variants should not call readAccRaw")); // NOLINT(readability-simplify-boolean-expr)
-    return acc;
 }
 
 xyz_t IMU_M5_UNIFIED::readAcc()
@@ -96,11 +158,9 @@ xyz_t IMU_M5_UNIFIED::readAcc()
     return acc;
 }
 
-IMU_Base::xyz_int32_t IMU_M5_UNIFIED::readGyroRaw()
+[[noreturn]] IMU_Base::xyz_int32_t IMU_M5_UNIFIED::readGyroRaw()
 {
-    xyz_int32_t gyro {};
     assert(false && ("M5Unified variants should not call readGyroRaw")); // NOLINT(readability-simplify-boolean-expr)
-    return gyro;
 }
 
 xyz_t IMU_M5_UNIFIED::readGyroRPS()
