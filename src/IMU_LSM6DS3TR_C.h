@@ -51,8 +51,10 @@ public:
 public:
     virtual int init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) override;
     virtual void setInterruptDriven() override;
+
     virtual xyz_int32_t readGyroRaw() override;
     virtual xyz_int32_t readAccRaw() override;
+
     IRAM_ATTR virtual accGyroRPS_t readAccGyroRPS() override;
     IRAM_ATTR virtual accGyroRPS_t getAccGyroRPS() const override;
 private:

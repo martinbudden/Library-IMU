@@ -323,6 +323,11 @@ int IMU_LSM6DS3TR_C::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gy
     return 0;
 }
 
+void IMU_LSM6DS3TR_C::setInterruptDriven()
+{
+    _bus.setInterruptDriven();
+}
+
 IMU_Base::xyz_int32_t IMU_LSM6DS3TR_C::readGyroRaw()
 {
     mems_sensor_data_t gyro; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init,misc-const-correctness)
@@ -362,11 +367,6 @@ IRAM_ATTR IMU_Base::accGyroRPS_t IMU_LSM6DS3TR_C::readAccGyroRPS()
     i2cSemaphoreGive();
 
     return accGyroRPSFromRaw(_spiAccGyroData.accGyro.value);
-}
-
-void IMU_LSM6DS3TR_C::setInterruptDriven()
-{
-    _bus.setInterruptDriven();
 }
 
 /*!
