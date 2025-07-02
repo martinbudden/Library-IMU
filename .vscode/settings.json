@@ -1,6 +1,7 @@
 {
     "cSpell.words": [
         "afruitnrf",
+        "AFSR",
         "AHRS",
         "altera",
         "BETAFLIGHT",
@@ -47,7 +48,9 @@
         "SENSORTIME",
         "shtp",
         "suppr",
+        "TDEASSERT",
         "TMST",
+        "TPULSE",
         "unflags",
         "USRH",
         "USRL",

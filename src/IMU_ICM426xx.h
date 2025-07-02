@@ -13,21 +13,30 @@ public:
         enum { DATA_SIZE = 6 };
         std::array<uint8_t, DATA_SIZE> data;
         struct value_t {
-            int16_t x;
-            int16_t y;
-            int16_t z;
+            uint8_t x_h;
+            uint8_t x_l;
+            uint8_t y_h;
+            uint8_t y_l;
+            uint8_t z_h;
+            uint8_t z_l;
         } value;
     };
     union acc_gyro_data_t {
         enum { DATA_SIZE = 12 };
         std::array<uint8_t, DATA_SIZE> data;
         struct value_t {
-            int16_t acc_x;
-            int16_t acc_y;
-            int16_t acc_z;
-            int16_t gyro_x;
-            int16_t gyro_y;
-            int16_t gyro_z;
+            uint8_t acc_x_h;
+            uint8_t acc_x_l;
+            uint8_t acc_y_h;
+            uint8_t acc_y_l;
+            uint8_t acc_z_h;
+            uint8_t acc_z_l;
+            uint8_t gyro_x_h;
+            uint8_t gyro_x_l;
+            uint8_t gyro_y_h;
+            uint8_t gyro_y_l;
+            uint8_t gyro_z_h;
+            uint8_t gyro_z_l;
         } value;
     };
     struct spi_acc_gyro_data_t {
@@ -51,11 +60,18 @@ public:
 public:
     virtual int init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) override;
     virtual void setInterruptDriven() override;
+
     virtual xyz_int32_t readGyroRaw() override;
     virtual xyz_int32_t readAccRaw() override;
+
+    virtual xyz_t readGyroRPS() override;
+    virtual xyz_t readGyroDPS() override;
+    virtual xyz_t readAcc() override;
     IRAM_ATTR virtual accGyroRPS_t readAccGyroRPS() override;
     IRAM_ATTR virtual accGyroRPS_t getAccGyroRPS() const override;
 private:
+    xyz_t gyroRPS_FromRaw(const mems_sensor_data_t::value_t& data) const;
+    xyz_t accFromRaw(const mems_sensor_data_t::value_t& data) const;
     accGyroRPS_t accGyroRPSFromRaw(const acc_gyro_data_t::value_t& data) const;
 private:
 #if defined(USE_IMU_ICM426XX_SPI)
