@@ -221,7 +221,7 @@ int IMU_ICM426xx::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroS
 
     // Configure interrupts
 
-    _bus.writeRegister(REG_INT_CONFIG, INT1_MODE_PULSED | INT1_DRIVE_CIRCUIT_PUSH_PULL | INT1_POLARITY_ACTIVE_HIGH);
+    _bus.writeRegister(REG_INT_CONFIG, INT1_MODE_PULSED | INT1_DRIVE_CIRCUIT_PUSH_PULL | INT1_POLARITY_ACTIVE_HIGH); // cppcheck-suppress badBitmaskCheck
 
     _bus.writeRegister(REG_INT_CONFIG0, INT_CLEAR_ON_STATUS_BIT_READ);
 
@@ -234,14 +234,14 @@ int IMU_ICM426xx::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroS
     // Disable AFSR to prevent stalls in gyro output
     uint8_t intFConfig1 = _bus.readRegister(REG_INTF_CONFIG1);
     //constexpr uint8_t CONFIG1_RESET_VALUE   = 0b10010001;
-    constexpr uint8_t CONFIG1_AFSR_MASK     = 0b00001100;
-    constexpr uint8_t CONFIG1_AFSR_DISABLE  = 0b00000100;
-    intFConfig1 &= ~CONFIG1_AFSR_MASK;
+    constexpr uint8_t CONFIG1_AFSR_MASK     = 0b00001100U;
+    constexpr uint8_t CONFIG1_AFSR_DISABLE  = 0b00000100U;
+    intFConfig1 &= ~CONFIG1_AFSR_MASK; // NOLINT(hicpp-signed-bitwise)
     intFConfig1 |= CONFIG1_AFSR_DISABLE;
     _bus.writeRegister(REG_INTF_CONFIG1, intFConfig1);
 
     // Turn on gyro and acc on again so Output Data Rate(ODR) and Full Scale Rate (FSRP can be configured
-    _bus.writeRegister(REG_PWR_MGMT0, PWR_TEMP_ENABLED | PWR_GYRO_LOW_NOISE | PWR_ACCEL_LOW_NOISE);
+    _bus.writeRegister(REG_PWR_MGMT0, PWR_TEMP_ENABLED | PWR_GYRO_LOW_NOISE | PWR_ACCEL_LOW_NOISE); // cppcheck-suppress badBitmaskCheck
     delayMs(1);
 
     // calculate the GYRO_ODR bit values to write to the REG_GYRO_CONFIG0 register
@@ -369,11 +369,13 @@ IMU_Base::xyz_int32_t IMU_ICM426xx::readGyroRaw()
     _bus.readRegister(REG_GYRO_DATA_X1, &gyro.data[0], sizeof(gyro));
     i2cSemaphoreGive();
 
+// NOLINTBEGIN(hicpp-signed-bitwise)
     return xyz_int32_t {
         .x = static_cast<int16_t>((gyro.value.x_h << 8U) | gyro.value.x_l), // static cast to int16_t to sign extend the 8 bit values
         .y = static_cast<int16_t>((gyro.value.y_h << 8U) | gyro.value.y_l),
         .z = static_cast<int16_t>((gyro.value.z_h << 8U) | gyro.value.z_l)
     };
+// NOLINTEND(hicpp-signed-bitwise)
 }
 
 IMU_Base::xyz_int32_t IMU_ICM426xx::readAccRaw()
@@ -384,11 +386,13 @@ IMU_Base::xyz_int32_t IMU_ICM426xx::readAccRaw()
     _bus.readRegister(REG_ACCEL_DATA_X1, &acc.data[0], sizeof(acc));
     i2cSemaphoreGive();
 
+// NOLINTBEGIN(hicpp-signed-bitwise)
     return xyz_int32_t {
         .x = static_cast<int16_t>((acc.value.x_h << 8U) | acc.value.x_l), // static cast to int16_t to sign extend the 8 bit values
         .y = static_cast<int16_t>((acc.value.y_h << 8U) | acc.value.y_l),
         .z = static_cast<int16_t>((acc.value.z_h << 8U) | acc.value.z_l)
     };
+// NOLINTEND(hicpp-signed-bitwise)
 }
 
 xyz_t IMU_ICM426xx::readGyroRPS()
@@ -511,6 +515,7 @@ xyz_t IMU_ICM426xx::accFromRaw(const mems_sensor_data_t::value_t& data) const
 
 IMU_Base::accGyroRPS_t IMU_ICM426xx::accGyroRPSFromRaw(const acc_gyro_data_t::value_t& data) const
 {
+// NOLINTBEGIN(hicpp-signed-bitwise)
 #if defined(IMU_BUILD_XPOS_YPOS_ZPOS)
     return accGyroRPS_t {
         .gyroRPS = {
@@ -590,6 +595,7 @@ IMU_Base::accGyroRPS_t IMU_ICM426xx::accGyroRPSFromRaw(const acc_gyro_data_t::va
             .z =  static_cast<float>(static_cast<int16_t>((data.acc_z_h << 8U) | data.acc_z_l) - _accOffset.z) * _accResolution
         }
     };
+// NOLINTEND(hicpp-signed-bitwise)
 
     switch (_axisOrder) {
     case XPOS_YPOS_ZPOS:

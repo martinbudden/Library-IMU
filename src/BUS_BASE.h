@@ -28,20 +28,23 @@ protected:
 #if defined(FRAMEWORK_RPI_PICO)
     mutable mutex_t _dataReadyMutex{};
 public:
-    inline void WAIT_DATA_READY() const { mutex_enter_blocking(&_dataReadyMutex); }
+    inline int32_t WAIT_DATA_READY() const { mutex_enter_blocking(&_dataReadyMutex); return 0; }
+    inline int32_t WAIT_DATA_READY(uint32_t ticksToWait) const { return mutex_enter_timeout_ms(&_dataReadyMutex, ticksToWait); } // returns true if mutex owned, false if timeout
     inline void SIGNAL_DATA_READY_FROM_ISR() const { mutex_exit(&_dataReadyMutex); }
 #elif defined(USE_FREERTOS)
     mutable uint32_t _dataReadyQueueItem {}; // this is just a dummy item whose value is not used
-    enum { IMU_DATA_READY_QUEUE_LENGTH = 8 };
+    enum { IMU_DATA_READY_QUEUE_LENGTH = 1 };
     std::array<uint8_t, IMU_DATA_READY_QUEUE_LENGTH * sizeof(_dataReadyQueueItem)> _dataReadyQueueStorageArea {};
     StaticQueue_t _dataReadyQueueStatic {};
     QueueHandle_t _dataReadyQueue {};
 public:
-    inline void WAIT_DATA_READY() const { xQueueReceive(_dataReadyQueue, &_dataReadyQueueItem, portMAX_DELAY); }
+    inline int32_t WAIT_DATA_READY() const { return xQueueReceive(_dataReadyQueue, &_dataReadyQueueItem, portMAX_DELAY); }
+    inline int32_t WAIT_DATA_READY(uint32_t ticksToWait) const { return xQueueReceive(_dataReadyQueue, &_dataReadyQueueItem, ticksToWait); } // returns pdPASS(1) if queue read, pdFAIL(0) if timeout
     inline void SIGNAL_DATA_READY_FROM_ISR() const { xQueueSendFromISR(_dataReadyQueue, &_dataReadyQueueItem, nullptr); }
 #else
 public:
-    inline void WAIT_DATA_READY() const {}
+    inline int32_t WAIT_DATA_READY() const { return 0; }
+    inline int32_t WAIT_DATA_READY(uint32_t ticksToWait) const { (void)ticksToWait; return 0; }
     inline void SIGNAL_DATA_READY_FROM_ISR() const {}
 #endif
 };

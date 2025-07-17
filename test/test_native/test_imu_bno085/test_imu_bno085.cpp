@@ -115,7 +115,7 @@ void test_bno085_channel_gyro_integrated_rotation_vector_report()
 
     constexpr int Q_point = 14;
     const float multiplier = pow(2, Q_point * -1);
-    constexpr float multiplier2 = 1.0F / (1 << Q_point); // NOLINT(hicpp-signed-bitwise)
+    constexpr float multiplier2 = 1.0F / (1U << Q_point); // NOLINT(hicpp-signed-bitwise)
     TEST_ASSERT_EQUAL_FLOAT(multiplier, multiplier2);
 }
 

@@ -159,8 +159,9 @@ public:
     uint16_t getAccIdMSP() const { return _accIdMSP; }
 
     virtual void setInterruptDriven();
-    void WAIT_IMU_DATA_READY() { _busBase->WAIT_DATA_READY(); }
-    void SIGNAL_IMU_DATA_READY_FROM_ISR() { _busBase->SIGNAL_DATA_READY_FROM_ISR(); } // should not be used, made public for debugging purposes
+    int32_t WAIT_IMU_DATA_READY() { return _busBase->WAIT_DATA_READY(); }
+    int32_t WAIT_IMU_DATA_READY(uint32_t ticksToWait) { return _busBase->WAIT_DATA_READY(ticksToWait); }
+    void SIGNAL_IMU_DATA_READY_FROM_ISR() { _busBase->SIGNAL_DATA_READY_FROM_ISR(); } //! should not be used directly, made public for debugging purposes
 
     virtual xyz_int32_t getGyroOffset() const;
     virtual void setGyroOffset(const xyz_int32_t& gyroOffset);

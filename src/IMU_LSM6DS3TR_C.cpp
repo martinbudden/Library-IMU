@@ -196,7 +196,7 @@ int IMU_LSM6DS3TR_C::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gy
     _bus.writeRegister(REG_CTRL3_C, SW_RESET); // software reset
     delayMs(100);
 
-    [[maybe_unused]] const uint8_t chipID = _bus.readRegisterWithTimeout(REG_WHO_AM_I, 100);
+    const uint8_t chipID = _bus.readRegisterWithTimeout(REG_WHO_AM_I, 100);
     delayMs(1);
 #if defined(SERIAL_OUTPUT)
     Serial.print("IMU init, chipID:0x");

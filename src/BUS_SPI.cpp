@@ -73,8 +73,8 @@ void BUS_SPI::dataReadyISR(unsigned int gpio, uint32_t events)
     cs_select(bus->_pins.cs);
     dma_start_channel_mask((1u << bus->_dmaTxChannel) | (1u << bus->_dmaRxChannel));
     // wait for rx to complete
-    dma_channel_wait_for_finish_blocking(bus->_dmaRxChannel);
-    cs_deselect(bus->_pins.cs);
+    //dma_channel_wait_for_finish_blocking(bus->_dmaRxChannel);
+    //cs_deselect(bus->_pins.cs);
 #else
     bus->readDeviceRegisterDMA();
     bus->SIGNAL_DATA_READY_FROM_ISR();
@@ -83,6 +83,7 @@ void BUS_SPI::dataReadyISR(unsigned int gpio, uint32_t events)
 
 void BUS_SPI::dmaRxCompleteISR()
 {
+    cs_deselect(bus->_pins.cs);
     //gpio_put(PICO_DEFAULT_LED_PIN, 1);
     dma_channel_acknowledge_irq0(bus->_dmaRxChannel);
     //cs_deselect(bus->_pins.cs);
@@ -310,15 +311,15 @@ IRAM_ATTR bool BUS_SPI::readDeviceRegisterDMA()
     dma_channel_set_write_addr(_dmaRxChannel, _readBuf + start, DONT_START_YET);
 #if 0
     dma_channel_configure(_dmaTxChannel, &dmaTxChannelConfig,
-                        &spi_get_hw(_spi)->dr, // destination, write data to SPI data register
-                        &_deviceRegister, // source, send the value of the IMU register we want to read
-                        _readLength - start, // number of bytes to read (each element is DMA_SIZE_8, ie 8 bits)
-                        DONT_START_YET); // don't start yet
+                          &spi_get_hw(_spi)->dr, // destination, write data to SPI data register
+                          &_deviceRegister, // source, send the value of the IMU register we want to read
+                          _readLength - start, // number of bytes to read (each element is DMA_SIZE_8, ie 8 bits)
+                          DONT_START_YET);
     dma_channel_configure(_dmaRxChannel, &dmaRxChannelConfig,
                           _readBuf + start, // destination, write SPI data to data
                           &spi_get_hw(_spi)->dr, // source, read data from SPI
                           _readLength - start, // element count (each element is 8 bits)
-                          DONT_START_YET); // don't start yet
+                          DONT_START_YET);
 #endif
     cs_select(_pins.cs);
     dma_start_channel_mask((1u << _dmaTxChannel) | (1u << _dmaRxChannel));
@@ -328,7 +329,7 @@ IRAM_ATTR bool BUS_SPI::readDeviceRegisterDMA()
     return true;
 #else
     return readDeviceRegister();
-#endif
+#endif // FRAMEWORK
 #else
     return readDeviceRegister();
 #endif // USE_IMU_SPI_DMA
