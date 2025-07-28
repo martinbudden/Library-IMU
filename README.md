@@ -28,12 +28,10 @@ The Arduino Framework and the Raspberry Pi Pico SDK Framework are supported.
 This library uses the [VectorQuaternionMatrix library](https://github.com/martinbudden/Library-VectorQuaternionMatrix)
 for its `xyz_t`(3D vector) and `Quaternion` classes.
 
-## Classes Structure
-
-Simplified class diagram.
+## Simplified class diagram
 
 `BUS_SPI` and `BUS_I2C` are statically (build-time) polymorphic, not dynamically (run-time) polymorphic.<br>
-They have functions that have the same name and signature, but these functions are not virtual.<br>
+They have functions that have the same names and signatures, but these functions are not virtual.<br>
 This is deliberate.<br>
 This means the SPI and I2C read and write functions can be called directly, rather than indirectly via a virtual function pointer.
 Some of these functions are short enough that they may be inlined. So in some cases an indirect function call is replaced by an
@@ -41,9 +39,9 @@ inlined function. This is important because many of these functions are highly t
 It does result in an unconventional class tree: each concrete IMU class has two pointers to its bus: a pointer to `BUS_BASE` in `IMU_BASE`
 and a reference to either `BUS_I2C` or `BUS_SPI` in the class itself.
 
-`IMU_BNO085` is shown using `I2C_BUS`. It can be configured by build flag to use `SPI_BUS`.
+`IMU_BNO085` is shown using `I2C_BUS`. It can be configured by a build flag to use `SPI_BUS`.
 
-`IMU_BMI270`, `IMU_ICM426xx`, and `IMU_LSM6DS3TR_C` are shown using `SPI_BUS`. They can be configured by build flag to use `I2C_BUS`.
+`IMU_BMI270`, `IMU_LSM6DS3TR_C`, and `IMU_ICM426xx` are shown using `SPI_BUS`. They can be configured by build flags to use `I2C_BUS`.
 
 ```mermaid
 classDiagram
