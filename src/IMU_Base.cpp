@@ -164,21 +164,27 @@ xyz_t IMU_Base::mapAxes(const xyz_t& data, axis_order_e axisOrder)
     case XPOS_YPOS_ZPOS:
         return data;
         break;
-    case YPOS_XNEG_ZPOS:
+    case YPOS_XNEG_ZPOS: // rotate  90 degrees anticlockwise
+        // .x =   data.x*cos90(0) + data.y*sin90(1)
+        // .y =  -data.x*sin90(1) + data.y*cos90(0)
         return xyz_t {
             .x =  data.y,
             .y = -data.x,
             .z =  data.z
         };
         break;
-    case XNEG_YNEG_ZPOS:
+    case XNEG_YNEG_ZPOS: // rotate 180 degrees
+        // .x =   data.x*cos180(-1) + data.y*sin180(0)
+        // .y =  -data.x*sin180(0) + data.y*cos180(-1)
         return xyz_t {
             .x = -data.x,
             .y = -data.y,
             .z =  data.z
         };
         break;
-    case YNEG_XPOS_ZPOS:
+    case YNEG_XPOS_ZPOS: // rotate 270 degrees anticlockwise
+        // .x =   data.x*cos270(0) + data.y*sin270(-1)
+        // .y =  -data.x*sin270(-1) + data.y*cos270(0)
         return xyz_t {
             .x = -data.y,
             .y =  data.x,
@@ -325,6 +331,43 @@ xyz_t IMU_Base::mapAxes(const xyz_t& data, axis_order_e axisOrder)
             .z = -data.y
         };
         break;
+    case XPOS_YPOS_ZPOS_45: // 45
+        return xyz_t {
+            .x =  data.x*cos45f + data.y*sin45f,
+            .y = -data.x*sin45f + data.y*cos45f,
+            .z =  data.z
+        };
+        break;
+    case YPOS_XNEG_ZPOS_45: {// 135
+        static constexpr float sin135f =  sin45f;
+        static constexpr float cos135f = -cos45f;
+        return xyz_t {
+            .x =  data.x*cos135f + data.y*sin135f,
+            .y = -data.x*sin135f + data.y*cos135f,
+            .z =  data.z
+        };
+        break;
+    }
+    case XNEG_YNEG_ZPOS_45: {// 225
+        static constexpr float sin225f = -sin45f;
+        static constexpr float cos225f = -cos45f;
+        return xyz_t {
+            .x =  data.x*cos225f + data.y*sin225f,
+            .y = -data.x*sin225f + data.y*cos225f,
+            .z =  data.z
+        };
+        break;
+    }
+    case YNEG_XPOS_ZPOS_45: {// 315
+        static constexpr float sin315f = -sin45f;
+        static constexpr float cos315f =  cos45f;
+        return xyz_t {
+            .x =  data.x*cos315f + data.y*sin315f,
+            .y = -data.x*sin315f + data.y*cos315f,
+            .z =  data.z
+        };
+        break;
+    }
     default:
         assert(false && "IMU axis order not supported"); // NOLINT(readability-implicit-bool-conversion,readability-simplify-boolean-expr)
         break;
@@ -365,6 +408,14 @@ IMU_Base::axis_order_e IMU_Base::axisOrderInverse(axis_order_e axisOrder)
         return YPOS_ZNEG_XNEG;
     case XPOS_ZPOS_YNEG:
         return XPOS_ZNEG_YPOS;
+    case XPOS_YPOS_ZPOS_45: // 45
+        return YNEG_XPOS_ZPOS_45; // 315
+    case YPOS_XNEG_ZPOS_45: // 135
+        return XNEG_YNEG_ZPOS_45; // 225
+    case XNEG_YNEG_ZPOS_45: // 225
+        return YPOS_XNEG_ZPOS_45; // 135
+    case YNEG_XPOS_ZPOS_45: // 315
+        return XPOS_YPOS_ZPOS_45; // 45
     default:
         // other axis orders are self-inverting
         return axisOrder;

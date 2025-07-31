@@ -37,9 +37,9 @@ public:
     */
    enum axis_order_e {
         XPOS_YPOS_ZPOS,
-        YPOS_XNEG_ZPOS,
-        XNEG_YNEG_ZPOS,
-        YNEG_XPOS_ZPOS,
+        YPOS_XNEG_ZPOS, // rotate  90 degrees anticlockwise
+        XNEG_YNEG_ZPOS, // rotate 180 degrees
+        YNEG_XPOS_ZPOS, // rotate 270 degrees anticlockwise
 
         XPOS_YNEG_ZNEG,
         YPOS_XPOS_ZNEG,
@@ -64,8 +64,18 @@ public:
         ZPOS_XNEG_YNEG,
         XNEG_ZNEG_YNEG,
         ZNEG_XPOS_YNEG,
-        XPOS_ZPOS_YNEG
+        XPOS_ZPOS_YNEG,
+
+        XPOS_YPOS_ZPOS_45, // rotate  45 degrees anticlockwise
+        YPOS_XNEG_ZPOS_45, // rotate 135 degrees anticlockwise
+        XNEG_YNEG_ZPOS_45, // rotate 225 degrees anticlockwise
+        YNEG_XPOS_ZPOS_45,  // rotate 315 degrees anticlockwise
+
+        XPOS_YPOS_ZPOS_135 = YPOS_XNEG_ZPOS_45,
+        XPOS_YPOS_ZPOS_225 = XNEG_YNEG_ZPOS_45,
+        XPOS_YPOS_ZPOS_315 = YNEG_XPOS_ZPOS_45
     };
+
     enum gyro_sensitivity_e {
         GYRO_FULL_SCALE_MAX,
         GYRO_FULL_SCALE_125_DPS,
@@ -94,6 +104,7 @@ public:
     enum : uint32_t { IMU_AUTO_CALIBRATES = 0x01, IMU_PERFORMS_SENSOR_FUSION = 0x02 };
 
     static constexpr float sin45f = 0.7071067811865475F;
+    static constexpr float cos45f = 0.7071067811865475F;
     const std::array<Quaternion, 24> axisOrientations = {
         Quaternion(  1.0F,    0.0F,    0.0F,    0.0F ),
         Quaternion(  sin45f,  0.0F,    0.0F,    sin45f ),
