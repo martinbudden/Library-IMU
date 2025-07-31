@@ -66,5 +66,4 @@ private:
     BUS_I2C _bus; //!< I2C bus interface
 #endif
     spi_acc_gyro_data_t _spiAccGyroData {};
-    uint8_t _dmaSpiRegister {}; // register value used for DMA transfer
 };

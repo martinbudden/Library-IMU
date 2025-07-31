@@ -160,7 +160,6 @@ IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_e axisOrder, uint32_t frequency, BUS
 {
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
-    _dmaSpiRegister = REG_OUTX_L_G | BUS_SPI::READ_BIT;
 }
 #else
 IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_e axisOrder, BUS_I2C::i2c_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :

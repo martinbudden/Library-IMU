@@ -180,6 +180,7 @@ void test_map_axes_inversion()
         TEST_ASSERT_EQUAL(input.z, output.z);
     }
 }
+
 void test_raw()
 {
     static IMU_Null imu;
