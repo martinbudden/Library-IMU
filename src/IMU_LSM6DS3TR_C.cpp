@@ -67,6 +67,8 @@ constexpr uint8_t REG_ALL_INT_SRC           = 0x1A;
 
 #endif
 
+constexpr uint8_t REG_DATA_READY_PULSE_CONFIG = 0x0B;
+    const uint8_t DATA_READY_PULSED         = 0b10000000;
 constexpr uint8_t REG_INT1_CTRL             = 0x0D;
     constexpr uint8_t INT1_DRDY_G           =0b00000010;
 constexpr uint8_t REG_INT2_CTRL             = 0x0E;
@@ -206,6 +208,9 @@ int IMU_LSM6DS3TR_C::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gy
         return chipID == 0 ? -1 : chipID;
     }
 
+    // set data ready pulsed
+    _bus.writeRegister(REG_DATA_READY_PULSE_CONFIG, DATA_READY_PULSED);
+    delayMs(1);
     // INT pins are by default forced to ground, so active high
     _bus.writeRegister(REG_INT1_CTRL, INT1_DRDY_G); // Enable gyro data ready on INT1 pin
     delayMs(1);

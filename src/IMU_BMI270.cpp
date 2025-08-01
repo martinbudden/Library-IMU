@@ -224,11 +224,19 @@ int IMU_BMI270::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSen
     //_bus.writeRegister(REG_FIFO_CONFIG_1, FIFO_GYRO_ENABLE | FIFO_ACC_ENABLE | FIFO_HEADER_DISABLE);
     _bus.writeRegister(REG_FIFO_CONFIG_1, 0x00); // all FIFOs disabled
     delayMs(1);
-    _bus.writeRegister(REG_INT_MAP_DATA, 0b01000100); // enable the data ready interrupt pins 1 and 2
+
+    // configure interrupts
+    constexpr uint8_t DATA_READY_INI_1 = 0b00000100;
+    constexpr uint8_t DATA_READY_INI_2 = 0b01000000;
+    _bus.writeRegister(REG_INT_MAP_DATA, DATA_READY_INI_1 | DATA_READY_INI_2); // enable the data ready interrupt pins 1 and 2
     delayMs(1);
-    _bus.writeRegister(REG_INT1_IO_CTRL, 0b00000100); // input disabled, output enabled, push-pull, active low
+    constexpr uint8_t ACTIVE_HIGH   = 0b00000010;
+    constexpr uint8_t OUTPUT_ENABLE = 0b00000100;
+    _bus.writeRegister(REG_INT1_IO_CTRL, OUTPUT_ENABLE | ACTIVE_HIGH); // input disabled, push-pull are defaults
     delayMs(1);
-    _bus.writeRegister(REG_INT2_IO_CTRL, 0b00000100); // input disabled, output enabled, push-pull, active low
+    _bus.writeRegister(REG_INT2_IO_CTRL, OUTPUT_ENABLE | ACTIVE_HIGH); // input disabled, push-pull are defaults
+    delayMs(1);
+    _bus.writeRegister(REG_INT_LATCH, 0); // interrupt latching off
     delayMs(1);
 
     // calculate the GYRO_ODR bit values to write to the REG_GYR_CONF register
