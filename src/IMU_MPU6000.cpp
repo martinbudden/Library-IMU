@@ -1,4 +1,5 @@
 #include "IMU_MPU6000.h"
+
 //#define SERIAL_OUTPUT
 #if defined(SERIAL_OUTPUT)
 #if defined(USE_ARDUINO_ESP32) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)// ESP32, ARDUINO_ARCH_ESP32 defined in platform.txt
@@ -10,6 +11,43 @@
 #include <cassert>
 
 namespace { // use anonymous namespace to make items local to this translation unit
+
+constexpr uint8_t REG_SAMPLE_RATE_DIVIDER = 0x19;
+constexpr uint8_t REG_CONFIG                = 0x1A;
+    constexpr uint8_t DLPF_CFG_260_HZ   = 0b00000000; // FS = 8kHz only
+    constexpr uint8_t DLPF_CFG_184_HZ   = 0b00000001;
+    constexpr uint8_t DLPF_CFG_94_HZ    = 0b00000010;
+    constexpr uint8_t DLPF_CFG_44_HZ    = 0b00000011;
+    constexpr uint8_t DLPF_CFG_21_HZ    = 0b00000100;
+    constexpr uint8_t DLPF_CFG_10_HZ    = 0b00000101;
+    constexpr uint8_t DLPF_CFG_5_HZ     = 0b00000110;
+constexpr uint8_t REG_GYRO_CONFIG           = 0x1B;
+    constexpr uint8_t GYRO_RANGE_250_DPS    = 0b00000000;
+    constexpr uint8_t GYRO_RANGE_500_DPS    = 0b00001000;
+    constexpr uint8_t GYRO_RANGE_1000_DPS   = 0b00010000;
+    constexpr uint8_t GYRO_RANGE_2000_DPS   = 0b00011000;
+constexpr uint8_t REG_ACCEL_CONFIG          = 0x1C;
+    constexpr uint8_t ACCEL_RANGE_2G        = 0b00000000;
+    constexpr uint8_t ACCEL_RANGE_4G        = 0b00001000;
+    constexpr uint8_t ACCEL_RANGE_8G        = 0b00010000;
+    constexpr uint8_t ACCEL_RANGE_16G       = 0b00011000;
+
+constexpr uint8_t REG_INT_PIN_CONFIG        = 0x37;
+    constexpr uint8_t INT_LEVEL_ACTIVE_LOW  = 0b10000000;
+    constexpr uint8_t INT_LEVEL_ACTIVE_HIGH = 0;
+    constexpr uint8_t INT_OPEN_DRAIN        = 0b01000000;
+    constexpr uint8_t INT_PUSH_PULL         = 0;
+    constexpr uint8_t INT_ENABLE_LATCHED    = 0b00100000;
+    constexpr uint8_t INT_ENABLE_PULSE      = 0;
+    constexpr uint8_t INT_CLEAR_READ_ANY    = 0b00010000; // cleared on any read
+    constexpr uint8_t INT_CLEAR_READ_STATUS = 0; // cleared only by reading REG_INT_STATUS
+    constexpr uint8_t FSYNCH_ACTIVE_LOW     = 0b00001000; // interrupt on FSYNCH pin active high
+    constexpr uint8_t FSYNCH_ACTIVE_HIGH    = 0;
+    constexpr uint8_t FSYNCH_INT_ENABLE     = 0b00000100; // enable interrup on FSYNCH pin
+    constexpr uint8_t FSYNCH_INT_DISABLE    = 0;
+constexpr uint8_t REG_INT_ENABLE            = 0x38;
+    constexpr uint8_t DATA_READY_ENABLE     = 0b00000001;
+constexpr uint8_t REG_INT_STATUS            = 0x3A;
 
 constexpr uint8_t REG_ACCEL_XOUT_H          = 0x3B;
 constexpr uint8_t REG_ACCEL_XOUT_L          = 0x3C;
@@ -26,6 +64,19 @@ constexpr uint8_t REG_GYRO_YOUT_L           = 0x46;
 constexpr uint8_t REG_GYRO_ZOUT_H           = 0x47;
 constexpr uint8_t REG_GYRO_ZOUT_L           = 0x48;
 
+constexpr uint8_t REG_USER_CTRL             = 0x6A;
+    constexpr uint8_t I2C_INTERFACE_DISABLED = 0b00010000;
+constexpr uint8_t REG_PWR_MGMT_1            = 0x6B;
+    constexpr uint8_t CLKSEL_INTERNAL_8_MHZ  = 0x00;
+    constexpr uint8_t CLKSEL_PLL_X_AXIS_GYRO = 0x01;
+    constexpr uint8_t CLKSEL_PLL_Y_AXIS_GYRO = 0x02;
+    constexpr uint8_t CLKSEL_PLL_Z_AXIS_GYRO = 0x03;
+    constexpr uint8_t CLKSEL_EXTERNAL_32768_HZ = 0x04;
+    constexpr uint8_t CLKSEL_EXTERNAL_19p2_MHZ = 0x05;
+constexpr uint8_t REG_PWR_MGMT_2            = 0x6C;
+
+constexpr uint8_t REG_WHO_AM_I              = 0x75;
+
 } // end namespace
 
 // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
@@ -36,7 +87,7 @@ IMU_MPU6000::IMU_MPU6000(axis_order_e axisOrder, uint32_t frequency, BUS_SPI::sp
     _bus(frequency, SPI_index, pins)
 {
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
-    static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
+    static_assert(sizeof(acc_temperature_gyro_data_t) == acc_temperature_gyro_data_t::DATA_SIZE);
 }
 #else
 IMU_MPU6000::IMU_MPU6000(axis_order_e axisOrder, BUS_I2C::i2c_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
@@ -55,9 +106,6 @@ IMU_MPU6000::IMU_MPU6000(axis_order_e axisOrder, TwoWire& wire, const BUS_I2C::p
 
 int IMU_MPU6000::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) // NOLINT(readability-function-cognitive-complexity)
 {
-    (void)targetOutputDataRateHz;
-    (void)gyroSensitivity;
-    (void)accSensitivity;
 #if defined(I2C_MUTEX_REQUIRED)
     _i2cMutex = static_cast<SemaphoreHandle_t>(i2cMutex);
 #else
@@ -75,6 +123,94 @@ int IMU_MPU6000::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSe
 
     _bus.setDeviceRegister(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&_spiAccGyroData), sizeof(_spiAccGyroData));
 
+    // Disable Primary I2C Interface
+#if defined(USE_IMU_MPU6000_SPI)
+    _bus.writeRegister(REG_USER_CTRL, I2C_INTERFACE_DISABLED);
+    delayMs(15);
+#endif
+
+    // clock source: PLL with Z axis gyro reference
+    _bus.writeRegister(REG_PWR_MGMT_1, CLKSEL_PLL_Z_AXIS_GYRO);
+    delayMs(15);
+    _bus.writeRegister(REG_PWR_MGMT_2, 0x00);
+    delayMs(15);
+
+    // Configure interrupts
+    _bus.writeRegister(REG_INT_PIN_CONFIG, INT_LEVEL_ACTIVE_HIGH | INT_PUSH_PULL | INT_ENABLE_PULSE | INT_CLEAR_READ_ANY | FSYNCH_INT_DISABLE); // cppcheck-suppress badBitmaskCheck
+    delayMs(15);
+    _bus.writeRegister(REG_INT_ENABLE, DATA_READY_ENABLE);
+    delayMs(15);
+
+    // calculate the GYRO_SAMPLE_RATE_DIVIDER values to write to the REG_SAMPLE_RATE_DIVIDER register
+    // sample rate = gyroscopeOutputRate / (1 + sampleRateDivider)
+    const uint8_t GYRO_SAMPLE_RATE_DIVIDER =
+        targetOutputDataRateHz == 0 ? 0 : // default to 8kHz
+        targetOutputDataRateHz > 4000 ? 0 : // div by 1
+        targetOutputDataRateHz > 2000 ? 1 : // div by 2
+        targetOutputDataRateHz > 1000 ? 3 : // div by 4
+        targetOutputDataRateHz > 500  ? 7 : // div by 8
+        targetOutputDataRateHz > 250  ? 15 : 31;
+    // report the value that was actually set
+    _gyroSampleRateHz =
+        GYRO_SAMPLE_RATE_DIVIDER  == 0 ? 8000 :
+        GYRO_SAMPLE_RATE_DIVIDER  == 1 ? 4000 :
+        GYRO_SAMPLE_RATE_DIVIDER  == 3 ? 2000 :
+        GYRO_SAMPLE_RATE_DIVIDER  == 7 ? 1000 :
+        GYRO_SAMPLE_RATE_DIVIDER  == 15 ? 500 : 125;
+
+    _bus.writeRegister(REG_SAMPLE_RATE_DIVIDER, GYRO_SAMPLE_RATE_DIVIDER);
+    delayMs(15);
+    _bus.writeRegister(REG_CONFIG, DLPF_CFG_260_HZ); // DLPF_CFG_260_HZ sets base sample rate to 8kHz
+    delayMs(15);
+
+    // calculate the GYRO_RANGE bit values to write to the REG_GYRO_CONFIG0 register
+    uint8_t GYRO_RANGE = 0;
+    switch (gyroSensitivity) {
+    case GYRO_FULL_SCALE_125_DPS:
+        [[fallthrough]];
+    case GYRO_FULL_SCALE_250_DPS:
+        GYRO_RANGE = GYRO_RANGE_250_DPS;
+        _gyroResolutionDPS = 250.0F / 32768.0F;
+        break;
+    case GYRO_FULL_SCALE_500_DPS:
+        GYRO_RANGE = GYRO_RANGE_500_DPS;
+        _gyroResolutionDPS = 500.0F / 32768.0F;
+        break;
+    case GYRO_FULL_SCALE_1000_DPS:
+        GYRO_RANGE = GYRO_RANGE_1000_DPS;
+        _gyroResolutionDPS = 1000.0F / 32768.0F;
+        break;
+    default:
+        GYRO_RANGE = GYRO_RANGE_2000_DPS;
+        _gyroResolutionDPS = 2000.0F / 32768.0F;
+        break;
+    }
+    _gyroResolutionRPS = _gyroResolutionDPS * degreesToRadians;
+    _bus.writeRegister(REG_GYRO_CONFIG, GYRO_RANGE);
+    delayMs(15);
+
+    _accSampleRateHz = 1000;
+    uint8_t ACCEL_RANGE = 0;
+    switch (accSensitivity) {
+    case ACC_FULL_SCALE_2G:
+        ACCEL_RANGE = ACCEL_RANGE_2G;
+        _accResolution = 2.0F / 32768.0F;
+        break;
+    case ACC_FULL_SCALE_4G:
+        ACCEL_RANGE = ACCEL_RANGE_4G;
+        _accResolution = 4.0F / 32768.0F;
+        break;
+    case ACC_FULL_SCALE_8G:
+        ACCEL_RANGE = ACCEL_RANGE_8G;
+        _accResolution = 8.0F / 32768.0F;
+        break;
+    default:
+        ACCEL_RANGE = ACCEL_RANGE_16G;
+        _accResolution = 16.0F / 32768.0F;
+        break;
+    }
+    _bus.writeRegister(REG_ACCEL_CONFIG, ACCEL_RANGE);
+    delayMs(15);
     return 0;
 }
 

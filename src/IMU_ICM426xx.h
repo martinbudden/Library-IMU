@@ -47,7 +47,7 @@ public:
 public:
 #if defined(USE_IMU_ICM426XX_SPI)
     // SPI constructor
-    IMU_LSM6DS3TR_C(axis_order_e axisOrder, uint32_t frequency, BUS_SPI::spi_index_e SPI_index, const BUS_SPI::pins_t& pins);
+    IMU_ICM426xx(axis_order_e axisOrder, uint32_t frequency, BUS_SPI::spi_index_e SPI_index, const BUS_SPI::pins_t& pins);
 #else
     // I2C constructors
     IMU_ICM426xx(axis_order_e axisOrder, BUS_I2C::i2c_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address);

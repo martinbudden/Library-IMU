@@ -168,7 +168,7 @@ constexpr uint8_t REG_BANK2_ACCEL_CONFIG_STATIC4    = 0x05;
 /*!
 Gyroscope data rates up to 6.4 kHz, accelerometer up to 1.6 kHz
 */
-#if defined(USE_IMU_ICM426xx_SPI)
+#if defined(USE_IMU_ICM426XX_SPI)
 IMU_ICM426xx::IMU_ICM426xx(axis_order_e axisOrder, uint32_t frequency, BUS_SPI::spi_index_e SPI_index, const BUS_SPI::pins_t& pins) :
     IMU_Base(axisOrder, _bus),
     _bus(frequency, SPI_index, pins)
@@ -202,8 +202,8 @@ int IMU_ICM426xx::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroS
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
 
     // MSP compatible gyro and acc identifiers
-    enum { MSP_GYRO_ID_ICM42605 = 14, MSP_GYRO_ID_ICM42688P = 15 };
-    enum { MSP_ACC_ID_ICM42605 = 15, MSP_ACC_ID_ICM42688P = 16 };
+    enum { MSP_GYRO_ID_ICM42605 = 12, MSP_GYRO_ID_ICM42688P = 13 };
+    enum { MSP_ACC_ID_ICM42605 = 11, MSP_ACC_ID_ICM42688P = 12 };
 
     _gyroIdMSP = MSP_GYRO_ID_ICM42605;
     _accIdMSP = MSP_ACC_ID_ICM42605;
