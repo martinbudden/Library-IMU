@@ -42,7 +42,8 @@ int IMU_M5_UNIFIED::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensi
     setAxisOrder(_axisOrder);
 #endif
 
-    return 0;
+    // return the gyro sample rate actually set
+    return _gyroSampleRateHz;
 }
 
 void IMU_M5_UNIFIED::setAxisOrder(axis_order_e axisOrder)

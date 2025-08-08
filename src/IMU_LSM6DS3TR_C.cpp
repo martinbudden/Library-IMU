@@ -205,7 +205,7 @@ int IMU_LSM6DS3TR_C::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gy
 #endif
     //assert(chipID == REG_WHO_AM_I_RESPONSE_LSM6DS3TR_C || chipID == REG_WHO_AM_I_RESPONSE_ISM330DHCX || chipID == REG_WHO_AM_I_RESPONSE_LSM6DSOX);
     if (chipID != REG_WHO_AM_I_RESPONSE_LSM6DS3TR_C && chipID != REG_WHO_AM_I_RESPONSE_ISM330DHCX && chipID != REG_WHO_AM_I_RESPONSE_LSM6DSOX) {
-        return chipID == 0 ? -1 : chipID;
+        return NOT_DETECTED;
     }
 
     // set data ready pulsed
@@ -324,7 +324,8 @@ int IMU_LSM6DS3TR_C::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gy
     }
     delayMs(1);
 
-    return 0;
+    // return the gyro sample rate actually set
+    return _gyroSampleRateHz;
 }
 
 void IMU_LSM6DS3TR_C::setInterruptDriven()

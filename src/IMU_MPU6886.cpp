@@ -197,7 +197,8 @@ int IMU_MPU6886::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSe
     i2cSemaphoreGive(_i2cMutex);
     delayMs(1);
 
-    return 0;
+    // return the gyro sample rate actually set
+    return _gyroSampleRateHz;
 }
 
 /*!

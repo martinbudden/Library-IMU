@@ -53,7 +53,7 @@ constexpr uint8_t REG_FEAT_PAGE             = 0x2F;
 constexpr uint8_t REG_FEATURES              = 0x30; // 16 items
 
 constexpr uint8_t REG_ACC_CONF              = 0x40;
-    constexpr uint8_t ACC_FILTER_PERFORMANCE_OPTIMIZED = 0b10000000;
+    constexpr uint8_t ACC_FILTER_PERFORMANCE_OPTIMIZED = 0b10000000; // ie not power optimised
     constexpr uint8_t ACC_ODR_25_HZ = 0x06;
     constexpr uint8_t ACC_ODR_50_HZ = 0x07;
     constexpr uint8_t ACC_ODR_100_HZ = 0x08;
@@ -71,18 +71,19 @@ constexpr uint8_t REG_ACC_RANGE             = 0x41;
     constexpr uint8_t ACC_RANGE_8G = 0x02;
     constexpr uint8_t ACC_RANGE_16G = 0x03;
 constexpr uint8_t REG_GYR_CONF              = 0x42;
-    constexpr uint8_t GYRO_FILTER_PERFORMANCE_OPTIMIZED = 0b10000000U;
-    constexpr uint8_t GYRO_ODR_25_HZ = 0x06;
-    constexpr uint8_t GYRO_ODR_50_HZ = 0x07;
-    constexpr uint8_t GYRO_ODR_100_HZ = 0x08;
-    constexpr uint8_t GYRO_ODR_200_HZ = 0x09;
-    constexpr uint8_t GYRO_ODR_400_HZ = 0x0A;
-    constexpr uint8_t GYRO_ODR_800_HZ = 0x0B;
-    constexpr uint8_t GYRO_ODR_1600_HZ = 0x0C;
-    constexpr uint8_t GYRO_ODR_3200_HZ = 0x0D; // for gyro only, acc does not support this rate
-    constexpr uint8_t GYRO_OSR4 = 0x00;
-    constexpr uint8_t GYRO_OSR2 = 0x10;
-    constexpr uint8_t GYRO_NORM = 0x30;
+    constexpr uint8_t GYRO_FILTER_PERFORMANCE_OPTIMIZED = 0b11000000U; // ie not power optimized
+    constexpr uint8_t GYRO_ODR_25_HZ    = 0x06;
+    constexpr uint8_t GYRO_ODR_50_HZ    = 0x07;
+    constexpr uint8_t GYRO_ODR_100_HZ   = 0x08;
+    constexpr uint8_t GYRO_ODR_200_HZ   = 0x09;
+    constexpr uint8_t GYRO_ODR_400_HZ   = 0x0A;
+    constexpr uint8_t GYRO_ODR_800_HZ   = 0x0B;
+    constexpr uint8_t GYRO_ODR_1600_HZ  = 0x0C;
+    constexpr uint8_t GYRO_ODR_3200_HZ  = 0x0D; // for gyro only, acc does not support this rate
+    constexpr uint8_t GYRO_OSR4     = 0x00; // filter 3dB cutoff = 300Hz at 3200Hz ODR
+    constexpr uint8_t GYRO_OSR2     = 0x10; // filter 3dB cutoff = 557Hz at 3200Hz ODR
+    constexpr uint8_t GYRO_NORM     = 0x20; // filter 3dB cutoff = 751Hz at 3200Hz ODR
+    constexpr uint8_t GYRO_RESERVED = 0x30;
 constexpr uint8_t REG_GYR_RANGE             = 0x43;
     constexpr uint8_t GYRO_RANGE_125_DPS  = 0x04;
     constexpr uint8_t GYRO_RANGE_250_DPS  = 0x03;
@@ -195,14 +196,14 @@ int IMU_BMI270::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSen
 
     // Initialization sequence, see page 17 and following from BMI270 Datasheet
     _bus.readRegister(REG_CHIP_ID); // dummy read, required for SPI mode
-    [[maybe_unused]] const uint8_t chipID = _bus.readRegisterWithTimeout(REG_CHIP_ID, 100);
+    const uint8_t chipID = _bus.readRegisterWithTimeout(REG_CHIP_ID, 100);
 #if defined(SERIAL_OUTPUT)
     Serial.print("IMU_BMI270 init, chipID:0x");
     Serial.println(chipID, HEX);
 #endif
     //assert(chipID == 0x24);
     if (chipID != 0x24) {
-        return chipID == 0 ? -1 : chipID;
+        return NOT_DETECTED;
     }
     delayMs(1);
 
@@ -327,7 +328,8 @@ int IMU_BMI270::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSen
     }
     delayMs(1);
 
-    return 0;
+    // return the gyro sample rate actually set
+    return _gyroSampleRateHz;
 }
 
 void IMU_BMI270::loadConfigurationData()

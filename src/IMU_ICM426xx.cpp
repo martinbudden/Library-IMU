@@ -352,7 +352,8 @@ int IMU_ICM426xx::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroS
     _bus.writeRegister(REG_ACCEL_CONFIG0, ACCEL_RANGE | ACCEL_ODR);
     delayMs(1);
 
-    return 0;
+    // return the gyro sample rate actually set
+    return _gyroSampleRateHz;
 }
 
 void IMU_ICM426xx::setInterruptDriven()

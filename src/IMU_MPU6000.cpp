@@ -211,7 +211,9 @@ int IMU_MPU6000::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSe
     }
     _bus.writeRegister(REG_ACCEL_CONFIG, ACCEL_RANGE);
     delayMs(15);
-    return 0;
+
+    // return the gyro sample rate actually set
+    return _gyroSampleRateHz;
 }
 
 void IMU_MPU6000::setInterruptDriven()

@@ -47,7 +47,7 @@ int IMU_Base::init(uint32_t outputDataRateHz)
 
 int IMU_Base::init(void* i2cMutex)
 {
-    return init(0, GYRO_FULL_SCALE_MAX, ACC_FULL_SCALE_MAX, i2cMutex);
+    return init(TARGET_OUTPUT_DATA_RATE_MAX, GYRO_FULL_SCALE_MAX, ACC_FULL_SCALE_MAX, i2cMutex);
 }
 
 int IMU_Base::init()

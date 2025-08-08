@@ -42,7 +42,8 @@ int IMU_M5_STACK::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensiti
     M5.IMU.RestFIFO();
     i2cSemaphoreGive(_i2cMutex);
 
-    return 0;
+    // return the gyro sample rate actually set
+    return _gyroSampleRateHz;
 }
 
 IMU_Base::xyz_int32_t IMU_M5_STACK::readAccRaw()

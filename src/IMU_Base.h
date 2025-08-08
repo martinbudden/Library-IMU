@@ -25,6 +25,7 @@ if the IMU is read via a 400 kHz I2C bus this takes approximately 270 microsecon
 */
 class IMU_Base {
 public:
+    enum  { NOT_DETECTED = -1 };
     /*!
     Axes order describing the sensor axes relative to the body axes.
     For example, if the sensor is rotated relative to the body so that the
@@ -76,6 +77,7 @@ public:
         XPOS_YPOS_ZPOS_315 = YNEG_XPOS_ZPOS_45
     };
 
+    enum { TARGET_OUTPUT_DATA_RATE_MAX = 0 };
     enum gyro_sensitivity_e {
         GYRO_FULL_SCALE_MAX,
         GYRO_FULL_SCALE_125_DPS,

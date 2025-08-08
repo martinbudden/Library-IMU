@@ -100,7 +100,7 @@ int IMU_BNO085::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivi
     delayMs(100);
     while (readPacketAndParse()) { delayMs(1); }
 
-    return 0;
+    return outputDataRateHz;
 }
 
 void IMU_BNO085::setFeatureCommand(uint8_t reportID, uint32_t timeBetweenReportsUs, uint32_t specificConfig)
