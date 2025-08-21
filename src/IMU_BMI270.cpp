@@ -53,7 +53,7 @@ constexpr uint8_t REG_FEAT_PAGE             = 0x2F;
 constexpr uint8_t REG_FEATURES              = 0x30; // 16 items
 
 constexpr uint8_t REG_ACC_CONF              = 0x40;
-    constexpr uint8_t ACC_FILTER_PERFORMANCE_OPTIMIZED = 0b10000000; // ie not power optimised
+    constexpr uint8_t ACC_FILTER_PERFORMANCE_OPTIMIZED = 0b10000000; // ie not power optimized
     constexpr uint8_t ACC_ODR_25_HZ = 0x06;
     constexpr uint8_t ACC_ODR_50_HZ = 0x07;
     constexpr uint8_t ACC_ODR_100_HZ = 0x08;
@@ -329,7 +329,7 @@ int IMU_BMI270::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSen
     delayMs(1);
 
     // return the gyro sample rate actually set
-    return _gyroSampleRateHz;
+    return static_cast<int>(_gyroSampleRateHz);
 }
 
 void IMU_BMI270::loadConfigurationData()

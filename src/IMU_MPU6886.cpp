@@ -198,7 +198,7 @@ int IMU_MPU6886::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSe
     delayMs(1);
 
     // return the gyro sample rate actually set
-    return _gyroSampleRateHz;
+    return static_cast<int>(_gyroSampleRateHz);
 }
 
 /*!

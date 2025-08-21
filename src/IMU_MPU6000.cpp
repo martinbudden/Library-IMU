@@ -136,7 +136,7 @@ int IMU_MPU6000::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSe
     delayMs(15);
 
     // Configure interrupts
-    _bus.writeRegister(REG_INT_PIN_CONFIG, INT_LEVEL_ACTIVE_HIGH | INT_PUSH_PULL | INT_ENABLE_PULSE | INT_CLEAR_READ_ANY | FSYNCH_INT_DISABLE); // cppcheck-suppress badBitmaskCheck
+    _bus.writeRegister(REG_INT_PIN_CONFIG, INT_LEVEL_ACTIVE_HIGH | INT_PUSH_PULL | INT_ENABLE_PULSE | INT_CLEAR_READ_ANY | FSYNCH_INT_DISABLE); // cppcheck-suppress [badBitmaskCheck, knownConditionTrueFalse]
     delayMs(15);
     _bus.writeRegister(REG_INT_ENABLE, DATA_READY_ENABLE);
     delayMs(15);
@@ -213,7 +213,7 @@ int IMU_MPU6000::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSe
     delayMs(15);
 
     // return the gyro sample rate actually set
-    return _gyroSampleRateHz;
+    return static_cast<int>(_gyroSampleRateHz);
 }
 
 void IMU_MPU6000::setInterruptDriven()

@@ -10,7 +10,7 @@ int IMU_Null::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSensi
     _gyroIdMSP = MSP_GYRO_ID_VIRTUAL;
     _accIdMSP = MSP_ACC_ID_VIRTUAL;
 
-    return targetOutputDataRateHz;
+    return static_cast<int>(targetOutputDataRateHz);
 }
 
 IMU_Base::xyz_int32_t IMU_Null::readGyroRaw()

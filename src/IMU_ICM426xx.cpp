@@ -68,6 +68,7 @@ constexpr uint8_t REG_INTF_CONFIG0          = 0x4C;
     constexpr uint8_t SENSOR_DATA_LITTLE_ENDIAN = 0b00000000; // datasheet gives very little information on how this works
     constexpr uint8_t UI_SIFS_CFG_DISABLE_I2C   = 0b00000011;
 constexpr uint8_t REG_INTF_CONFIG1          = 0x4D;
+    constexpr uint8_t AFSR_DISABLE          = 0x40;
 
 constexpr uint8_t REG_PWR_MGMT0             = 0x4E;
     constexpr uint8_t PWR_OFF               = 0x00;
@@ -353,7 +354,7 @@ int IMU_ICM426xx::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroS
     delayMs(1);
 
     // return the gyro sample rate actually set
-    return _gyroSampleRateHz;
+    return static_cast<int>(_gyroSampleRateHz);
 }
 
 void IMU_ICM426xx::setInterruptDriven()
