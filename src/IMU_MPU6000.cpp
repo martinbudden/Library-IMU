@@ -82,7 +82,7 @@ constexpr uint8_t REG_WHO_AM_I              = 0x75;
 // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 
 #if defined(USE_IMU_MPU6000_SPI)
-IMU_MPU6000::IMU_MPU6000(axis_order_e axisOrder, uint32_t frequency, BUS_SPI::spi_index_e SPI_index, const BUS_SPI::pins_t& pins) :
+IMU_MPU6000::IMU_MPU6000(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::pins_t& pins) :
     IMU_Base(axisOrder, _bus),
     _bus(frequency, SPI_index, pins)
 {
@@ -90,7 +90,7 @@ IMU_MPU6000::IMU_MPU6000(axis_order_e axisOrder, uint32_t frequency, BUS_SPI::sp
     static_assert(sizeof(acc_temperature_gyro_data_t) == acc_temperature_gyro_data_t::DATA_SIZE);
 }
 #else
-IMU_MPU6000::IMU_MPU6000(axis_order_e axisOrder, BUS_I2C::i2c_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
+IMU_MPU6000::IMU_MPU6000(axis_order_e axisOrder, BUS_BASE::bus_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
     IMU_Base(axisOrder, _bus),
     _bus(I2C_address, I2C_index, pins)
 {
@@ -121,7 +121,7 @@ int IMU_MPU6000::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSe
     _gyroIdMSP = MSP_GYRO_ID_MPU6000;
     _accIdMSP = MSP_ACC_ID_MPU6000;
 
-    _bus.setDeviceRegister(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&_spiAccGyroData), sizeof(_spiAccGyroData));
+    _bus.setDeviceDataRegister(REG_ACCEL_XOUT_H, reinterpret_cast<uint8_t*>(&_spiAccGyroData), sizeof(_spiAccGyroData));
 
     // Disable Primary I2C Interface
 #if defined(USE_IMU_MPU6000_SPI)
@@ -218,7 +218,8 @@ int IMU_MPU6000::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSe
 
 void IMU_MPU6000::setInterruptDriven()
 {
-    _bus.setInterruptDriven();
+    // set interrupt level as configured in init()
+    _bus.setInterruptDriven(BUS_BASE::IRQ_EDGE_RISE);
 }
 
 IMU_Base::xyz_int32_t IMU_MPU6000::readGyroRaw()
@@ -285,8 +286,7 @@ xyz_t IMU_MPU6000::readAcc()
 IRAM_ATTR IMU_Base::accGyroRPS_t IMU_MPU6000::readAccGyroRPS()
 {
     i2cSemaphoreTake(_i2cMutex);
-    _bus.readDeviceRegister();
-    //_bus.readDeviceRegisterDMA();
+    _bus.readDeviceData();
     i2cSemaphoreGive(_i2cMutex);
 
     return accGyroRPSFromRaw(_spiAccGyroData.accGyro.value);

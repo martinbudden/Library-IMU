@@ -98,9 +98,9 @@ classDiagram
         _I2C_address uint8_t
 
         setInterruptDriven()
-        setDeviceRegister(uint8_t deviceRegister, uint8_t* readBuf, size_t readLength)
+        setDeviceDataRegister(uint8_t deviceRegister, uint8_t* readBuf, size_t readLength)
 
-        readDeviceRegister() bool
+        readDeviceData() bool
         readRegister(uint8_t reg) uint8_t
         readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) uint8_t
         readRegister(uint8_t reg, uint8_t* data, size_t length) bool
@@ -117,9 +117,9 @@ classDiagram
         _pins pins_t
 
         setInterruptDriven()
-        setDeviceRegister(uint8_t deviceRegister, uint8_t* readBuf, size_t readLength)
+        setDeviceDataRegister(uint8_t deviceRegister, uint8_t* readBuf, size_t readLength)
 
-        readDeviceRegister() bool
+        readDeviceData() bool
         readRegister(uint8_t reg) uint8_t
         readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) uint8_t
         readRegister(uint8_t reg, uint8_t* data, size_t length) bool

@@ -40,11 +40,11 @@ public:
 public:
 #if defined(USE_IMU_BMI270_SPI)
     // SPI constructors
-    IMU_BMI270(axis_order_e axisOrder, uint32_t frequency, BUS_SPI::spi_index_e SPI_index, const BUS_SPI::pins_t& pins);
+    IMU_BMI270(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::pins_t& pins);
 #else
     // I2C constructors
-    IMU_BMI270(axis_order_e axisOrder, BUS_I2C::i2c_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address);
-    IMU_BMI270(axis_order_e axisOrder, const BUS_I2C::pins_t& pins, uint8_t I2C_address) : IMU_BMI270(axisOrder, BUS_I2C::I2C_INDEX_0, pins, I2C_address) {}
+    IMU_BMI270(axis_order_e axisOrder, BUS_BASE::bus_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address);
+    IMU_BMI270(axis_order_e axisOrder, const BUS_I2C::pins_t& pins, uint8_t I2C_address) : IMU_BMI270(axisOrder, BUS_I2C::BUS_INDEX_0, pins, I2C_address) {}
     IMU_BMI270(axis_order_e axisOrder, const BUS_I2C::pins_t& pins) : IMU_BMI270(axisOrder, pins, I2C_ADDRESS) {}
 #endif
 public:

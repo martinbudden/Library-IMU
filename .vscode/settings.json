@@ -4,6 +4,7 @@
         "AFSR",
         "AHRS",
         "altera",
+        "BAUDRATEPRESCALER",
         "BETAFLIGHT",
         "Budden",
         "bugprone",
@@ -13,6 +14,7 @@
         "CLKSEL",
         "COUNTH",
         "CPHA",
+        "Cplt",
         "cppcoreguidelines",
         "DHCX",
         "DLPF",
@@ -22,11 +24,13 @@
         "earlephilhower",
         "ESPIDF",
         "espressif",
+        "EXTI",
         "FSRP",
         "FSYNCH",
         "FSYNCHL",
         "hicpp",
         "Hillcrest",
+        "hspi",
         "Inven",
         "IRAM",
         "libc",
@@ -49,6 +53,8 @@
         "SENSORTIME",
         "shtp",
         "SIFS",
+        "stlink",
+        "ststm",
         "suppr",
         "TDEASSERT",
         "TMST",
@@ -80,5 +86,8 @@
         "YOUT",
         "ZNEG",
         "ZOUT"
-    ]
+    ],
+    "files.associations": {
+        "cstdint": "cpp"
+    }
 }

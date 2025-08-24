@@ -96,7 +96,7 @@ constexpr uint8_t REG_ZA_OFFSET_L           = 0x7E;
 // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers,hicpp-signed-bitwise)
 
 #if defined(USE_IMU_MPU6886_SPI)
-IMU_MPU6886::IMU_MPU6886(axis_order_e axisOrder, uint32_t frequency, BUS_SPI::spi_index_e SPI_index, const BUS_SPI::pins_t& pins) :
+IMU_MPU6886::IMU_MPU6886(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::pins_t& pins) :
     IMU_Base(axisOrder, _bus),
     _bus(frequency, SPI_index, pins)
 {
@@ -105,7 +105,7 @@ IMU_MPU6886::IMU_MPU6886(axis_order_e axisOrder, uint32_t frequency, BUS_SPI::sp
     static_assert(sizeof(acc_temperature_gyro_array_t) == acc_temperature_gyro_array_t::DATA_SIZE);
 }
 #else
-IMU_MPU6886::IMU_MPU6886(axis_order_e axisOrder, BUS_I2C::i2c_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
+IMU_MPU6886::IMU_MPU6886(axis_order_e axisOrder, BUS_BASE::bus_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
     IMU_Base(axisOrder, _bus),
     _bus(I2C_address, I2C_index, pins)
 {
@@ -131,7 +131,7 @@ int IMU_MPU6886::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSe
     _gyroIdMSP = MSP_GYRO_ID_DEFAULT;
     _accIdMSP = MSP_ACC_ID_DEFAULT;
 
-    _bus.setDeviceRegister(REG_GYRO_XOUT_H, reinterpret_cast<uint8_t*>(&_spiAccTemperatureGyroData), sizeof(_spiAccTemperatureGyroData));
+    _bus.setDeviceDataRegister(REG_GYRO_XOUT_H, reinterpret_cast<uint8_t*>(&_spiAccTemperatureGyroData), sizeof(_spiAccTemperatureGyroData));
 
     i2cSemaphoreTake(_i2cMutex);
 
@@ -221,7 +221,8 @@ IMU_MPU6886::mems_sensor_data_t::value_t IMU_MPU6886::gyroOffsetFromXYZ(const xy
 
 void IMU_MPU6886::setInterruptDriven()
 {
-    _bus.setInterruptDriven();
+    // set interrupt level as configured in init()
+    _bus.setInterruptDriven(BUS_BASE::IRQ_EDGE_RISE);
 }
 
 void IMU_MPU6886::setGyroOffset(const xyz_int32_t& gyroOffset)
@@ -298,7 +299,7 @@ IRAM_ATTR IMU_Base::accGyroRPS_t IMU_MPU6886::readAccGyroRPS()
 {
     i2cSemaphoreTake(_i2cMutex);
     _bus.readRegister(REG_ACCEL_XOUT_H, &_spiAccTemperatureGyroData.accGyro.data[0], sizeof(_spiAccTemperatureGyroData.accGyro));
-    //_bus.readDeviceRegister();
+    //_bus.readDeviceData();
     i2cSemaphoreGive(_i2cMutex);
 
     return accGyroRPSFromRaw(_spiAccTemperatureGyroData.accGyro.value);

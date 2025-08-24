@@ -2,10 +2,10 @@
 
 #include <cassert>
 #if defined(FRAMEWORK_RPI_PICO)
-#include <hardware/i2c.h>
-#include <pico/stdlib.h>
-#include <pico/binary_info.h>
 #include <boards/pico.h> // for PICO_DEFAULT_LED_PIN
+#include <hardware/i2c.h>
+#include <pico/binary_info.h>
+#include <pico/stdlib.h>
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_TEST)
 #else // defaults to FRAMEWORK_ARDUINO
@@ -27,23 +27,23 @@ void BUS_I2C::dataReadyISR(unsigned int gpio, uint32_t events)
     (void)events;
     //gpio_put(PICO_DEFAULT_LED_PIN, 1);
     // reading the IMU register resets the interrupt
-    bus->readDeviceRegister();
+    bus->readDeviceData();
     bus->SIGNAL_DATA_READY_FROM_ISR();
 }
 #else
 IRAM_ATTR void BUS_I2C::dataReadyISR()
 {
     // reading the IMU register resets the interrupt
-    bus->readDeviceRegister();
+    bus->readDeviceData();
     bus->SIGNAL_DATA_READY_FROM_ISR();
 }
 #endif
 
-BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_e I2C_index, const pins_t& pins) :
+BUS_I2C::BUS_I2C(uint8_t I2C_address, bus_index_e I2C_index, const pins_t& pins) :
     _I2C_index(I2C_index),
     _pins(pins),
 #if defined(FRAMEWORK_RPI_PICO)
-    _I2C(I2C_index == I2C_INDEX_1 ? i2c1 : i2c0),
+    _I2C(I2C_index == BUS_INDEX_1 ? i2c1 : i2c0),
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_TEST)
 #else // defaults to FRAMEWORK_ARDUINO
@@ -59,7 +59,8 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_e I2C_index, const pins_t& pins)
     static_assert(static_cast<int>(IRQ_EDGE_FALL) == GPIO_IRQ_EDGE_FALL);
     static_assert(static_cast<int>(IRQ_EDGE_RISE) == GPIO_IRQ_EDGE_RISE);
 
-    i2c_init(_I2C, 400 * 1000);
+    enum { BUS_400_KHZ = 400000 };
+    i2c_init(_I2C, BUS_400_KHZ);
     gpio_set_function(_pins.sda, GPIO_FUNC_I2C); // PICO_DEFAULT_I2C_SDA_PIN is GP4
     gpio_set_function(_pins.scl, GPIO_FUNC_I2C); // PICO_DEFAULT_I2C_SCL_PIN is GP5
     gpio_pull_up(_pins.sda);
@@ -119,7 +120,7 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_e I2C_index, const pins_t& pins)
 
 #if !defined(FRAMEWORK_RPI_PICO) && !defined(FRAMEWORK_ESPIDF) && !defined(FRAMEWORK_TEST)
 BUS_I2C::BUS_I2C(uint8_t I2C_address, TwoWire& wire, const pins_t& pins) :
-    _I2C_index(I2C_INDEX_0),
+    _I2C_index(BUS_INDEX_0),
     _pins(pins),
     _wire(wire),
     _I2C_address(I2C_address)
@@ -140,40 +141,34 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, TwoWire& wire, const pins_t& pins) :
 }
 #endif
 
-BUS_I2C::BUS_I2C(uint8_t I2C_address, i2c_index_e I2C_index)
+BUS_I2C::BUS_I2C(uint8_t I2C_address, bus_index_e I2C_index)
 #if defined(FRAMEWORK_RPI_PICO)
     : BUS_I2C(I2C_address, I2C_index,
-        I2C_index == I2C_INDEX_0 ? pins_t{.sda=PICO_DEFAULT_I2C_SDA_PIN, .scl=PICO_DEFAULT_I2C_SCL_PIN, .irq=IRQ_NOT_SET, .irqLevel=0} : pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET, .irqLevel=0})
+        I2C_index == BUS_INDEX_0 ? pins_t{.sda=PICO_DEFAULT_I2C_SDA_PIN, .scl=PICO_DEFAULT_I2C_SCL_PIN, .irq=IRQ_NOT_SET} :
+                                   pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET})
 #elif defined(FRAMEWORK_ESPIDF)
-    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET, .irqLevel=0})
+    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET})
 #elif defined(FRAMEWORK_TEST)
-    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET, .irqLevel=0})
+    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET})
 #else // defaults to FRAMEWORK_ARDUINO
-    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET, .irqLevel=0})
+    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET})
 #endif // FRAMEWORK
 {
 }
 
-
-void BUS_I2C::setDeviceRegister(uint8_t deviceRegister, uint8_t* readBuf, size_t readLength)
-{
-    _deviceRegister = deviceRegister;
-    _readBuf = readBuf;
-    _readLength = readLength;
-}
-
-void BUS_I2C::setInterruptDriven() // NOLINT(readability-make-member-function-const)
+void BUS_I2C::setInterruptDriven(irq_level_e irqLevel) // NOLINT(readability-make-member-function-const)
 {
     assert(_pins.irq != IRQ_NOT_SET);
 
 #if defined(FRAMEWORK_RPI_PICO)
-    assert(_pins.irqLevel != 0);
     gpio_init(_pins.irq);
     enum { IRQ_ENABLED = true };
-    gpio_set_irq_enabled_with_callback(_pins.irq, _pins.irqLevel, IRQ_ENABLED, &dataReadyISR);
+    gpio_set_irq_enabled_with_callback(_pins.irq, irqLevel, IRQ_ENABLED, &dataReadyISR);
 #elif defined(USE_ARDUINO_ESP32)
     //pinMode(_pins.irq, INPUT);
-    //attachInterrupt(digitalPinToInterrupt(_pins.irq), &dataReadyISR, _pins.irqLevel); // esp32-hal-gpio.h
+    //attachInterrupt(digitalPinToInterrupt(_pins.irq), &dataReadyISR, irqLevel); // esp32-hal-gpio.h
+#else
+    (void)irqLevel;
 #endif
 }
 
@@ -206,7 +201,8 @@ IRAM_ATTR uint8_t BUS_I2C::readRegisterWithTimeout(uint8_t reg, uint32_t timeout
 #if defined(FRAMEWORK_RPI_PICO)
     i2c_write_blocking(_I2C, _I2C_address, &reg, 1, RETAIN_CONTROL_OF_BUS);
     uint8_t ret;
-    i2c_read_timeout_us(_I2C, _I2C_address, &ret, 1, DONT_RETAIN_CONTROL_OF_BUS, timeoutMs * 1000);
+    enum { MILLISECONDS_TO_MICROSECONDS = 1000 };
+    i2c_read_timeout_us(_I2C, _I2C_address, &ret, 1, DONT_RETAIN_CONTROL_OF_BUS, timeoutMs * MILLISECONDS_TO_MICROSECONDS);
     return ret;
 #elif defined(FRAMEWORK_ESPIDF)
     (void)reg;
@@ -230,9 +226,9 @@ IRAM_ATTR uint8_t BUS_I2C::readRegisterWithTimeout(uint8_t reg, uint32_t timeout
     return 0;
 }
 
-IRAM_ATTR bool BUS_I2C::readDeviceRegister()
+IRAM_ATTR bool BUS_I2C::readDeviceData()
 {
-    return readRegister(_deviceRegister, _readBuf + SPI_BUFFER_SIZE, _readLength - SPI_BUFFER_SIZE); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    return readRegister(_deviceDataRegister, _readBuf + SPI_BUFFER_SIZE, _readLength - SPI_BUFFER_SIZE); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 }
 
 IRAM_ATTR bool BUS_I2C::readRegister(uint8_t reg, uint8_t* data, size_t length) const // NOLINT(readability-non-const-parameter)
@@ -283,7 +279,8 @@ IRAM_ATTR bool BUS_I2C::readBytes(uint8_t* data, size_t length) const // NOLINT(
 IRAM_ATTR bool BUS_I2C::readBytesWithTimeout(uint8_t* data, size_t length, uint32_t timeoutMs) const // NOLINT(readability-non-const-parameter)
 {
 #if defined(FRAMEWORK_RPI_PICO)
-    i2c_read_timeout_us(_I2C, _I2C_address, data, length, false, timeoutMs *1000);
+    enum { MILLISECONDS_TO_MICROSECONDS = 1000 };
+    i2c_read_timeout_us(_I2C, _I2C_address, data, length, false, timeoutMs * MILLISECONDS_TO_MICROSECONDS);
     return true;
 #elif defined(FRAMEWORK_ESPIDF)
     *data = 0;

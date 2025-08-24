@@ -14,24 +14,26 @@
 
 class BUS_BASE {
 public:
+    enum bus_index_e : uint8_t { BUS_INDEX_0, BUS_INDEX_1, BUS_INDEX_2, BUS_INDEX_3, BUS_INDEX_4, BUS_INDEX_5, BUS_INDEX_6, BUS_INDEX_7 };
     enum { SPI_BUFFER_SIZE = 2};
     enum { IRQ_NOT_SET = 0xFF };
 #if defined(FRAMEWORK_RPI_PICO)
-    enum { IRQ_LEVEL_LOW = 0x1U, IRQ_LEVEL_HIGH = 0x2U, IRQ_EDGE_FALL = 0x4U, IRQ_EDGE_RISE = 0x8U, IRQ_EDGE_CHANGE = 0x4U|0x8U };
+    enum irq_level_e { IRQ_LEVEL_LOW = 0x1U, IRQ_LEVEL_HIGH = 0x2U, IRQ_EDGE_FALL = 0x4U, IRQ_EDGE_RISE = 0x8U, IRQ_EDGE_CHANGE = 0x4U|0x8U };
 #else
-    enum { IRQ_LEVEL_LOW = 0x04, IRQ_LEVEL_HIGH = 0x05, IRQ_EDGE_FALL = 0x02, IRQ_EDGE_RISE = 0x01, IRQ_EDGE_CHANGE = 0x03 };
+    enum irq_level_e { IRQ_LEVEL_LOW = 0x04, IRQ_LEVEL_HIGH = 0x05, IRQ_EDGE_FALL = 0x02, IRQ_EDGE_RISE = 0x01, IRQ_EDGE_CHANGE = 0x03 };
 #endif
+
+public:
+    inline void setDeviceDataRegister(uint8_t deviceDataRegister, uint8_t* readBuf, size_t readLength) {
+        _deviceDataRegister = deviceDataRegister;
+        _readBuf = readBuf;
+        _readLength = readLength;
+    }
 protected:
-    uint8_t _deviceRegister {}; // the device register that is read in the ISR
+    uint8_t _deviceDataRegister {}; // the device register that is read in the readDeviceData() function
     uint8_t* _readBuf {};
     size_t _readLength {};
-#if defined(FRAMEWORK_RPI_PICO)
-    mutable mutex_t _dataReadyMutex{};
-public:
-    inline int32_t WAIT_DATA_READY() const { mutex_enter_blocking(&_dataReadyMutex); return 0; }
-    inline int32_t WAIT_DATA_READY(uint32_t ticksToWait) const { return mutex_enter_timeout_ms(&_dataReadyMutex, ticksToWait); } // returns true if mutex owned, false if timeout
-    inline void SIGNAL_DATA_READY_FROM_ISR() const { mutex_exit(&_dataReadyMutex); }
-#elif defined(USE_FREERTOS)
+#if defined(USE_FREERTOS)
     mutable uint32_t _dataReadyQueueItem {}; // this is just a dummy item whose value is not used
     enum { IMU_DATA_READY_QUEUE_LENGTH = 1 };
     std::array<uint8_t, IMU_DATA_READY_QUEUE_LENGTH * sizeof(_dataReadyQueueItem)> _dataReadyQueueStorageArea {};
@@ -41,6 +43,12 @@ public:
     inline int32_t WAIT_DATA_READY() const { return xQueueReceive(_dataReadyQueue, &_dataReadyQueueItem, portMAX_DELAY); }
     inline int32_t WAIT_DATA_READY(uint32_t ticksToWait) const { return xQueueReceive(_dataReadyQueue, &_dataReadyQueueItem, ticksToWait); } // returns pdPASS(1) if queue read, pdFAIL(0) if timeout
     inline void SIGNAL_DATA_READY_FROM_ISR() const { xQueueSendFromISR(_dataReadyQueue, &_dataReadyQueueItem, nullptr); }
+#elif defined(FRAMEWORK_RPI_PICO)
+    mutable mutex_t _dataReadyMutex{};
+public:
+    inline int32_t WAIT_DATA_READY() const { mutex_enter_blocking(&_dataReadyMutex); return 0; }
+    inline int32_t WAIT_DATA_READY(uint32_t ticksToWait) const { return mutex_enter_timeout_ms(&_dataReadyMutex, ticksToWait); } // returns true if mutex owned, false if timeout
+    inline void SIGNAL_DATA_READY_FROM_ISR() const { mutex_exit(&_dataReadyMutex); }
 #else
 public:
     inline int32_t WAIT_DATA_READY() const { return 0; }
