@@ -12,7 +12,7 @@ void tearDown()
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-init-variables,readability-magic-numbers)
 void test_icm426xx()
 {
-#if defined(USE_IMU_ICM426XX_SPI)
+#if defined(LIBRARY_IMU_USE_SPI_BUS)
     constexpr uint32_t spiFrequency = 2000000;
     static IMU_ICM426xx imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::BUS_INDEX_0, BUS_SPI::pins_t{});
 #else

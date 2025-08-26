@@ -4,7 +4,7 @@
 
 #include <Quaternion.h>
 
-#if defined(USE_FREERTOS)
+#if defined(FRAMEWORK_USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 #endif
@@ -208,7 +208,7 @@ public:
     static axis_order_e axisOrderFromAlignment(const xyz_alignment_t& alignment);
 
     inline uint32_t getFlags() const { return _flags; }
-#if defined(USE_FREERTOS)
+#if defined(FRAMEWORK_USE_FREERTOS)
 #if defined(I2C_MUTEX_REQUIRED)
     inline void i2cSemaphoreTake() const { xSemaphoreTake(_i2cMutex, portMAX_DELAY); }
     inline void i2cSemaphoreGive() const { xSemaphoreGive(_i2cMutex); }
@@ -226,7 +226,7 @@ public:
     inline void i2cSemaphoreTake(void* i2cMutex) const { (void)i2cMutex; }
     inline void i2cSemaphoreGive(void* i2cMutex) const { (void)i2cMutex; }
     void* _i2cMutex {};
-#endif // USE_FREERTOS
+#endif // FRAMEWORK_USE_FREERTOS
 protected:
     axis_order_e _axisOrder;
     BUS_BASE* _busBase;

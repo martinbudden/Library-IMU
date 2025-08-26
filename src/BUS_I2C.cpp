@@ -102,13 +102,13 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, bus_index_e I2C_index, const pins_t& pins)
 
 #else // defaults to FRAMEWORK_ARDUINO
 
-#if defined(USE_ARDUINO_ESP32) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)// ESP32, ARDUINO_ARCH_ESP32 defined in platform.txt
+#if defined(FRAMEWORK_ARDUINO_ESP32) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)// ESP32, ARDUINO_ARCH_ESP32 defined in platform.txt
     _wire.begin(_pins.sda, _pins.scl);
 #else
     _wire.begin();
 #endif
 
-#if defined(USE_FREERTOS)
+#if defined(FRAMEWORK_USE_FREERTOS)
     _dataReadyQueue = xQueueCreateStatic(IMU_DATA_READY_QUEUE_LENGTH, sizeof(_dataReadyQueueItem), &_dataReadyQueueStorageArea[0], &_dataReadyQueueStatic);
     configASSERT(_dataReadyQueue);
     const UBaseType_t messageCount = uxQueueMessagesWaiting(_dataReadyQueue);
@@ -127,12 +127,12 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, TwoWire& wire, const pins_t& pins) :
 {
     bus = this;
 
-#if defined(USE_ARDUINO_ESP32) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)// ESP32, ARDUINO_ARCH_ESP32 defined in platform.txt
+#if defined(FRAMEWORK_ARDUINO_ESP32) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)// ESP32, ARDUINO_ARCH_ESP32 defined in platform.txt
     _wire.begin(_pins.sda, _pins.scl);
 #else
     _wire.begin();
 #endif
-#if defined(USE_FREERTOS)
+#if defined(FRAMEWORK_USE_FREERTOS)
     _dataReadyQueue = xQueueCreateStatic(IMU_DATA_READY_QUEUE_LENGTH, sizeof(_dataReadyQueueItem), &_dataReadyQueueStorageArea[0], &_dataReadyQueueStatic);
     configASSERT(_dataReadyQueue);
     const UBaseType_t messageCount = uxQueueMessagesWaiting(_dataReadyQueue);
@@ -164,7 +164,7 @@ void BUS_I2C::setInterruptDriven(irq_level_e irqLevel) // NOLINT(readability-mak
     gpio_init(_pins.irq);
     enum { IRQ_ENABLED = true };
     gpio_set_irq_enabled_with_callback(_pins.irq, irqLevel, IRQ_ENABLED, &dataReadyISR);
-#elif defined(USE_ARDUINO_ESP32)
+#elif defined(FRAMEWORK_ARDUINO_ESP32)
     //pinMode(_pins.irq, INPUT);
     // map to ESP32 constants
     enum { LEVEL_LOW = 0x04, LEVEL_HIGH = 0x05, EDGE_FALL = 0x02, EDGE_RISE = 0x01, EDGE_CHANGE = 0x03 };
@@ -173,6 +173,7 @@ void BUS_I2C::setInterruptDriven(irq_level_e irqLevel) // NOLINT(readability-mak
         (irqLevel == IRQ_LEVEL_HIGH) ? LEVEL_HIGH :
         (irqLevel == IRQ_EDGE_FALL) ? EDGE_FALL :
         (irqLevel == IRQ_EDGE_RISE) ? EDGE_RISE : EDGE_CHANGE;
+    (void)level;
     //attachInterrupt(digitalPinToInterrupt(_pins.irq), &dataReadyISR, irqLevel); // esp32-hal-gpio.h
 #else
     enum { LEVEL_LOW = 0x04, LEVEL_HIGH = 0x05, EDGE_FALL = 0x02, EDGE_RISE = 0x01, EDGE_CHANGE = 0x03 };

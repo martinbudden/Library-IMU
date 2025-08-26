@@ -1,7 +1,7 @@
 #include "IMU_ICM426xx.h"
 //#define SERIAL_OUTPUT
 #if defined(SERIAL_OUTPUT)
-#if defined(USE_ARDUINO_ESP32) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)// ESP32, ARDUINO_ARCH_ESP32 defined in platform.txt
+#if defined(FRAMEWORK_ARDUINO_ESP32) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)// ESP32, ARDUINO_ARCH_ESP32 defined in platform.txt
 #include <HardwareSerial.h>
 #else
 #include <Arduino.h>
@@ -169,7 +169,7 @@ constexpr uint8_t REG_BANK2_ACCEL_CONFIG_STATIC4    = 0x05;
 /*!
 Gyroscope data rates up to 6.4 kHz, accelerometer up to 1.6 kHz
 */
-#if defined(USE_IMU_ICM426XX_SPI)
+#if defined(LIBRARY_IMU_USE_SPI_BUS)
 IMU_ICM426xx::IMU_ICM426xx(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::port_pins_t& pins) :
     IMU_Base(axisOrder, _bus),
     _bus(frequency, SPI_index, pins)
@@ -450,25 +450,25 @@ IRAM_ATTR IMU_Base::accGyroRPS_t IMU_ICM426xx::getAccGyroRPS() const
 xyz_t IMU_ICM426xx::gyroRPS_FromRaw(const mems_sensor_data_t::value_t& data) const
 {
     // static cast to int16_t to sign extend the 8 bit values
-#if defined(IMU_BUILD_YNEG_XPOS_ZPOS)
+#if defined(LIBRARY_IMU_FIXED_AXES_YNEG_XPOS_ZPOS)
     return xyz_t {
         .x = -static_cast<float>(static_cast<int16_t>((data.y_h << 8U) | data.y_l) - _gyroOffset.y) * _gyroResolutionRPS,
         .y =  static_cast<float>(static_cast<int16_t>((data.x_h << 8U) | data.x_l) - _gyroOffset.x) * _gyroResolutionRPS,
         .z =  static_cast<float>(static_cast<int16_t>((data.z_h << 8U) | data.z_l) - _gyroOffset.z) * _gyroResolutionRPS
     };
-#elif defined(IMU_BUILD_YPOS_XNEG_ZPOS)
+#elif defined(LIBRARY_IMU_FIXED_AXES_YPOS_XNEG_ZPOS)
     return xyz_t {
         .x =  static_cast<float>(static_cast<int16_t>((data.y_h << 8U) | data.y_l) - _gyroOffset.y) * _gyroResolutionRPS,
         .y = -static_cast<float>(static_cast<int16_t>((data.x_h << 8U) | data.x_l) - _gyroOffset.x) * _gyroResolutionRPS,
         .z =  static_cast<float>(static_cast<int16_t>((data.z_h << 8U) | data.z_l) - _gyroOffset.z) * _gyroResolutionRPS
     };
-#elif defined(IMU_BUILD_XPOS_ZPOS_YNEG)
+#elif defined(LIBRARY_IMU_FIXED_AXES_XPOS_ZPOS_YNEG)
     return xyz_t {
         .x =  static_cast<float>(static_cast<int16_t>((data.x_h << 8U) | data.x_l) - _gyroOffset.x) * _gyroResolutionRPS,
         .y =  static_cast<float>(static_cast<int16_t>((data.z_h << 8U) | data.z_l) - _gyroOffset.z) * _gyroResolutionRPS,
         .z = -static_cast<float>(static_cast<int16_t>((data.y_h << 8U) | data.y_l) - _gyroOffset.y) * _gyroResolutionRPS
     };
-#elif defined(IMU_BUILD_XPOS_YPOS_ZPOS)
+#elif defined(LIBRARY_IMU_FIXED_AXES_XPOS_YPOS_ZPOS)
     return xyz_t {
         .x =  static_cast<float>(static_cast<int16_t>((data.x_h << 8U) | data.x_l) - _gyroOffset.x) * _gyroResolutionRPS,
         .y =  static_cast<float>(static_cast<int16_t>((data.y_h << 8U) | data.y_l) - _gyroOffset.y) * _gyroResolutionRPS,
@@ -486,25 +486,25 @@ xyz_t IMU_ICM426xx::gyroRPS_FromRaw(const mems_sensor_data_t::value_t& data) con
 
 xyz_t IMU_ICM426xx::accFromRaw(const mems_sensor_data_t::value_t& data) const
 {
-#if defined(IMU_BUILD_YNEG_XPOS_ZPOS)
+#if defined(LIBRARY_IMU_FIXED_AXES_YNEG_XPOS_ZPOS)
     return xyz_t {
         .x = -static_cast<float>(static_cast<int16_t>((data.y_h << 8U) | data.y_l) - _accOffset.y)* _accResolution,
         .y =  static_cast<float>(static_cast<int16_t>((data.x_h << 8U) | data.x_l) - _accOffset.x)* _accResolution,
         .z =  static_cast<float>(static_cast<int16_t>((data.z_h << 8U) | data.z_l) - _accOffset.z)* _accResolution
     };
-#elif defined(IMU_BUILD_YPOS_XNEG_ZPOS)
+#elif defined(LIBRARY_IMU_FIXED_AXES_YPOS_XNEG_ZPOS)
     return xyz_t {
         .x =  static_cast<float>(static_cast<int16_t>((data.y_h << 8U) | data.y_l) - _accOffset.y)* _accResolution,
         .y = -static_cast<float>(static_cast<int16_t>((data.x_h << 8U) | data.x_l) - _accOffset.x)* _accResolution,
         .z =  static_cast<float>(static_cast<int16_t>((data.z_h << 8U) | data.z_l) - _accOffset.z)* _accResolution
     };
-#elif defined(IMU_BUILD_XPOS_ZPOS_YNEG)
+#elif defined(LIBRARY_IMU_FIXED_AXES_XPOS_ZPOS_YNEG)
     return xyz_t {
         .x =  static_cast<float>(static_cast<int16_t>((data.x_h << 8U) | data.x_l) - _accOffset.x)* _accResolution,
         .y =  static_cast<float>(static_cast<int16_t>((data.z_h << 8U) | data.z_l) - _accOffset.z)* _accResolution,
         .z = -static_cast<float>(static_cast<int16_t>((data.y_h << 8U) | data.y_l) - _accOffset.y)* _accResolution
     };
-#elif defined(IMU_BUILD_XPOS_YPOS_ZPOS)
+#elif defined(LIBRARY_IMU_FIXED_AXES_XPOS_YPOS_ZPOS)
     return xyz_t {
         .x =  static_cast<float>(static_cast<int16_t>((data.x_h << 8U) | data.x_l) - _accOffset.x)* _accResolution,
         .y =  static_cast<float>(static_cast<int16_t>((data.y_h << 8U) | data.y_l) - _accOffset.y)* _accResolution,
@@ -523,7 +523,7 @@ xyz_t IMU_ICM426xx::accFromRaw(const mems_sensor_data_t::value_t& data) const
 IMU_Base::accGyroRPS_t IMU_ICM426xx::accGyroRPSFromRaw(const acc_gyro_data_t::value_t& data) const
 {
 // NOLINTBEGIN(hicpp-signed-bitwise)
-#if defined(IMU_BUILD_XPOS_YPOS_ZPOS)
+#if defined(LIBRARY_IMU_FIXED_AXES_XPOS_YPOS_ZPOS)
     return accGyroRPS_t {
         .gyroRPS = {
             .x =  static_cast<float>(static_cast<int16_t>((data.gyro_x_h << 8U) | data.gyro_x_l) - _gyroOffset.x) * _gyroResolutionRPS,
@@ -536,7 +536,7 @@ IMU_Base::accGyroRPS_t IMU_ICM426xx::accGyroRPSFromRaw(const acc_gyro_data_t::va
             .z =  static_cast<float>(static_cast<int16_t>((data.acc_z_h << 8U) | data.acc_z_l) - _accOffset.z)* _accResolution
         }
     };
-#elif defined(IMU_BUILD_YPOS_XNEG_ZPOS)
+#elif defined(LIBRARY_IMU_FIXED_AXES_YPOS_XNEG_ZPOS)
     return accGyroRPS_t {
         .gyroRPS = {
             .x =  static_cast<float>(static_cast<int16_t>((data.gyro_y_h << 8U) | data.gyro_y_l) - _gyroOffset.y) * _gyroResolutionRPS,
@@ -549,7 +549,7 @@ IMU_Base::accGyroRPS_t IMU_ICM426xx::accGyroRPSFromRaw(const acc_gyro_data_t::va
             .z =  static_cast<float>(static_cast<int16_t>((data.acc_z_h << 8U) | data.acc_z_l) - _accOffset.z)* _accResolution
         }
     };
-#elif defined(IMU_BUILD_XNEG_YNEG_ZPOS)
+#elif defined(LIBRARY_IMU_FIXED_AXES_XNEG_YNEG_ZPOS)
     return accGyroRPS_t {
         .gyroRPS = {
             .x = -static_cast<float>(static_cast<int16_t>((data.gyro_x_h << 8U) | data.gyro_x_l) - _gyroOffset.x) * _gyroResolutionRPS,
@@ -562,7 +562,7 @@ IMU_Base::accGyroRPS_t IMU_ICM426xx::accGyroRPSFromRaw(const acc_gyro_data_t::va
             .z =  static_cast<float>(static_cast<int16_t>((data.acc_z_h << 8U) | data.acc_z_l) - _accOffset.z)* _accResolution
         }
     };
-#elif defined(IMU_BUILD_YNEG_XPOS_ZPOS)
+#elif defined(LIBRARY_IMU_FIXED_AXES_YNEG_XPOS_ZPOS)
     return accGyroRPS_t {
         .gyroRPS = {
             .x = -static_cast<float>(static_cast<int16_t>((data.gyro_y_h << 8U) | data.gyro_y_l) - _gyroOffset.y) * _gyroResolutionRPS,
@@ -575,7 +575,7 @@ IMU_Base::accGyroRPS_t IMU_ICM426xx::accGyroRPSFromRaw(const acc_gyro_data_t::va
             .z =  static_cast<float>(static_cast<int16_t>((data.acc_z_h << 8U) | data.acc_z_l) - _accOffset.z)* _accResolution
         }
     };
-#elif defined(IMU_BUILD_XPOS_ZPOS_YNEG)
+#elif defined(LIBRARY_IMU_FIXED_AXES_XPOS_ZPOS_YNEG)
     return accGyroRPS_t {
         .gyroRPS = {
             .x =  static_cast<float>(static_cast<int16_t>((data.gyro_x_h << 8U) | data.gyro_x_l) - _gyroOffset.x) * _gyroResolutionRPS,

@@ -12,7 +12,7 @@ void tearDown()
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-init-variables,readability-magic-numbers)
 void test_lsm6ds3tr_c()
 {
-#if defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_IMU_LSM6DSOX_SPI)
+#if defined(LIBRARY_IMU_USE_SPI_BUS)
     constexpr uint32_t spiFrequency = 2000000;
     const IMU_LSM6DS3TR_C imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::BUS_INDEX_0,
         BUS_SPI::port_pins_t{});

@@ -11,10 +11,9 @@ void tearDown()
 
 IMU_BNO085& newBNO085()
 {
-#if defined(USE_IMU_BNO085_SPI)
+#if defined(LIBRARY_IMU_USE_SPI_BUS)
     constexpr uint32_t spiFrequency = 2000000;
-    constexpr uint8_t CS_pin = 0;
-    static IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::BUS_INDEX_0, CS_pin);
+    static IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::BUS_INDEX_0, BUS_SPI::pins_t{});
 #else
     static IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{});
 #endif
@@ -121,10 +120,9 @@ void test_bno085_channel_gyro_integrated_rotation_vector_report()
 
 void test_bno085()
 {
-#if defined(USE_IMU_BNO085_SPI)
+#if defined(LIBRARY_IMU_USE_SPI_BUS)
     constexpr uint32_t spiFrequency = 2000000;
-    constexpr uint8_t CS_pin = 0;
-    static const IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::BUS_INDEX_0, CS_pin);
+    static const IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::BUS_INDEX_0, BUS_SPI::pins_t{});
 #else
     static const IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{});
 #endif

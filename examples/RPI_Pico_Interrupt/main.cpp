@@ -32,10 +32,10 @@ void setup()
     gpio_put(PICO_DEFAULT_LED_PIN, 0);
 
     // statically allocate an LSM6DS3TR_C IMU object
-#if defined(USE_IMU_LSM6DS3TR_C_SPI)
+#if defined(LIBRARY_IMU_USE_SPI_BUS)
     constexpr uint32_t spiFrequency = 20000000; // 20 MHz
     static IMU_LSM6DS3TR_C imuStatic(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::IMU_SPI_INDEX, BUS_SPI::IMU_SPI_PINS);
-#elif defined(USE_IMU_LSM6DS3TR_C_I2C)
+#else
     static IMU_LSM6DS3TR_C imuStatic(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::IMU_I2C_PINS);
 #endif
 

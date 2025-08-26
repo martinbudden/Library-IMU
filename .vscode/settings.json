@@ -92,5 +92,8 @@
         "YOUT",
         "ZNEG",
         "ZOUT"
-    ]
+    ],
+    "files.associations": {
+        "cstdint": "cpp"
+    }
 }

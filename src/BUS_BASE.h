@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#if defined(USE_FREERTOS)
+#if defined(FRAMEWORK_USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 #endif
@@ -41,7 +41,7 @@ protected:
     uint8_t _deviceDataRegister {}; // the device register that is read in the readDeviceData() function
     uint8_t* _readBuf {};
     size_t _readLength {};
-#if defined(USE_FREERTOS)
+#if defined(FRAMEWORK_USE_FREERTOS)
     mutable uint32_t _dataReadyQueueItem {}; // this is just a dummy item whose value is not used
     enum { IMU_DATA_READY_QUEUE_LENGTH = 1 };
     std::array<uint8_t, IMU_DATA_READY_QUEUE_LENGTH * sizeof(_dataReadyQueueItem)> _dataReadyQueueStorageArea {};

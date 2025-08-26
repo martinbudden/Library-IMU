@@ -47,7 +47,7 @@ public:
     };
 #pragma pack(pop)
 public:
-#if defined(USE_IMU_MPU6000_SPI)
+#if defined(LIBRARY_IMU_USE_SPI_BUS)
     // SPI constructor
     IMU_MPU6000(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::port_pins_t& pins);
     IMU_MPU6000(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::pins_t& pins);
@@ -59,7 +59,7 @@ public:
 #if !defined(FRAMEWORK_RPI_PICO) && !defined(FRAMEWORK_ESPIDF) && !defined(FRAMEWORK_TEST)
     IMU_MPU6000(axis_order_e axisOrder, TwoWire& wire, const BUS_I2C::pins_t& pins, uint8_t I2C_address);
 #endif
-#endif // USE_IMU_MPU6000_SPI
+#endif // LIBRARY_IMU_USE_SPI_BUS
 public:
     virtual int init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) override;
     virtual void setInterruptDriven() override;
@@ -78,7 +78,7 @@ private:
     xyz_t accFromRaw(const mems_sensor_data_t::value_t& data) const;
     accGyroRPS_t accGyroRPSFromRaw(const acc_temperature_gyro_data_t::value_t& data) const;
 private:
-#if defined(USE_IMU_MPU6000_SPI)
+#if defined(LIBRARY_IMU_USE_SPI_BUS)
     BUS_SPI _bus; //!< SPI bus interface,
 #else
     BUS_I2C _bus; //!< I2C bus interface

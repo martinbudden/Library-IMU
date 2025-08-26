@@ -4,20 +4,20 @@ This library implements drivers for IMUs (Inertial Management Units), that is co
 
 The following IMUs are currently implemented:
 
-| IMU                                                                                  | ID          | SPI Build Flag            |
-| -------------------------------------------------------------------------------------| ----------- | ------------------------- |
-| Bosch [BMI270](https://www.bosch-sensortec.com/products/motion-sensors/imus/bmi270/) | BMI270      | `USE_IMU_BMI270_SPI`      |
-| CEVA [BNO085](https://www.ceva-ip.com/product/bno-9-axis-imu/)                       | BNO085      | `USE_IMU_BNO085_SPI`      |
-| ST [LSM6DS3TR-C](https://www.st.com/en/mems-and-sensors/lsm6ds3tr-c.html)            | LSM6DS3TR_C | `USE_IMU_LSM6DS3TR_C_SPI` |
-| ST [ISM330DHCX](https://www.st.com/en/mems-and-sensors/ism330dhcx.html)              | ISM330DHCX  | `USE_IMU_ISM330DHCX_SPI`  |
-| ST [LSM6DSOX](https://www.st.com/en/mems-and-sensors/lsm6dsox.html)                  | LSM6DSOX    | `USE_IMU_LSM6DSOX_SPI`        |
-| InvenSense MPU-6886                                                                  | MPU6886     | `USE_IMU_MPU6886_SPI`     |
+| IMU                                                                                  | ID          |
+| -------------------------------------------------------------------------------------| ----------- |
+| Bosch [BMI270](https://www.bosch-sensortec.com/products/motion-sensors/imus/bmi270/) | BMI270      |
+| CEVA [BNO085](https://www.ceva-ip.com/product/bno-9-axis-imu/)                       | BNO085      |
+| ST [LSM6DS3TR-C](https://www.st.com/en/mems-and-sensors/lsm6ds3tr-c.html)            | LSM6DS3TR_C |
+| ST [ISM330DHCX](https://www.st.com/en/mems-and-sensors/ism330dhcx.html)              | ISM330DHCX  |
+| ST [LSM6DSOX](https://www.st.com/en/mems-and-sensors/lsm6dsox.html)                  | LSM6DSOX    |
+| InvenSense MPU-6886                                                                  | MPU6886     |
 
 The LSM6DS3TR-C, ISM330DHCX, and LSM6DSOX are broadly compatible and share the same driver.
 
 ## SPI Build Flags
 
-By default the drivers are configured to us I2C. To use SPI, define the relevant SPI build flag for the IMU. This can be done in the `build_flags` section of `platformio.ini`.
+By default the drivers are configured to us I2C. To use SPI, define the `LIBRARY_IMU_USE_SPI_BUS`. This can be done in the `build_flags` section of `platformio.ini`.
 
 ## Frameworks
 

@@ -24,7 +24,7 @@ void test_mpu_6886()
     TEST_ASSERT_EQUAL_UINT8(0xFE, output.z_h);
     TEST_ASSERT_EQUAL_UINT8(0x70, output.z_l);
 
-#if defined(USE_IMU_MPU6886_SPI)
+#if defined(LIBRARY_IMU_USE_SPI_BUS)
     constexpr uint32_t spiFrequency = 2000000;
     static const IMU_MPU6886 imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::BUS_INDEX_0, BUS_SPI::pins_t{});
 #else

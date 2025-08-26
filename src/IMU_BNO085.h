@@ -122,7 +122,7 @@ public:
     };
 #pragma pack(pop)
 public:
-#if defined(USE_IMU_BNO085_SPI)
+#if defined(LIBRARY_IMU_USE_SPI_BUS)
     // SPI constructors
     IMU_BNO085(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::port_pins_t& pins);
     IMU_BNO085(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::pins_t& pins);
@@ -169,7 +169,7 @@ private:
     bool sendPacket(uint8_t channelNumber, uint8_t dataLength);
     bool sendCommand(uint8_t command);
 protected:
-#if defined(USE_IMU_BNO085_SPI)
+#if defined(LIBRARY_IMU_USE_SPI_BUS)
     BUS_SPI _bus; //!< SPI bus interface,
 #else
     BUS_I2C _bus; //!< I2C bus interface

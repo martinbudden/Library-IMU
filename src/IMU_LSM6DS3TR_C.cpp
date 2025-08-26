@@ -1,7 +1,7 @@
 #include "IMU_LSM6DS3TR_C.h"
 //#define SERIAL_OUTPUT
 #if defined(SERIAL_OUTPUT)
-#if defined(USE_ARDUINO_ESP32) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)// ESP32, ARDUINO_ARCH_ESP32 defined in platform.txt
+#if defined(FRAMEWORK_ARDUINO_ESP32) || defined(ESP32) || defined(ARDUINO_ARCH_ESP32)// ESP32, ARDUINO_ARCH_ESP32 defined in platform.txt
 #include <HardwareSerial.h>
 #else
 #include <Arduino.h>
@@ -19,11 +19,11 @@ namespace { // use anonymous namespace to make items local to this translation u
 
 constexpr uint8_t REG_RESERVED_00           = 0x00;
 constexpr uint8_t REG_FUNC_CFG_ACCESS       = 0x01;
+constexpr uint8_t REG_RESERVED_03           = 0x03;
 
-#if defined(USE_IMU_LSM6DS3TR_C_I2C) || defined(USE_IMU_LSM6DS3TR_C_SPI)
+#if defined(USE_IMU_LSM6DS3TR_C)
 
 constexpr uint8_t REG_RESERVED_02           = 0x02;
-constexpr uint8_t REG_RESERVED_03           = 0x03;
 constexpr uint8_t REG_SENSOR_SYNC_TIME_FRAME= 0x04;
 constexpr uint8_t REG_SENSOR_SYNC_RES_RATIO = 0x05;
 constexpr uint8_t REG_FIFO_CTRL1            = 0x06;
@@ -35,10 +35,9 @@ constexpr uint8_t REG_DRDY_PULSE_CFG_G      = 0x0B;
 constexpr uint8_t REG_RESERVED_0C           = 0x0C;
 constexpr uint8_t REG_MASTER_CONFIG         = 0x1A;
 
-#elif defined(USE_IMU_ISM330DHCX_I2C) || defined(USE_IMU_ISM330DHCX_SPI)
+#elif defined(USE_IMU_ISM330DHCX)
 
 constexpr uint8_t REG_PIN_CTRL              = 0x02;
-constexpr uint8_t REG_RESERVED_03           = 0x03;
 constexpr uint8_t REG_RESERVED_04           = 0x04;
 constexpr uint8_t REG_RESERVED_05           = 0x05;
 constexpr uint8_t REG_RESERVED_06           = 0x06;
@@ -50,10 +49,9 @@ constexpr uint8_t REG_COUNTER_BDR_REG1      = 0x0B;
 constexpr uint8_t REG_COUNTER_BDR_REG2      = 0x0C;
 constexpr uint8_t REG_ALL_INT_SRC           = 0x1A;
 
-#elif defined(USE_IMU_LSM6DSOX_I2C) || defined(USE_IMU_LSM6DSOX_SPI)
+#elif defined(USE_IMU_LSM6DSOX)
 
 constexpr uint8_t REG_PIN_CTRL              = 0x02;
-constexpr uint8_t REG_RESERVED_03           = 0x03;
 constexpr uint8_t REG_S4S_TPH_L             = 0x04;
 constexpr uint8_t REG_S4S_TPH_H             = 0x05;
 constexpr uint8_t REG_S4S_RR                = 0x06;
@@ -155,7 +153,7 @@ constexpr uint8_t REG_OUTZ_H_ACC            = 0x2D;
 /*!
 Gyroscope data rates up to 6.4 kHz, accelerometer up to 1.6 kHz
 */
-#if defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_IMU_LSM6DSOX_SPI)
+#if defined(LIBRARY_IMU_USE_SPI_BUS)
 IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::port_pins_t& pins) :
     IMU_Base(axisOrder, _bus),
     _bus(frequency, SPI_index, pins)
@@ -224,7 +222,7 @@ int IMU_LSM6DS3TR_C::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gy
     delayMs(1);
     _bus.writeRegister(REG_CTRL3_C, BDU | IF_INC); // Block Data Update and automatically increment registers when read via serial interface (I2C or SPI)
     delayMs(1);
-#if defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_IMU_LSM6DSOX_SPI)
+#if defined(LIBRARY_IMU_USE_SPI_BUS)
     _bus.writeRegister(REG_CTRL4_C, LPF1_SEL_G | I2C_DISABLE);  // enable gyro LPF, disable I2C
 #else
     _bus.writeRegister(REG_CTRL4_C, LPF1_SEL_G); // enable gyro LPF
@@ -390,7 +388,7 @@ IRAM_ATTR IMU_Base::accGyroRPS_t IMU_LSM6DS3TR_C::getAccGyroRPS() const
 
 IMU_Base::accGyroRPS_t IMU_LSM6DS3TR_C::accGyroRPSFromRaw(const acc_gyro_data_t::value_t& data) const
 {
-#if defined(IMU_BUILD_XPOS_YPOS_ZPOS)
+#if defined(LIBRARY_IMU_FIXED_AXES_XPOS_YPOS_ZPOS)
     return accGyroRPS_t {
         .gyroRPS = {
             .x =  static_cast<float>(data.gyro_x - _gyroOffset.x) * _gyroResolutionRPS,
@@ -403,7 +401,7 @@ IMU_Base::accGyroRPS_t IMU_LSM6DS3TR_C::accGyroRPSFromRaw(const acc_gyro_data_t:
             .z =  static_cast<float>(data.acc_z - _accOffset.z)* _accResolution
         }
     };
-#elif defined(IMU_BUILD_YPOS_XNEG_ZPOS)
+#elif defined(LIBRARY_IMU_FIXED_AXES_YPOS_XNEG_ZPOS)
     return accGyroRPS_t {
         .gyroRPS = {
             .x =  static_cast<float>(data.gyro_y - _gyroOffset.y) * _gyroResolutionRPS,
@@ -416,7 +414,7 @@ IMU_Base::accGyroRPS_t IMU_LSM6DS3TR_C::accGyroRPSFromRaw(const acc_gyro_data_t:
             .z =  static_cast<float>(data.acc_z - _accOffset.z)* _accResolution
         }
     };
-#elif defined(IMU_BUILD_XNEG_YNEG_ZPOS)
+#elif defined(LIBRARY_IMU_FIXED_AXES_XNEG_YNEG_ZPOS)
     return accGyroRPS_t {
         .gyroRPS = {
             .x = -static_cast<float>(data.gyro_x - _gyroOffset.x) * _gyroResolutionRPS,
@@ -429,7 +427,7 @@ IMU_Base::accGyroRPS_t IMU_LSM6DS3TR_C::accGyroRPSFromRaw(const acc_gyro_data_t:
             .z =  static_cast<float>(data.acc_z - _accOffset.z)* _accResolution
         }
     };
-#elif defined(IMU_BUILD_YNEG_XPOS_ZPOS)
+#elif defined(LIBRARY_IMU_FIXED_AXES_YNEG_XPOS_ZPOS)
     return accGyroRPS_t {
         .gyroRPS = {
             .x = -static_cast<float>(data.gyro_y - _gyroOffset.y) * _gyroResolutionRPS,
@@ -442,7 +440,7 @@ IMU_Base::accGyroRPS_t IMU_LSM6DS3TR_C::accGyroRPSFromRaw(const acc_gyro_data_t:
             .z =  static_cast<float>(data.acc_z - _accOffset.z)* _accResolution
         }
     };
-#elif defined(IMU_BUILD_XPOS_ZPOS_YNEG)
+#elif defined(LIBRARY_IMU_FIXED_AXES_XPOS_ZPOS_YNEG)
     return accGyroRPS_t {
         .gyroRPS = {
             .x =  static_cast<float>(data.gyro_x - _gyroOffset.x) * _gyroResolutionRPS,

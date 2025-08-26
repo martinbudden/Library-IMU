@@ -21,11 +21,11 @@ void setup()
     Serial.begin(115200);
 
     // create an LSM6DS3TR_C IMU object
-#if defined(USE_IMU_LSM6DS3TR_C_SPI)
+#if defined(LIBRARY_IMU_USE_SPI_BUS)
     constexpr uint32_t spiFrequency = 20000000; // 20 MHz
     static IMU_LSM6DS3TR_C imuStatic(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::IMU_SPI_INDEX, BUS_SPI::IMU_SPI_PINS);
 #else
-#if defined(USE_I2C_WIRE_1)
+#if defined(LIBRARY_IMU_USE_I2C_WIRE_1)
     static IMU_LSM6DS3TR_C imuStatic(IMU_Base::XPOS_YPOS_ZPOS, Wire1, BUS_I2C::port_pins_t{.sda=IMU_I2C_SDA_PIN, .scl=IMU_I2C_SCL_PIN, .irq=BUS_SPI::IRQ_NOT_SET}, IMU_LSM6DS3TR_C::I2C_ADDRESS);
 #else
     static IMU_LSM6DS3TR_C imuStatic(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::port_pins_t{.sda=IMU_I2C_SDA_PIN, .scl=IMU_I2C_SCL_PIN, .irq=BUS_I2C::IRQ_NOT_SET});

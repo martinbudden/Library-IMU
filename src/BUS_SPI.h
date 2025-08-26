@@ -2,19 +2,19 @@
 
 #include "BUS_BASE.h"
 
-//#define USE_IMU_SPI_HARDWARE_CHIP_SELECT
+//#define LIBRARY_IMU_USE_SPI_HARDWARE_CHIP_SELECT //!!TODO: make this based on member data, not build flag
 
 #if defined(FRAMEWORK_RPI_PICO)
-#if defined(USE_IMU_SPI_DMA)
+#if defined(LIBRARY_IMU_USE_SPI_DMA)
 #include "hardware/dma.h"
 #endif
 typedef struct spi_inst spi_inst_t;
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_TEST)
-#elif defined(FRAMEWORK_STM32_CUBE) || defined(USE_ARDUINO_STM32)
+#elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
 #include "stm32f4xx_hal.h"
 #else // defaults to FRAMEWORK_ARDUINO
-#if defined(USE_ARDUINO_ESP32)
+#if defined(FRAMEWORK_ARDUINO_ESP32)
 #endif
 #include <SPI.h>
 #endif // FRAMEWORK
@@ -79,7 +79,7 @@ private:
     static void dmaRxCompleteISR();
 #elif defined(FRAMEWORK_ESPIDF)
     IRAM_ATTR static void dataReadyISR();
-#elif defined(FRAMEWORK_STM32_CUBE) || defined(USE_ARDUINO_STM32)
+#elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
     mutable SPI_HandleTypeDef _spi {};
 #elif defined(FRAMEWORK_TEST)
     static void dataReadyISR();
@@ -87,12 +87,12 @@ private:
     IRAM_ATTR static void dataReadyISR();// cppcheck-suppress unusedPrivateFunction
     mutable volatile uint32_t* _csOut {};
     uint32_t _csBit {};
-#if defined(USE_ARDUINO_ESP32)
+#if defined(FRAMEWORK_ARDUINO_ESP32)
 #else
     SPIClass& _spi;
 #endif
 #endif // FRAMEWORK
-#if defined(USE_IMU_SPI_HARDWARE_CHIP_SELECT)
+#if defined(LIBRARY_IMU_USE_SPI_HARDWARE_CHIP_SELECT)
     mutable std::array<uint8_t, 256> _writeReadBuf {};
 #endif
 };

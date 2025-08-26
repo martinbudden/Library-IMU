@@ -161,7 +161,7 @@ extern const std::array<uint8_t, 8192> imu_bmi270_config_data;
 /*!
 Gyroscope data rates up to 6.4 kHz, accelerometer up to 1.6 kHz
 */
-#if defined(USE_IMU_BMI270_SPI)
+#if defined(LIBRARY_IMU_USE_SPI_BUS)
 IMU_BMI270::IMU_BMI270(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::port_pins_t& pins) :
     IMU_Base(axisOrder, _bus),
     _bus(frequency, SPI_index, pins)
@@ -431,7 +431,7 @@ IRAM_ATTR IMU_Base::accGyroRPS_t IMU_BMI270::getAccGyroRPS() const
 
 IMU_Base::accGyroRPS_t IMU_BMI270::accGyroRPSFromRaw(const acc_gyro_data_t::value_t& data) const
 {
-#if defined(IMU_BUILD_XPOS_YPOS_ZPOS)
+#if defined(LIBRARY_IMU_FIXED_AXES_XPOS_YPOS_ZPOS)
     return accGyroRPS_t {
         .gyroRPS = {
             .x =  static_cast<float>(data.gyro_x - _gyroOffset.x) * _gyroResolutionRPS,
@@ -444,7 +444,7 @@ IMU_Base::accGyroRPS_t IMU_BMI270::accGyroRPSFromRaw(const acc_gyro_data_t::valu
             .z =  static_cast<float>(data.acc_z - _accOffset.z)* _accResolution
         }
     };
-#elif defined(IMU_BUILD_YPOS_XNEG_ZPOS)
+#elif defined(LIBRARY_IMU_FIXED_AXES_YPOS_XNEG_ZPOS)
     return accGyroRPS_t {
         .gyroRPS = {
             .x =  static_cast<float>(data.gyro_y - _gyroOffset.y) * _gyroResolutionRPS,
@@ -457,7 +457,7 @@ IMU_Base::accGyroRPS_t IMU_BMI270::accGyroRPSFromRaw(const acc_gyro_data_t::valu
             .z =  static_cast<float>(data.acc_z - _accOffset.z)* _accResolution
         }
     };
-#elif defined(IMU_BUILD_XNEG_YNEG_ZPOS)
+#elif defined(LIBRARY_IMU_FIXED_AXES_XNEG_YNEG_ZPOS)
     return accGyroRPS_t {
         .gyroRPS = {
             .x = -static_cast<float>(data.gyro_x - _gyroOffset.x) * _gyroResolutionRPS,
@@ -470,7 +470,7 @@ IMU_Base::accGyroRPS_t IMU_BMI270::accGyroRPSFromRaw(const acc_gyro_data_t::valu
             .z =  static_cast<float>(data.acc_z - _accOffset.z)* _accResolution
         }
     };
-#elif defined(IMU_BUILD_YNEG_XPOS_ZPOS)
+#elif defined(LIBRARY_IMU_FIXED_AXES_YNEG_XPOS_ZPOS)
     return accGyroRPS_t {
         .gyroRPS = {
             .x = -static_cast<float>(data.gyro_y - _gyroOffset.y) * _gyroResolutionRPS,
@@ -483,7 +483,7 @@ IMU_Base::accGyroRPS_t IMU_BMI270::accGyroRPSFromRaw(const acc_gyro_data_t::valu
             .z =  static_cast<float>(data.acc_z - _accOffset.z)* _accResolution
         }
     };
-#elif defined(IMU_BUILD_XPOS_ZPOS_YNEG)
+#elif defined(LIBRARY_IMU_FIXED_AXES_XPOS_ZPOS_YNEG)
     return accGyroRPS_t {
         .gyroRPS = {
             .x =  static_cast<float>(data.gyro_x - _gyroOffset.x) * _gyroResolutionRPS,

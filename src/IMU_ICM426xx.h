@@ -45,7 +45,7 @@ public:
     };
 #pragma pack(pop)
 public:
-#if defined(USE_IMU_ICM426XX_SPI)
+#if defined(LIBRARY_IMU_USE_SPI_BUS)
     // SPI constructor
     IMU_ICM426xx(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::port_pins_t& pins);
     IMU_ICM426xx(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::pins_t& pins);
@@ -75,7 +75,7 @@ private:
     xyz_t accFromRaw(const mems_sensor_data_t::value_t& data) const;
     accGyroRPS_t accGyroRPSFromRaw(const acc_gyro_data_t::value_t& data) const;
 private:
-#if defined(USE_IMU_ICM426XX_SPI)
+#if defined(LIBRARY_IMU_USE_SPI_BUS)
     BUS_SPI _bus; //!< SPI bus interface,
 #else
     BUS_I2C _bus; //!< I2C bus interface

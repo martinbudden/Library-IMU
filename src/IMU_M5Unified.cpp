@@ -1,4 +1,4 @@
-#if defined(USE_IMU_M5_UNIFIED)
+#if defined(LIBRARY_IMU_USE_M5_UNIFIED)
 #include <M5Unified.h>
 
 #include <IMU_M5Unified.h>
@@ -22,21 +22,21 @@ int IMU_M5_UNIFIED::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensi
     _gyroSampleRateHz = 500;
     _accSampleRateHz = 500;
 
-#if defined(USE_FREERTOS)
+#if defined(FRAMEWORK_USE_FREERTOS)
     _i2cMutex = static_cast<SemaphoreHandle_t>(i2cMutex);
 #else
     _i2cMutex = i2cMutex;
 #endif
 
-#if defined(IMU_BUILD_YNEG_XPOS_ZPOS)
+#if defined(LIBRARY_IMU_FIXED_AXES_YNEG_XPOS_ZPOS)
     M5.Imu.setAxisOrder(m5::IMU_Class::axis_y_neg, m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_z_pos);
-#elif defined(IMU_BUILD_YPOS_XNEG_ZPOS)
+#elif defined(LIBRARY_IMU_FIXED_AXES_YPOS_XNEG_ZPOS)
     M5.Imu.setAxisOrder(m5::IMU_Class::axis_y_pos, m5::IMU_Class::axis_x_neg, m5::IMU_Class::axis_z_pos);
-#elif defined(IMU_BUILD_XPOS_ZPOS_YNEG)
+#elif defined(LIBRARY_IMU_FIXED_AXES_XPOS_ZPOS_YNEG)
     M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_z_pos, m5::IMU_Class::axis_y_neg);
-#elif defined(IMU_BUILD_XPOS_YPOS_ZPOS)
+#elif defined(LIBRARY_IMU_FIXED_AXES_XPOS_YPOS_ZPOS)
     M5.Imu.setAxisOrder(m5::IMU_Class::axis_x_pos, m5::IMU_Class::axis_y_pos, m5::IMU_Class::axis_z_pos);
-#elif defined(IMU_BUILD_ZPOS_XNEG_YNEG)
+#elif defined(LIBRARY_IMU_FIXED_AXES_ZPOS_XNEG_YNEG)
     M5.Imu.setAxisOrder(m5::IMU_Class::axis_z_pos, m5::IMU_Class::axis_x_neg, m5::IMU_Class::axis_y_neg);
 #else
     setAxisOrder(_axisOrder);
