@@ -3,14 +3,14 @@
 #include <M5Unified.h>
 
 
-static constexpr uint8_t I2C_SDA_PIN = 45;
-static constexpr uint8_t I2C_SCL_PIN = 0;
-static constexpr uint8_t I2C_IRQ_PIN = BUS_I2C::IRQ_NOT_SET;
+#define IMU_I2C_PINS pins_t{.sda=45,.scl=0,.irq=BUS_I2C::IRQ_NOT_SET}
 
 static IMU_Base* imu;
 
 void setup()
 {
+    enum {PA=0, PB=1, PC=2, PD=3, PE=4, PF=5, PG=6, PH=7};
+
     auto cfg = M5.config(); // NOLINT(readability-static-accessed-through-instance)
     cfg.serial_baudrate = 115200;
     M5.begin(cfg);
@@ -19,7 +19,7 @@ void setup()
     Serial.begin(115200);
 
     // statically allocate a BMI270 IMU object
-    static IMU_BMI270 imuStatic(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{.sda=I2C_SDA_PIN, .scl=I2C_SCL_PIN, .irq=I2C_IRQ_PIN});
+    static IMU_BMI270 imuStatic(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::IMU_I2C_PINS);
 
     imu = &imuStatic;
 

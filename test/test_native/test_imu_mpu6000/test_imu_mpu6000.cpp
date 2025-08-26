@@ -14,9 +14,9 @@ void test_mpu6000()
 {
 #if defined(USE_IMU_MPU6000_SPI)
     constexpr uint32_t spiFrequency = 2000000;
-    static IMU_MPU6000 imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::BUS_INDEX_0, {});
+    static IMU_MPU6000 imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::BUS_INDEX_0, BUS_SPI::pins_t{});
 #else
-    static IMU_MPU6000 imu(IMU_Base::XPOS_YPOS_ZPOS, IMU_I2C_SDA_PIN, IMU_I2C_SCL_PIN);
+    static IMU_MPU6000 imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{});
 #endif
     TEST_ASSERT_EQUAL(4096, imu.getAccOneG_Raw());
     TEST_ASSERT_EQUAL(0, imu.getFlags());

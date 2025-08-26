@@ -8,6 +8,8 @@ static IMU_Base* imu;
 
 void setup()
 {
+    enum {PA=0, PB=1, PC=2, PD=3, PE=4, PF=5, PG=6, PH=7};
+
     Serial.begin(115200);
 
     // statically allocate a BNO085 IMU object

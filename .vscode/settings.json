@@ -28,6 +28,11 @@
         "FSRP",
         "FSYNCH",
         "FSYNCHL",
+        "GPIOA",
+        "GPIOB",
+        "GPIOC",
+        "GPIOD",
+        "gpios",
         "hicpp",
         "Hillcrest",
         "hspi",
@@ -43,6 +48,7 @@
         "MSBFIRST",
         "nordicnrf",
         "noreturn",
+        "NVIC",
         "picotool",
         "pioenvs",
         "piolibdeps",
@@ -86,8 +92,5 @@
         "YOUT",
         "ZNEG",
         "ZOUT"
-    ],
-    "files.associations": {
-        "cstdint": "cpp"
-    }
+    ]
 }

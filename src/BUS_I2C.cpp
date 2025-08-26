@@ -166,9 +166,22 @@ void BUS_I2C::setInterruptDriven(irq_level_e irqLevel) // NOLINT(readability-mak
     gpio_set_irq_enabled_with_callback(_pins.irq, irqLevel, IRQ_ENABLED, &dataReadyISR);
 #elif defined(USE_ARDUINO_ESP32)
     //pinMode(_pins.irq, INPUT);
+    // map to ESP32 constants
+    enum { LEVEL_LOW = 0x04, LEVEL_HIGH = 0x05, EDGE_FALL = 0x02, EDGE_RISE = 0x01, EDGE_CHANGE = 0x03 };
+    const uint8_t level = 
+        (irqLevel == IRQ_LEVEL_LOW) ? LEVEL_LOW :
+        (irqLevel == IRQ_LEVEL_HIGH) ? LEVEL_HIGH :
+        (irqLevel == IRQ_EDGE_FALL) ? EDGE_FALL :
+        (irqLevel == IRQ_EDGE_RISE) ? EDGE_RISE : EDGE_CHANGE;
     //attachInterrupt(digitalPinToInterrupt(_pins.irq), &dataReadyISR, irqLevel); // esp32-hal-gpio.h
 #else
-    (void)irqLevel;
+    enum { LEVEL_LOW = 0x04, LEVEL_HIGH = 0x05, EDGE_FALL = 0x02, EDGE_RISE = 0x01, EDGE_CHANGE = 0x03 };
+    const uint8_t level = 
+        (irqLevel == IRQ_LEVEL_LOW) ? LEVEL_LOW :
+        (irqLevel == IRQ_LEVEL_HIGH) ? LEVEL_HIGH :
+        (irqLevel == IRQ_EDGE_FALL) ? EDGE_FALL :
+        (irqLevel == IRQ_EDGE_RISE) ? EDGE_RISE : EDGE_CHANGE;
+    (void)level;
 #endif
 }
 

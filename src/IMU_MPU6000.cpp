@@ -82,12 +82,15 @@ constexpr uint8_t REG_WHO_AM_I              = 0x75;
 // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 
 #if defined(USE_IMU_MPU6000_SPI)
+IMU_MPU6000::IMU_MPU6000(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::port_pins_t& pins) :
+    IMU_Base(axisOrder, _bus),
+    _bus(frequency, SPI_index, pins)
+{
+}
 IMU_MPU6000::IMU_MPU6000(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::pins_t& pins) :
     IMU_Base(axisOrder, _bus),
     _bus(frequency, SPI_index, pins)
 {
-    static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
-    static_assert(sizeof(acc_temperature_gyro_data_t) == acc_temperature_gyro_data_t::DATA_SIZE);
 }
 #else
 IMU_MPU6000::IMU_MPU6000(axis_order_e axisOrder, BUS_BASE::bus_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :

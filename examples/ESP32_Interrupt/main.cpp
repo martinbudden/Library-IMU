@@ -3,10 +3,15 @@
 #include <M5Unified.h>
 
 
-static constexpr uint8_t I2C_SDA_PIN = 45;
-static constexpr uint8_t I2C_SCL_PIN = 0;
-static constexpr uint8_t I2C_IRQ_PIN = 16; // pin is pulled high
-static constexpr uint8_t I2C_IRQ_LEVEL = BUS_I2C::IRQ_LEVEL_HIGH;
+
+#define IMU_I2C_PINS pins_t{.sda=45,.scl=0,.irq=16}
+
+//static constexpr uint8_t I2C_SDA_PIN = 45;
+//static constexpr uint8_t I2C_SCL_PIN = 0;
+//static constexpr uint8_t I2C_IRQ_PIN = 16; // pin is pulled high
+//enum irq_level_e { IRQ_LEVEL_LOW = 0x04, IRQ_LEVEL_HIGH = 0x05, IRQ_EDGE_FALL = 0x02, IRQ_EDGE_RISE = 0x01, IRQ_EDGE_CHANGE = 0x03 };
+//static constexpr uint8_t I2C_IRQ_LEVEL = IRQ_LEVEL_HIGH;
+
 
 static IMU_Base* imu;
 
@@ -14,6 +19,8 @@ static IMU_Base* imu;
 
 void setup()
 {
+    enum {PA=0, PB=1, PC=2, PD=3, PE=4, PF=5, PG=6, PH=7};
+
     auto cfg = M5.config(); // NOLINT(readability-static-accessed-through-instance)
     cfg.serial_baudrate = 115200;
     M5.begin(cfg);
@@ -23,7 +30,7 @@ void setup()
     delay(1000);
 
     // statically allocate a BMI270 IMU object
-    static IMU_BMI270 imuStatic(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{.sda=I2C_SDA_PIN, .scl=I2C_SCL_PIN, .irq=I2C_IRQ_PIN});
+    static IMU_BMI270 imuStatic(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::IMU_I2C_PINS);
 
     imu = &imuStatic;
 

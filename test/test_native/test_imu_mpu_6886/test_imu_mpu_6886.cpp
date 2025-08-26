@@ -26,9 +26,9 @@ void test_mpu_6886()
 
 #if defined(USE_IMU_MPU6886_SPI)
     constexpr uint32_t spiFrequency = 2000000;
-    static const IMU_MPU6886 imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::BUS_INDEX_0, {});
+    static const IMU_MPU6886 imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::BUS_INDEX_0, BUS_SPI::pins_t{});
 #else
-    static const IMU_MPU6886 imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{.sda=IMU_I2C_SDA_PIN, .scl=IMU_I2C_SCL_PIN});
+    static const IMU_MPU6886 imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{});
 #endif
     TEST_ASSERT_EQUAL(4096, imu.getAccOneG_Raw());
     TEST_ASSERT_EQUAL(0, imu.getFlags());

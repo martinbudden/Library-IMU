@@ -2,6 +2,11 @@
 #include <IMU_LSM6DS3TR_C.h>
 #include <boards/pico.h>
 
+#define IMU_I2C_PINS pins_t{.sda=4,.scl=5,.irq=6}
+#define IMU_SPI_INDEX BUS_INDEX_0
+#define IMU_SPI_PINS pins_t{.cs=17,.sck=18,.cipo=16,.copi=19,.irq=20}
+
+/*
 static constexpr uint8_t IMU_I2C_SDA_PIN=4;
 static constexpr uint8_t IMU_I2C_SCL_PIN=5;
 static constexpr uint8_t IMU_I2C_IRQ_PIN=6;
@@ -11,6 +16,7 @@ static constexpr uint8_t IMU_SPI_SCK_PIN=18;
 static constexpr uint8_t IMU_SPI_CIPO_PIN=16; // RX
 static constexpr uint8_t IMU_SPI_COPI_PIN=19; // TX
 static constexpr uint8_t IMU_SPI_IRQ_PIN=20;
+*/
 
 static IMU_Base* imu;
 
@@ -18,6 +24,8 @@ static IMU_Base* imu;
 
 void setup()
 {
+    enum {PA=0, PB=1, PC=2, PD=3, PE=4, PF=5, PG=6, PH=7};
+
     Serial.begin(115200);
     gpio_init(PICO_DEFAULT_LED_PIN); // 25
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
@@ -26,11 +34,9 @@ void setup()
     // statically allocate an LSM6DS3TR_C IMU object
 #if defined(USE_IMU_LSM6DS3TR_C_SPI)
     constexpr uint32_t spiFrequency = 20000000; // 20 MHz
-    const BUS_SPI::pins_t pins{.cs=IMU_SPI_CS_PIN, .sck=IMU_SPI_SCK_PIN, .cipo=IMU_SPI_CIPO_PIN, .copi=IMU_SPI_COPI_PIN, .irq=IMU_SPI_IRQ_PIN};
-    static IMU_LSM6DS3TR_C imuStatic(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::BUS_INDEX_0, pins);
+    static IMU_LSM6DS3TR_C imuStatic(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::IMU_SPI_INDEX, BUS_SPI::IMU_SPI_PINS);
 #elif defined(USE_IMU_LSM6DS3TR_C_I2C)
-    const BUS_I2C::pins_t pins{.sda=IMU_I2C_SDA_PIN, .scl=IMU_I2C_SCL_PIN, .irq=IMU_I2C_IRQ_PIN};
-    static IMU_LSM6DS3TR_C imuStatic(IMU_Base::XPOS_YPOS_ZPOS, pins);
+    static IMU_LSM6DS3TR_C imuStatic(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::IMU_I2C_PINS);
 #endif
 
     imu = &imuStatic;

@@ -12,17 +12,25 @@
 #include <pico/mutex.h>
 #endif
 
+/*!
+Base class for BUS_I2C and BUS_SPI.
+
+Note
+bus_index is zero-based.
+
+RPI Pico bus index is also zero-based so, for SPI, BUS_INDEX_0 corresponds to spi0
+STM32 bus index is also one-based so, for SPI, BUS_INDEX_0 corresponds to SPI1
+*/
 class BUS_BASE {
 public:
     enum bus_index_e : uint8_t { BUS_INDEX_0, BUS_INDEX_1, BUS_INDEX_2, BUS_INDEX_3, BUS_INDEX_4, BUS_INDEX_5, BUS_INDEX_6, BUS_INDEX_7 };
     enum { SPI_BUFFER_SIZE = 2};
     enum { IRQ_NOT_SET = 0xFF };
-#if defined(FRAMEWORK_RPI_PICO)
-    enum irq_level_e { IRQ_LEVEL_LOW = 0x1U, IRQ_LEVEL_HIGH = 0x2U, IRQ_EDGE_FALL = 0x4U, IRQ_EDGE_RISE = 0x8U, IRQ_EDGE_CHANGE = 0x4U|0x8U };
-#else
-    enum irq_level_e { IRQ_LEVEL_LOW = 0x04, IRQ_LEVEL_HIGH = 0x05, IRQ_EDGE_FALL = 0x02, IRQ_EDGE_RISE = 0x01, IRQ_EDGE_CHANGE = 0x03 };
-#endif
-
+    enum irq_level_e { IRQ_LEVEL_LOW = 0x01, IRQ_LEVEL_HIGH = 0x02, IRQ_EDGE_FALL = 0x04, IRQ_EDGE_RISE = 0x08, IRQ_EDGE_CHANGE = 0x04|0x08 };
+    struct port_pin_t {
+        uint8_t port;
+        uint8_t pin;
+    };
 public:
     inline void setDeviceDataRegister(uint8_t deviceDataRegister, uint8_t* readBuf, size_t readLength) {
         _deviceDataRegister = deviceDataRegister;

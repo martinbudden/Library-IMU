@@ -13,6 +13,10 @@
 #endif
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_TEST)
+#elif defined(FRAMEWORK_STM32_CUBE) || defined(USE_ARDUINO_STM32)
+#include "stm32f4xx_hal_gpio.h"
+static inline GPIO_TypeDef* gpioPort(uint8_t port) { return reinterpret_cast<GPIO_TypeDef*>(GPIOA_BASE + port*(GPIOB_BASE - GPIOA_BASE)); }
+static inline uint16_t gpioPin(uint8_t pin) { return static_cast<uint16_t>(1U << pin); }
 #else // defaults to FRAMEWORK_ARDUINO
 #include <Arduino.h>
 #include <SPI.h>
@@ -26,10 +30,11 @@ void BUS_SPI::cs_select() const
 #if !defined(USE_IMU_SPI_HARDWARE_CHIP_SELECT)
 #if defined(FRAMEWORK_RPI_PICO)
     asm volatile("nop \n nop \n nop"); // NOLINT(hicpp-no-assembler)
-    gpio_put(bus->_pins.cs, 0);  // Active low
+    gpio_put(bus->_pins.cs.pin, 0);  // Active low
     asm volatile("nop \n nop \n nop"); // NOLINT(hicpp-no-assembler)
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_STM32_CUBE) || defined(USE_ARDUINO_STM32)
+    HAL_GPIO_WritePin(gpioPort(bus->_pins.cs.port), gpioPin(bus->_pins.cs.pin), GPIO_PIN_SET);
 #elif defined(FRAMEWORK_TEST)
 #else // defaults to FRAMEWORK_ARDUINO
 
@@ -48,10 +53,11 @@ void BUS_SPI::cs_deselect() const
 #if !defined(USE_IMU_SPI_HARDWARE_CHIP_SELECT)
 #if defined(FRAMEWORK_RPI_PICO)
     asm volatile("nop \n nop \n nop"); // NOLINT(hicpp-no-assembler)
-    gpio_put(bus->_pins.cs, 1);
+    gpio_put(bus->_pins.cs.pin, 1);
     asm volatile("nop \n nop \n nop"); // NOLINT(hicpp-no-assembler)
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_STM32_CUBE) || defined(USE_ARDUINO_STM32)
+    HAL_GPIO_WritePin(gpioPort(bus->_pins.cs.port), gpioPin(bus->_pins.cs.pin), GPIO_PIN_RESET);
 #elif defined(FRAMEWORK_TEST)
 #else // defaults to FRAMEWORK_ARDUINO
 #if defined(USE_ARDUINO_ESP32)
@@ -109,25 +115,26 @@ void BUS_SPI::dmaRxCompleteISR()
 IMU Data Ready Interrupt service routine (ISR)
 Called when IMU interrupt pin signals an interrupt.
 */
-#if false
+extern "C" __weak void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     // The IMU has indicated it has new data, so initiate a read.
-    (void)GPIO_Pin;
-    //if(GPIO_Pin != GPIO_PIN_9) {// If The INT Source Is EXTI Line9 (A9 Pin)
-    //    return;
-    //}
+    if (GPIO_Pin != BUS_SPI::bus->getIrqPin()) {
+        return;
+    }
 #if defined(USE_IMU_SPI_DMA_IN_ISR)
     BUS_SPI::bus->readDeviceDataDMA();
 #else
     BUS_SPI::bus->readDeviceData();
     BUS_SPI::bus->SIGNAL_DATA_READY_FROM_ISR();
-#endif
 }
 #endif
 /*!
 Receive Complete Callback ISR
 */
+extern "C" void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef* hspi);
+
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef* hspi)
 {
     (void)hspi;
@@ -163,6 +170,30 @@ BUS_SPI::~BUS_SPI() // NOLINT(hicpp-use-equals-default,modernize-use-equals-defa
 BUS_SPI::BUS_SPI(uint32_t frequency, bus_index_e SPI_index, const pins_t& pins) :
     _frequency(frequency)
     ,_SPI_index(SPI_index)
+#if defined(FRAMEWORK_RPI_PICO)
+    ,_spi(SPI_index == BUS_INDEX_1 ? spi1 : spi0)
+    ,_dmaInterruptNumber(DMA_IRQ_0)
+#elif defined(FRAMEWORK_ESPIDF)
+#elif defined(FRAMEWORK_STM32_CUBE) || defined(USE_ARDUINO_STM32)
+#elif defined(FRAMEWORK_TEST)
+#else // defaults to FRAMEWORK_ARDUINO
+#if defined(USE_ARDUINO_ESP32)
+#else
+    ,_spi(SPI)
+#endif
+#endif // FRAMEWORK
+{
+    _pins.cs =   {0,pins.cs};
+    _pins.sck =  {0,pins.sck};
+    _pins.cipo = {0,pins.cipo};
+    _pins.copi = {0,pins.copi};
+    _pins.irq =  {0,pins.irq};
+    init();
+}
+
+BUS_SPI::BUS_SPI(uint32_t frequency, bus_index_e SPI_index, const port_pins_t& pins) :
+    _frequency(frequency)
+    ,_SPI_index(SPI_index)
     ,_pins(pins)
 #if defined(FRAMEWORK_RPI_PICO)
     ,_spi(SPI_index == BUS_INDEX_1 ? spi1 : spi0)
@@ -177,6 +208,11 @@ BUS_SPI::BUS_SPI(uint32_t frequency, bus_index_e SPI_index, const pins_t& pins) 
 #endif
 #endif // FRAMEWORK
 {
+    init();
+}
+
+void BUS_SPI::init()
+{
     bus = this;
 #if defined(FRAMEWORK_RPI_PICO)
     static_assert(static_cast<int>(IRQ_LEVEL_LOW) == GPIO_IRQ_LEVEL_LOW);
@@ -185,32 +221,57 @@ BUS_SPI::BUS_SPI(uint32_t frequency, bus_index_e SPI_index, const pins_t& pins) 
     static_assert(static_cast<int>(IRQ_EDGE_RISE) == GPIO_IRQ_EDGE_RISE);
 
     // Chip select is active-low, so we'll initialise it to a driven-high state
-    gpio_init(_pins.cs);
-    gpio_set_dir(_pins.cs, GPIO_OUT);
-    gpio_put(_pins.cs, 1);
+    gpio_init(_pins.cs.pin);
+    gpio_set_dir(_pins.cs.pin, GPIO_OUT);
+    gpio_put(_pins.cs.pin, 1);
 
     spi_init(_spi, _frequency);
 
     spi_set_format(_spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_LSB_FIRST); // channel, bits per transfer, polarity, phase, order
-    gpio_set_function(_pins.cipo, GPIO_FUNC_SPI);
-    gpio_set_function(_pins.sck, GPIO_FUNC_SPI);
-    gpio_set_function(_pins.copi, GPIO_FUNC_SPI);
+    gpio_set_function(_pins.cipo.pin, GPIO_FUNC_SPI);
+    gpio_set_function(_pins.sck.pin, GPIO_FUNC_SPI);
+    gpio_set_function(_pins.copi.pin, GPIO_FUNC_SPI);
 #if defined(USE_IMU_SPI_HARDWARE_CHIP_SELECT)
-    gpio_set_function(_pins.cs, GPIO_FUNC_SPI); // map the CS pin, so the RP2040/2340 will automatically toggle the CS pin for SPI
+    gpio_set_function(_pins.cs.pin, GPIO_FUNC_SPI); // map the CS pin, so the RP2040/2340 will automatically toggle the CS pin for SPI
     // Make the SPI pins available to picotool
-    bi_decl(bi_4pins_with_func(_pins.cipo, _pins.copi, _pins.sck, _pins.cs, GPIO_FUNC_SPI));
+    bi_decl(bi_4pins_with_func(_pins.cipo.pin, _pins.copi.pin, _pins.sck.pin, _pins.cs.pin, GPIO_FUNC_SPI));
 #else
     // Make the SPI pins available to picotool
-    bi_decl(bi_3pins_with_func(_pins.cipo, _pins.copi, _pins.sck, GPIO_FUNC_SPI));
-    bi_decl(bi_1pin_with_name(_pins.cs, "SPI CS"));
+    bi_decl(bi_3pins_with_func(_pins.cipo.pin, _pins.copi.pin, _pins.sck.pin, GPIO_FUNC_SPI));
+    bi_decl(bi_1pin_with_name(_pins.cs.pin, "SPI CS"));
 #endif
     mutex_init(&_dataReadyMutex);
 
 #elif defined(FRAMEWORK_ESPIDF)
 
 #elif defined(FRAMEWORK_STM32_CUBE) || defined(USE_ARDUINO_STM32)
-    _spi.Instance = (SPI_index == BUS_INDEX_0) ? SPI1 :
-                    (SPI_index == BUS_INDEX_1) ? SPI2 : SPI3;
+
+    /// GPIO Ports Clock Enable
+    //__HAL_RCC_GPIOD_CLK_ENABLE();
+    //__HAL_RCC_GPIOA_CLK_ENABLE();
+
+    // Configure GPIO pin : PA8
+    GPIO_InitTypeDef GPIO_InitStruct = {
+        .Pin = GPIO_PIN_8,
+        .Mode = GPIO_MODE_OUTPUT_PP,
+        .Pull = GPIO_NOPULL,
+        .Speed = GPIO_SPEED_FREQ_LOW,
+        .Alternate = 0
+    };
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    // Configure irq GPIO pin
+    GPIO_InitStruct.Pin = gpioPin(_pins.irq.pin);
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(gpioPort(_pins.irq.port), &GPIO_InitStruct);
+
+    // EXTI interrupt init
+    //HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+    //HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
+    _spi.Instance = (_SPI_index == BUS_INDEX_0) ? SPI1 :
+                    (_SPI_index == BUS_INDEX_1) ? SPI2 : SPI3;
     _spi.Init.Mode = SPI_MODE_MASTER;
     _spi.Init.Direction = SPI_DIRECTION_2LINES;
     _spi.Init.DataSize = SPI_DATASIZE_8BIT;
@@ -231,9 +292,9 @@ BUS_SPI::BUS_SPI(uint32_t frequency, bus_index_e SPI_index, const pins_t& pins) 
 #if defined(USE_ARDUINO_ESP32)
 #else
     _spi.begin();
-    _csBit = digitalPinToBitMask(_pins.cs); // NOLINT(cppcoreguidelines-prefer-member-initializer)
-    _csOut = portOutputRegister(digitalPinToPort(_pins.cs)); // NOLINT(cppcoreguidelines-prefer-member-initializer)
-    pinMode(_pins.cs, OUTPUT);
+    _csBit = digitalPinToBitMask(_pins.cs.pin); // NOLINT(cppcoreguidelines-prefer-member-initializer)
+    _csOut = portOutputRegister(digitalPinToPort(_pins.cs.pin)); // NOLINT(cppcoreguidelines-prefer-member-initializer)
+    pinMode(_pins.cs.pin, OUTPUT);
     cs_deselect();
 #endif
 
@@ -306,18 +367,31 @@ This routine sets the GPIO IRQ pin to input and attaches the dataReadyISR to be 
 */
 void BUS_SPI::setInterruptDriven(irq_level_e irqLevel) // NOLINT(readability-make-member-function-const)
 {
-    assert(_pins.irq != IRQ_NOT_SET);
+    assert(_pins.irq.pin != IRQ_NOT_SET);
 
 #if defined(USE_ARDUINO_ESP32)
-    pinMode(_pins.irq, INPUT);
-    attachInterrupt(digitalPinToInterrupt(_pins.irq), &dataReadyISR, irqLevel); // esp32-hal-gpio.h
+    pinMode(_pins.irq.pin, INPUT);
+    // map to ESP32 constants
+    enum { LEVEL_LOW = 0x04, LEVEL_HIGH = 0x05, EDGE_FALL = 0x02, EDGE_RISE = 0x01, EDGE_CHANGE = 0x03 };
+    const uint8_t level = 
+        (irqLevel == IRQ_LEVEL_LOW) ? LEVEL_LOW :
+        (irqLevel == IRQ_LEVEL_HIGH) ? LEVEL_HIGH :
+        (irqLevel == IRQ_EDGE_FALL) ? EDGE_FALL :
+        (irqLevel == IRQ_EDGE_RISE) ? EDGE_RISE : EDGE_CHANGE;
+    attachInterrupt(digitalPinToInterrupt(_pins.irq.pin), &dataReadyISR, level); // esp32-hal-gpio.h
 #elif defined(FRAMEWORK_RPI_PICO)
-    gpio_init(_pins.irq);
-    gpio_set_dir(_pins.irq, GPIO_IN);
+    gpio_init(_pins.irq.pin);
+    gpio_set_dir(_pins.irq.pin, GPIO_IN);
     enum { IRQ_ENABLED = true };
-    gpio_set_irq_enabled_with_callback(_pins.irq, irqLevel, IRQ_ENABLED, &dataReadyISR);
+    gpio_set_irq_enabled_with_callback(_pins.irq.pin, irqLevel, IRQ_ENABLED, &dataReadyISR);
 #else
-    (void)irqLevel;
+    enum { LEVEL_LOW = 0x04, LEVEL_HIGH = 0x05, EDGE_FALL = 0x02, EDGE_RISE = 0x01, EDGE_CHANGE = 0x03 };
+    const uint8_t level = 
+        (irqLevel == IRQ_LEVEL_LOW) ? LEVEL_LOW :
+        (irqLevel == IRQ_LEVEL_HIGH) ? LEVEL_HIGH :
+        (irqLevel == IRQ_EDGE_FALL) ? EDGE_FALL :
+        (irqLevel == IRQ_EDGE_RISE) ? EDGE_RISE : EDGE_CHANGE;
+    (void)level;
 #endif
 }
 

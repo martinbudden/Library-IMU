@@ -96,22 +96,21 @@ constexpr uint8_t REG_ZA_OFFSET_L           = 0x7E;
 // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers,hicpp-signed-bitwise)
 
 #if defined(USE_IMU_MPU6886_SPI)
+IMU_MPU6886::IMU_MPU6886(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::port_pins_t& pins) :
+    IMU_Base(axisOrder, _bus),
+    _bus(frequency, SPI_index, pins)
+{
+}
 IMU_MPU6886::IMU_MPU6886(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::pins_t& pins) :
     IMU_Base(axisOrder, _bus),
     _bus(frequency, SPI_index, pins)
 {
-    static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
-    static_assert(sizeof(acc_temperature_gyro_data_t) == acc_temperature_gyro_data_t::DATA_SIZE);
-    static_assert(sizeof(acc_temperature_gyro_array_t) == acc_temperature_gyro_array_t::DATA_SIZE);
 }
 #else
 IMU_MPU6886::IMU_MPU6886(axis_order_e axisOrder, BUS_BASE::bus_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
     IMU_Base(axisOrder, _bus),
     _bus(I2C_address, I2C_index, pins)
 {
-    static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
-    static_assert(sizeof(acc_temperature_gyro_data_t) == acc_temperature_gyro_data_t::DATA_SIZE);
-    static_assert(sizeof(acc_temperature_gyro_array_t) == acc_temperature_gyro_array_t::DATA_SIZE);
 }
 #endif
 
@@ -120,6 +119,10 @@ int IMU_MPU6886::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSe
     (void)targetOutputDataRateHz;
     (void)gyroSensitivity;
     (void)accSensitivity;
+
+    static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
+    static_assert(sizeof(acc_temperature_gyro_data_t) == acc_temperature_gyro_data_t::DATA_SIZE);
+    static_assert(sizeof(acc_temperature_gyro_array_t) == acc_temperature_gyro_array_t::DATA_SIZE);
 
 #if defined(USE_FREERTOS)
     _i2cMutex = static_cast<SemaphoreHandle_t>(i2cMutex);

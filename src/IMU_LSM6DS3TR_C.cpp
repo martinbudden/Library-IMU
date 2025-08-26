@@ -156,12 +156,15 @@ constexpr uint8_t REG_OUTZ_H_ACC            = 0x2D;
 Gyroscope data rates up to 6.4 kHz, accelerometer up to 1.6 kHz
 */
 #if defined(USE_IMU_LSM6DS3TR_C_SPI) || defined(USE_IMU_ISM330DHCX_SPI) || defined(USE_IMU_LSM6DSOX_SPI)
+IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::port_pins_t& pins) :
+    IMU_Base(axisOrder, _bus),
+    _bus(frequency, SPI_index, pins)
+{
+}
 IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::pins_t& pins) :
     IMU_Base(axisOrder, _bus),
     _bus(frequency, SPI_index, pins)
 {
-    static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
-    static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
 }
 #else
 IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_e axisOrder, BUS_BASE::bus_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
@@ -180,6 +183,9 @@ IMU_LSM6DS3TR_C::IMU_LSM6DS3TR_C(axis_order_e axisOrder, TwoWire& wire, const BU
 
 int IMU_LSM6DS3TR_C::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) // NOLINT(readability-function-cognitive-complexity)
 {
+    static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
+    static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
+
 #if defined(I2C_MUTEX_REQUIRED)
     _i2cMutex = static_cast<SemaphoreHandle_t>(i2cMutex);
 #else

@@ -9,6 +9,9 @@ int ret;
 
 void setup()
 {
+    enum {PA=0, PB=1, PC=2, PD=3, PE=4, PF=5, PG=6, PH=7};
+    enum {P0=0, P1=1, P2=2, P3=3, P4=4, P5=5, P6=6, P7=7};
+
 #if defined(M5_UNIFIED)
     auto cfg = M5.config(); // NOLINT(readability-static-accessed-through-instance)
     cfg.serial_baudrate = 115200;
@@ -20,13 +23,12 @@ void setup()
     // create an LSM6DS3TR_C IMU object
 #if defined(USE_IMU_LSM6DS3TR_C_SPI)
     constexpr uint32_t spiFrequency = 20000000; // 20 MHz
-    static IMU_LSM6DS3TR_C imuStatic(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::BUS_INDEX_0,
-        BUS_SPI::pins_t{.cs=IMU_SPI_CS_PIN, .sck=IMU_SPI_SCK_PIN, .cipo=IMU_SPI_CIPO_PIN, .copi=IMU_SPI_COPI_PIN, .irq=IMU_SPI_IRQ_PIN});
+    static IMU_LSM6DS3TR_C imuStatic(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::IMU_SPI_INDEX, BUS_SPI::IMU_SPI_PINS);
 #else
 #if defined(USE_I2C_WIRE_1)
-    static IMU_LSM6DS3TR_C imuStatic(IMU_Base::XPOS_YPOS_ZPOS, Wire1, BUS_I2C::pins_t{.sda=IMU_I2C_SDA_PIN, .scl=IMU_I2C_SCL_PIN, .irq=BUS_SPI::IRQ_NOT_SET}, IMU_LSM6DS3TR_C::I2C_ADDRESS);
+    static IMU_LSM6DS3TR_C imuStatic(IMU_Base::XPOS_YPOS_ZPOS, Wire1, BUS_I2C::port_pins_t{.sda=IMU_I2C_SDA_PIN, .scl=IMU_I2C_SCL_PIN, .irq=BUS_SPI::IRQ_NOT_SET}, IMU_LSM6DS3TR_C::I2C_ADDRESS);
 #else
-    static IMU_LSM6DS3TR_C imuStatic(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{.sda=IMU_I2C_SDA_PIN, .scl=IMU_I2C_SCL_PIN, .irq=BUS_I2C::IRQ_NOT_SET});
+    static IMU_LSM6DS3TR_C imuStatic(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::port_pins_t{.sda=IMU_I2C_SDA_PIN, .scl=IMU_I2C_SCL_PIN, .irq=BUS_I2C::IRQ_NOT_SET});
 #endif
 #endif
     imu = &imuStatic;

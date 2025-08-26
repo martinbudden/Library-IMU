@@ -49,6 +49,12 @@ enum {
 // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 
 #if defined(USE_IMU_BNO085_SPI)
+IMU_BNO085::IMU_BNO085(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::port_pins_t& pins) :
+    IMU_Base(axisOrder, _bus, IMU_AUTO_CALIBRATES | IMU_PERFORMS_SENSOR_FUSION),
+    _bus(frequency, SPI_index, pins),
+    _axisOrderQuaternion(axisOrientations[axisOrder])
+{
+}
 IMU_BNO085::IMU_BNO085(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::pins_t& pins) :
     IMU_Base(axisOrder, _bus, IMU_AUTO_CALIBRATES | IMU_PERFORMS_SENSOR_FUSION),
     _bus(frequency, SPI_index, pins),
