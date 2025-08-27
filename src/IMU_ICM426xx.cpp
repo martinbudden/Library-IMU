@@ -12,15 +12,6 @@
 namespace { // use anonymous namespace to make items local to this translation unit
 
 constexpr uint8_t REG_SENSOR_CONFIG0        = 0x03;
-constexpr uint8_t REG_GYRO_CONFIG_STATIC2   = 0x0B;
-constexpr uint8_t REG_GYRO_CONFIG_STATIC3   = 0x0C;
-constexpr uint8_t REG_GYRO_CONFIG_STATIC4   = 0x0D;
-constexpr uint8_t REG_GYRO_CONFIG_STATIC5   = 0x0E;
-constexpr uint8_t REG_GYRO_CONFIG_STATIC6   = 0x0F;
-constexpr uint8_t REG_GYRO_CONFIG_STATIC7   = 0x10;
-constexpr uint8_t REG_GYRO_CONFIG_STATIC8   = 0x11;
-constexpr uint8_t REG_GYRO_CONFIG_STATIC9   = 0x12;
-constexpr uint8_t REG_GYRO_CONFIG_STATIC10  = 0x13;
 
 constexpr uint8_t REG_INT_CONFIG            = 0x14;
     constexpr uint8_t INT1_MODE_LATCHED             = 0b00000100;
@@ -157,6 +148,17 @@ constexpr uint8_t REG_INTF_CONFIG4          = 0x7A;
 constexpr uint8_t REG_INTF_CONFIG5          = 0x7B;
 constexpr uint8_t REG_INTF_CONFIG6          = 0x7C;
 
+// User Bank 1 Register Map
+constexpr uint8_t REG_BANK1_GYRO_CONFIG_STATIC2     = 0x0B;
+constexpr uint8_t REG_BANK1_GYRO_CONFIG_STATIC3     = 0x0C;
+constexpr uint8_t REG_BANK1_GYRO_CONFIG_STATIC4     = 0x0D;
+constexpr uint8_t REG_BANK1_GYRO_CONFIG_STATIC5     = 0x0E;
+constexpr uint8_t REG_BANK1_GYRO_CONFIG_STATIC6     = 0x0F;
+constexpr uint8_t REG_BANK1_GYRO_CONFIG_STATIC7     = 0x10;
+constexpr uint8_t REG_BANK1_GYRO_CONFIG_STATIC8     = 0x11;
+constexpr uint8_t REG_BANK1_GYRO_CONFIG_STATIC9     = 0x12;
+constexpr uint8_t REG_BANK1_GYRO_CONFIG_STATIC10    = 0x13;
+
 // User Bank 2 Register Map
 constexpr uint8_t REG_BANK2_ACCEL_CONFIG_STATIC2    = 0x03;
 constexpr uint8_t REG_BANK2_ACCEL_CONFIG_STATIC3    = 0x04;
@@ -220,9 +222,15 @@ int IMU_ICM426xx::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroS
     _bus.writeRegister(REG_BANK_SEL, 0); // software reset
     _bus.writeRegister(REG_PWR_MGMT0, PWR_OFF); // turn off IMU
 
-    // Configure gyro and acc UI Filters
+    // set AntiAlias filter, see pages 28ff of TDK ICM-42688-P Datasheet
+    enum { GYRO_AAF_DELT=38, GYRO_AAF_DELTSQR=1440, GYRO_AAF_BITSH=4 }; // gives 3dB Bandwidth of 2029 Hz
+    _bus.writeRegister(REG_BANK_SEL, 1);
+    _bus.writeRegister(REG_BANK1_GYRO_CONFIG_STATIC3, GYRO_AAF_DELT);
+    _bus.writeRegister(REG_BANK1_GYRO_CONFIG_STATIC4, GYRO_AAF_DELTSQR & 0xFF);
+    _bus.writeRegister(REG_BANK1_GYRO_CONFIG_STATIC5, (GYRO_AAF_BITSH << 4)| (GYRO_AAF_DELTSQR >> 8));
     _bus.writeRegister(REG_BANK_SEL, 0);
 
+    // REG_GYRO_CONFIG1 defaults to first order gyro ui filter, 3rd order GYRO_DEC2_M2_ORD filter, so is left unchanged
     _bus.writeRegister(REG_GYRO_ACCEL_CONFIG0, ACCEL_FILTER_LOW_LATENCY | GYRO_FILTER_LOW_LATENCY);
 
     // Configure interrupts

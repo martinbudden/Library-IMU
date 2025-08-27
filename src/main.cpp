@@ -1,8 +1,7 @@
 #if defined (USE_EMPTY_SETUP_LOOP)
 
-#include <Arduino.h>
-
 #include "IMU_LSM6DS3TR_C.h"
+#include <Arduino.h>
 
 //#define IMU_SPI_PINS BUS_SPI::pins_t{.cs=17,.sck=18,.cipo=16,.copi=19,.irq=20}
 //#define IMU_SPI_PORT_PINS BUS_SPI::port_pins_t{.cs={PB,11},.sck={PB,14},.cipo={PB,14},.copi={PB,15},.irq={PB,10}}
