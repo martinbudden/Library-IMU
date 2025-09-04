@@ -1,4 +1,4 @@
-#include "IMU_MPU6886.h"
+#include "IMU_ICM20602.h"
 //#define SERIAL_OUTPUT
 #if defined(SERIAL_OUTPUT)
 #include <HardwareSerial.h>
@@ -96,25 +96,25 @@ constexpr uint8_t REG_ZA_OFFSET_L           = 0x7E;
 // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access,cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers,hicpp-signed-bitwise)
 
 #if defined(LIBRARY_IMU_USE_SPI_BUS)
-IMU_MPU6886::IMU_MPU6886(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::port_pins_t& pins) :
+IMU_ICM20602::IMU_ICM20602(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::port_pins_t& pins) :
     IMU_Base(axisOrder, _bus),
     _bus(frequency, SPI_index, pins)
 {
 }
-IMU_MPU6886::IMU_MPU6886(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::pins_t& pins) :
+IMU_ICM20602::IMU_ICM20602(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::pins_t& pins) :
     IMU_Base(axisOrder, _bus),
     _bus(frequency, SPI_index, pins)
 {
 }
 #else
-IMU_MPU6886::IMU_MPU6886(axis_order_e axisOrder, BUS_BASE::bus_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
+IMU_ICM20602::IMU_ICM20602(axis_order_e axisOrder, BUS_BASE::bus_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
     IMU_Base(axisOrder, _bus),
     _bus(I2C_address, I2C_index, pins)
 {
 }
 #endif
 
-int IMU_MPU6886::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex)
+int IMU_ICM20602::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex)
 {
     (void)targetOutputDataRateHz;
     (void)gyroSensitivity;
@@ -122,7 +122,6 @@ int IMU_MPU6886::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSe
 
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_temperature_gyro_data_t) == acc_temperature_gyro_data_t::DATA_SIZE);
-    static_assert(sizeof(acc_temperature_gyro_array_t) == acc_temperature_gyro_array_t::DATA_SIZE);
 
 #if defined(FRAMEWORK_USE_FREERTOS)
     _i2cMutex = static_cast<SemaphoreHandle_t>(i2cMutex);
@@ -210,7 +209,7 @@ These values are used to remove DC bias from the sensor output. The values are
 added to the gyroscope sensor value before going into the sensor register.
 So the offset value is negated.
 */
-IMU_MPU6886::mems_sensor_data_t::value_t IMU_MPU6886::gyroOffsetFromXYZ(const xyz_int32_t& data)
+IMU_ICM20602::mems_sensor_data_t::value_t IMU_ICM20602::gyroOffsetFromXYZ(const xyz_int32_t& data)
 {
     return mems_sensor_data_t::value_t {
         .x_h = static_cast<uint8_t>((-data.x) >> 8U),
@@ -222,13 +221,13 @@ IMU_MPU6886::mems_sensor_data_t::value_t IMU_MPU6886::gyroOffsetFromXYZ(const xy
     };
 }
 
-void IMU_MPU6886::setInterruptDriven()
+void IMU_ICM20602::setInterruptDriven()
 {
     // set interrupt level as configured in init()
     _bus.setInterruptDriven(BUS_BASE::IRQ_EDGE_RISE);
 }
 
-void IMU_MPU6886::setGyroOffset(const xyz_int32_t& gyroOffset)
+void IMU_ICM20602::setGyroOffset(const xyz_int32_t& gyroOffset)
 {
 #if false
     // Setting the XG_OFFS registers seems to have no effect, so this code disabled
@@ -240,7 +239,7 @@ void IMU_MPU6886::setGyroOffset(const xyz_int32_t& gyroOffset)
 #endif
 }
 
-IMU_Base::xyz_int32_t IMU_MPU6886::readGyroRaw()
+IMU_Base::xyz_int32_t IMU_ICM20602::readGyroRaw()
 {
     mems_sensor_data_t gyro; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init,misc-const-correctness)
 
@@ -256,7 +255,7 @@ IMU_Base::xyz_int32_t IMU_MPU6886::readGyroRaw()
     return ret;
 }
 
-IMU_Base::xyz_int32_t IMU_MPU6886::readAccRaw()
+IMU_Base::xyz_int32_t IMU_ICM20602::readAccRaw()
 {
     mems_sensor_data_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init,misc-const-correctness)
 
@@ -271,7 +270,7 @@ IMU_Base::xyz_int32_t IMU_MPU6886::readAccRaw()
     };
 }
 
-xyz_t IMU_MPU6886::readGyroRPS()
+xyz_t IMU_ICM20602::readGyroRPS()
 {
     mems_sensor_data_t gyro; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init,misc-const-correctness)
 
@@ -282,12 +281,12 @@ xyz_t IMU_MPU6886::readGyroRPS()
     return gyroRPS_FromRaw(gyro.value);
 }
 
-xyz_t IMU_MPU6886::readGyroDPS()
+xyz_t IMU_ICM20602::readGyroDPS()
 {
     return readGyroRPS() * radiansToDegrees;
 }
 
-xyz_t IMU_MPU6886::readAcc()
+xyz_t IMU_ICM20602::readAcc()
 {
     mems_sensor_data_t acc; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init,misc-const-correctness)
 
@@ -298,7 +297,7 @@ xyz_t IMU_MPU6886::readAcc()
     return accFromRaw(acc.value);
 }
 
-IRAM_ATTR IMU_Base::accGyroRPS_t IMU_MPU6886::readAccGyroRPS()
+IRAM_ATTR IMU_Base::accGyroRPS_t IMU_ICM20602::readAccGyroRPS()
 {
     i2cSemaphoreTake(_i2cMutex);
     _bus.readRegister(REG_ACCEL_XOUT_H, &_spiAccTemperatureGyroData.accGyro.data[0], sizeof(_spiAccTemperatureGyroData.accGyro));
@@ -311,12 +310,12 @@ IRAM_ATTR IMU_Base::accGyroRPS_t IMU_MPU6886::readAccGyroRPS()
 /*!
 Return the gyroAcc data that was read in the ISR
 */
-IRAM_ATTR IMU_Base::accGyroRPS_t IMU_MPU6886::getAccGyroRPS() const
+IRAM_ATTR IMU_Base::accGyroRPS_t IMU_ICM20602::getAccGyroRPS() const
 {
     return accGyroRPSFromRaw(_spiAccTemperatureGyroData.accGyro.value);
 }
 
-int32_t IMU_MPU6886::readTemperatureRaw() const
+int32_t IMU_ICM20602::readTemperatureRaw() const
 {
     std::array<uint8_t, 2> data;
 
@@ -328,63 +327,14 @@ int32_t IMU_MPU6886::readTemperatureRaw() const
     return temperature;
 }
 
-float IMU_MPU6886::readTemperature() const
+float IMU_ICM20602::readTemperature() const
 {
     const int32_t temperature = readTemperatureRaw();
 
     return static_cast<float>(temperature) / 326.8F + 25.0F; // NOLINT(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 }
 
-void IMU_MPU6886::setFIFOEnable(bool enableflag)
-{
-    i2cSemaphoreTake(_i2cMutex);
-    _bus.writeRegister(REG_FIFO_ENABLE, enableflag ? 0x18 : 0x00);
-    delayMs(1);
-    _bus.writeRegister(REG_USER_CTRL, enableflag ? 0x40 : 0x00);
-    i2cSemaphoreGive(_i2cMutex);
-    delayMs(1);
-}
-
-void IMU_MPU6886::resetFIFO()
-{
-    i2cSemaphoreTake(_i2cMutex);
-
-    uint8_t data = _bus.readRegister(REG_USER_CTRL);
-    data |= 0x04;
-    _bus.writeRegister(REG_USER_CTRL, data);
-
-    i2cSemaphoreGive(_i2cMutex);
-}
-
-size_t IMU_MPU6886::readFIFO_ToBuffer()
-{
-    std::array<uint8_t, 2> lengthData;
-
-    i2cSemaphoreTake(_i2cMutex);
-
-    _bus.readRegister(REG_FIFO_COUNT_H, &lengthData[0], sizeof(lengthData));
-    const size_t fifoLength = lengthData[0] << 8U | lengthData[1];
-
-    constexpr size_t chunkSize = 8*sizeof(acc_temperature_gyro_data_t);
-    const size_t count = fifoLength / chunkSize;
-    for (size_t ii = 0; ii < count; ++ii) {
-        _bus.readRegister(REG_FIFO_R_W, &_fifoBuffer.data[ii * chunkSize], chunkSize); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index,cppcoreguidelines-pro-type-union-access)
-    }
-    _bus.readRegister(REG_FIFO_R_W, &_fifoBuffer.data[count * chunkSize], fifoLength - count*chunkSize); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index,cppcoreguidelines-pro-type-union-access)
-
-    i2cSemaphoreGive(_i2cMutex);
-
-     // return the number of acc_temperature_gyro_data_t items read
-    return fifoLength / acc_temperature_gyro_data_t::DATA_SIZE;
-}
-
-IMU_Base::accGyroRPS_t IMU_MPU6886::readFIFO_Item(size_t index)
-{
-    const acc_temperature_gyro_data_t& accTempGyro = _fifoBuffer.accTemperatureGyro[index]; // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index,cppcoreguidelines-pro-type-union-access)
-    return accGyroRPSFromRaw(accTempGyro.value);
-}
-
-xyz_t IMU_MPU6886::gyroRPS_FromRaw(const mems_sensor_data_t::value_t& data) const
+xyz_t IMU_ICM20602::gyroRPS_FromRaw(const mems_sensor_data_t::value_t& data) const
 {
     // static cast to int16_t to sign extend the 8 bit values
 #if defined(LIBRARY_IMU_FIXED_AXES_YNEG_XPOS_ZPOS)
@@ -421,7 +371,7 @@ xyz_t IMU_MPU6886::gyroRPS_FromRaw(const mems_sensor_data_t::value_t& data) cons
 #endif
 }
 
-xyz_t IMU_MPU6886::accFromRaw(const mems_sensor_data_t::value_t& data) const
+xyz_t IMU_ICM20602::accFromRaw(const mems_sensor_data_t::value_t& data) const
 {
 #if defined(LIBRARY_IMU_FIXED_AXES_YNEG_XPOS_ZPOS)
     return xyz_t {
@@ -457,7 +407,7 @@ xyz_t IMU_MPU6886::accFromRaw(const mems_sensor_data_t::value_t& data) const
 #endif
 }
 
-IMU_Base::accGyroRPS_t IMU_MPU6886::accGyroRPSFromRaw(const acc_temperature_gyro_data_t::value_t& data) const
+IMU_Base::accGyroRPS_t IMU_ICM20602::accGyroRPSFromRaw(const acc_temperature_gyro_data_t::value_t& data) const
 {
 #if defined(LIBRARY_IMU_FIXED_AXES_XPOS_YPOS_ZPOS)
     return accGyroRPS_t {

@@ -261,9 +261,10 @@ IRAM_ATTR bool BUS_I2C::readRegister(uint8_t reg, uint8_t* data, size_t length) 
 #else // defaults to FRAMEWORK_ARDUINO
     _wire.beginTransmission(_I2C_address);
     _wire.write(reg);
-    _wire.endTransmission();
-
-    return readBytes(data, length);
+    const uint8_t err = _wire.endTransmission(false);
+    if (err == 0) {
+        return readBytes(data, length);
+    }
 #endif
     return false;
 }
@@ -281,6 +282,7 @@ IRAM_ATTR bool BUS_I2C::readBytes(uint8_t* data, size_t length) const // NOLINT(
     (void)length;
 #else // defaults to FRAMEWORK_ARDUINO
     if (_wire.requestFrom(_I2C_address, static_cast<uint8_t>(length))) {
+        //while (_wire.available() < 1) { delay(1); }
         for (size_t ii = 0; ii < length; ++ii) {
             data[ii] = static_cast<uint8_t>(_wire.read()); // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         }

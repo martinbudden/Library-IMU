@@ -5,17 +5,17 @@
 #include "IMU_Base.h"
 
 
-class IMU_MPU6886 : public IMU_Base {
+class IMU_ICM20602 : public IMU_Base {
 public:
 #if defined(LIBRARY_IMU_USE_SPI_BUS)
     // SPI constructors
-    IMU_MPU6886(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::port_pins_t& pins);
-    IMU_MPU6886(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::pins_t& pins);
+    IMU_ICM20602(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::port_pins_t& pins);
+    IMU_ICM20602(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::pins_t& pins);
 #else
     // I2C constructors
-    IMU_MPU6886(axis_order_e axisOrder, BUS_BASE::bus_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address);
-    IMU_MPU6886(axis_order_e axisOrder, const BUS_I2C::pins_t& pins, uint8_t I2C_address) : IMU_MPU6886(axisOrder, BUS_I2C::BUS_INDEX_0, pins, I2C_address) {}
-    IMU_MPU6886(axis_order_e axisOrder, const BUS_I2C::pins_t& pins) : IMU_MPU6886(axisOrder, pins, I2C_ADDRESS) {}
+    IMU_ICM20602(axis_order_e axisOrder, BUS_BASE::bus_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address);
+    IMU_ICM20602(axis_order_e axisOrder, const BUS_I2C::pins_t& pins, uint8_t I2C_address) : IMU_ICM20602(axisOrder, BUS_I2C::BUS_INDEX_0, pins, I2C_address) {}
+    IMU_ICM20602(axis_order_e axisOrder, const BUS_I2C::pins_t& pins) : IMU_ICM20602(axisOrder, pins, I2C_ADDRESS) {}
 #endif
 public:
     virtual int init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) override;
@@ -61,11 +61,6 @@ private:
         std::array<uint8_t, BUS_BASE::SPI_BUFFER_SIZE> spiBuffer; // buffer for use when reading gyro by SPI
         acc_temperature_gyro_data_t accGyro;
     };
-    union acc_temperature_gyro_array_t {
-        enum { DATA_SIZE = 1036 };
-        acc_temperature_gyro_data_t accTemperatureGyro[74];
-        uint8_t data[DATA_SIZE];
-    };
 #pragma pack(pop)
 public:
     virtual void setInterruptDriven() override;
@@ -80,14 +75,9 @@ public:
     IRAM_ATTR virtual accGyroRPS_t readAccGyroRPS() override;
     IRAM_ATTR virtual accGyroRPS_t getAccGyroRPS() const override;
 
-    virtual size_t readFIFO_ToBuffer() override;
-    virtual accGyroRPS_t readFIFO_Item(size_t index) override;
-
     float readTemperature() const;
     int32_t readTemperatureRaw() const;
 
-    void setFIFOEnable(bool enableflag);
-    void resetFIFO();
     static mems_sensor_data_t::value_t gyroOffsetFromXYZ(const xyz_int32_t& data);
 private:
     xyz_t gyroRPS_FromRaw(const mems_sensor_data_t::value_t& data) const;
@@ -100,5 +90,4 @@ private:
     BUS_I2C _bus; //!< I2C bus interface
 #endif
     spi_acc_temperature_gyro_data_t _spiAccTemperatureGyroData {};
-    acc_temperature_gyro_array_t _fifoBuffer {};
 };
