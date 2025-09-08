@@ -14,10 +14,8 @@ public:
     virtual xyz_t readGyroRPS() override;
     virtual xyz_t readGyroDPS() override;
     virtual xyz_t readAcc() override;
-    IRAM_ATTR virtual accGyroRPS_t readAccGyroRPS() override;
+    virtual accGyroRPS_t readAccGyroRPS() override;
 
-    virtual size_t readFIFO_ToBuffer() override;
-    virtual accGyroRPS_t readFIFO_Item(size_t index) override;
 private:
     struct acc_temperature_gyro_data_t { // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
         enum { DATA_SIZE = 14 };
@@ -37,7 +35,5 @@ private:
         uint8_t gyro_z_l;
     };
     accGyroRPS_t accGyroRPSFromRaw(const acc_temperature_gyro_data_t& data) const;
-private:
-    uint8_t _fifoBuffer[1024] {};
 };
 

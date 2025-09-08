@@ -335,55 +335,6 @@ float IMU_MPU6886::readTemperature() const
     return static_cast<float>(temperature) / 326.8F + 25.0F; // NOLINT(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 }
 
-void IMU_MPU6886::setFIFOEnable(bool enableflag)
-{
-    i2cSemaphoreTake(_i2cMutex);
-    _bus.writeRegister(REG_FIFO_ENABLE, enableflag ? 0x18 : 0x00);
-    delayMs(1);
-    _bus.writeRegister(REG_USER_CTRL, enableflag ? 0x40 : 0x00);
-    i2cSemaphoreGive(_i2cMutex);
-    delayMs(1);
-}
-
-void IMU_MPU6886::resetFIFO()
-{
-    i2cSemaphoreTake(_i2cMutex);
-
-    uint8_t data = _bus.readRegister(REG_USER_CTRL);
-    data |= 0x04;
-    _bus.writeRegister(REG_USER_CTRL, data);
-
-    i2cSemaphoreGive(_i2cMutex);
-}
-
-size_t IMU_MPU6886::readFIFO_ToBuffer()
-{
-    std::array<uint8_t, 2> lengthData;
-
-    i2cSemaphoreTake(_i2cMutex);
-
-    _bus.readRegister(REG_FIFO_COUNT_H, &lengthData[0], sizeof(lengthData));
-    const size_t fifoLength = lengthData[0] << 8U | lengthData[1];
-
-    constexpr size_t chunkSize = 8*sizeof(acc_temperature_gyro_data_t);
-    const size_t count = fifoLength / chunkSize;
-    for (size_t ii = 0; ii < count; ++ii) {
-        _bus.readRegister(REG_FIFO_R_W, &_fifoBuffer.data[ii * chunkSize], chunkSize); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index,cppcoreguidelines-pro-type-union-access)
-    }
-    _bus.readRegister(REG_FIFO_R_W, &_fifoBuffer.data[count * chunkSize], fifoLength - count*chunkSize); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index,cppcoreguidelines-pro-type-union-access)
-
-    i2cSemaphoreGive(_i2cMutex);
-
-     // return the number of acc_temperature_gyro_data_t items read
-    return fifoLength / acc_temperature_gyro_data_t::DATA_SIZE;
-}
-
-IMU_Base::accGyroRPS_t IMU_MPU6886::readFIFO_Item(size_t index)
-{
-    const acc_temperature_gyro_data_t& accTempGyro = _fifoBuffer.accTemperatureGyro[index]; // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index,cppcoreguidelines-pro-type-union-access)
-    return accGyroRPSFromRaw(accTempGyro.value);
-}
-
 xyz_t IMU_MPU6886::gyroRPS_FromRaw(const mems_sensor_data_t::value_t& data) const
 {
     // static cast to int16_t to sign extend the 8 bit values

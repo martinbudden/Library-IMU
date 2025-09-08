@@ -80,14 +80,9 @@ public:
     IRAM_ATTR virtual accGyroRPS_t readAccGyroRPS() override;
     IRAM_ATTR virtual accGyroRPS_t getAccGyroRPS() const override;
 
-    virtual size_t readFIFO_ToBuffer() override;
-    virtual accGyroRPS_t readFIFO_Item(size_t index) override;
-
     float readTemperature() const;
     int32_t readTemperatureRaw() const;
 
-    void setFIFOEnable(bool enableflag);
-    void resetFIFO();
     static mems_sensor_data_t::value_t gyroOffsetFromXYZ(const xyz_int32_t& data);
 private:
     xyz_t gyroRPS_FromRaw(const mems_sensor_data_t::value_t& data) const;
@@ -100,5 +95,4 @@ private:
     BUS_I2C _bus; //!< I2C bus interface
 #endif
     spi_acc_temperature_gyro_data_t _spiAccTemperatureGyroData {};
-    acc_temperature_gyro_array_t _fifoBuffer {};
 };

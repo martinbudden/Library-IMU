@@ -38,8 +38,7 @@ int IMU_M5_STACK::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensiti
     // Set up FIFO for IMU
     // IMU data frequency is 500Hz
     i2cSemaphoreTake(_i2cMutex);
-    M5.IMU.setFIFOEnable(true);
-    M5.IMU.RestFIFO();
+    M5.IMU.setFIFOEnable(false);
     i2cSemaphoreGive(_i2cMutex);
 
     // return the gyro sample rate actually set
@@ -132,26 +131,6 @@ IRAM_ATTR IMU_Base::accGyroRPS_t IMU_M5_STACK::readAccGyroRPS()
         .gyroRPS = readGyroRPS(),
         .acc = readAcc()
     };
-
-    return gyroAcc;
-}
-
-size_t IMU_M5_STACK::readFIFO_ToBuffer()
-{
-    i2cSemaphoreTake(_i2cMutex);
-    const uint32_t fifoCount = M5.IMU.ReadFIFOCount();
-    if (fifoCount != 0) {
-        M5.IMU.ReadFIFOBuff(&_fifoBuffer[0], fifoCount);
-    }
-    i2cSemaphoreGive(_i2cMutex);
-    return fifoCount / acc_temperature_gyro_data_t::DATA_SIZE;
-}
-
-IMU_Base::accGyroRPS_t IMU_M5_STACK::readFIFO_Item(size_t index)
-{
-    const acc_temperature_gyro_data_t* imu_data = reinterpret_cast<acc_temperature_gyro_data_t*>(&_fifoBuffer[0]); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
-    const acc_temperature_gyro_data_t& imuData = imu_data[index]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-    const accGyroRPS_t gyroAcc = IMU_M5_STACK::accGyroRPSFromRaw(imuData);
 
     return gyroAcc;
 }

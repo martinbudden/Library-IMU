@@ -71,19 +71,6 @@ void IMU_Base::setInterruptDriven()
 {
 }
 
-size_t IMU_Base::readFIFO_ToBuffer()
-{
-    return 0;
-}
-
-IMU_Base::accGyroRPS_t IMU_Base::readFIFO_Item(size_t index)
-{
-    (void)index;
-
-    const accGyroRPS_t gyroAcc {};
-    return gyroAcc;
-}
-
 IMU_Base::xyz_int32_t IMU_Base::getGyroOffset() const
 {
     return _gyroOffset;
