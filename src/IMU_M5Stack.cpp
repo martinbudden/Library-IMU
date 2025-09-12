@@ -125,7 +125,7 @@ xyz_t IMU_M5_STACK::readGyroDPS()
     return mapAxes(gyroDPS);
 }
 
-IRAM_ATTR IMU_Base::accGyroRPS_t IMU_M5_STACK::readAccGyroRPS()
+FAST_CODE IMU_Base::accGyroRPS_t IMU_M5_STACK::readAccGyroRPS()
 {
     const accGyroRPS_t gyroAcc {
         .gyroRPS = readGyroRPS(),

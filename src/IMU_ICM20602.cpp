@@ -297,7 +297,7 @@ xyz_t IMU_ICM20602::readAcc()
     return accFromRaw(acc.value);
 }
 
-IRAM_ATTR IMU_Base::accGyroRPS_t IMU_ICM20602::readAccGyroRPS()
+FAST_CODE IMU_Base::accGyroRPS_t IMU_ICM20602::readAccGyroRPS()
 {
     i2cSemaphoreTake(_i2cMutex);
     _bus.readRegister(REG_ACCEL_XOUT_H, &_spiAccTemperatureGyroData.accGyro.data[0], sizeof(_spiAccTemperatureGyroData.accGyro));
@@ -310,7 +310,7 @@ IRAM_ATTR IMU_Base::accGyroRPS_t IMU_ICM20602::readAccGyroRPS()
 /*!
 Return the gyroAcc data that was read in the ISR
 */
-IRAM_ATTR IMU_Base::accGyroRPS_t IMU_ICM20602::getAccGyroRPS() const
+FAST_CODE IMU_Base::accGyroRPS_t IMU_ICM20602::getAccGyroRPS() const
 {
     return accGyroRPSFromRaw(_spiAccTemperatureGyroData.accGyro.value);
 }

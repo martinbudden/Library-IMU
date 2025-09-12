@@ -56,8 +56,8 @@ public:
     virtual xyz_int32_t readGyroRaw() override;
     virtual xyz_int32_t readAccRaw() override;
 
-    IRAM_ATTR virtual accGyroRPS_t readAccGyroRPS() override;
-    IRAM_ATTR virtual accGyroRPS_t getAccGyroRPS() const override;
+    FAST_CODE virtual accGyroRPS_t readAccGyroRPS() override;
+    FAST_CODE virtual accGyroRPS_t getAccGyroRPS() const override;
 private:
     accGyroRPS_t accGyroRPSFromRaw(const acc_gyro_data_t::value_t& data) const;
 private:

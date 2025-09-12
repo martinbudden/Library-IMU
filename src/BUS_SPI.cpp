@@ -3,14 +3,12 @@
 #include <cassert>
 
 #if defined(FRAMEWORK_RPI_PICO)
-#include <boards/pico.h> // for PICO_DEFAULT_LED_PIN
+//#include <boards/pico.h> // for PICO_DEFAULT_LED_PIN
+#include <cstring>
 #include <hardware/dma.h>
 #include <hardware/spi.h>
 #include <pico/binary_info.h>
 #include <pico/stdlib.h>
-#if defined(LIBRARY_IMU_USE_SPI_HARDWARE_CHIP_SELECT)
-#include <cstring>
-#endif
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_TEST)
 #elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
@@ -25,7 +23,7 @@ static inline uint16_t gpioPin(uint8_t pin) { return static_cast<uint16_t>(1U <<
 
 BUS_SPI* BUS_SPI::bus {nullptr}; // copy of this for use in ISRs
 
-void BUS_SPI::cs_select() const
+void BUS_SPI::cs_select()
 {
 #if !defined(LIBRARY_IMU_USE_SPI_HARDWARE_CHIP_SELECT)
 #if defined(FRAMEWORK_RPI_PICO)
@@ -48,7 +46,7 @@ void BUS_SPI::cs_select() const
 #endif // LIBRARY_IMU_USE_SPI_HARDWARE_CHIP_SELECT
 }
 
-void BUS_SPI::cs_deselect() const
+void BUS_SPI::cs_deselect()
 {
 #if !defined(LIBRARY_IMU_USE_SPI_HARDWARE_CHIP_SELECT)
 #if defined(FRAMEWORK_RPI_PICO)
@@ -62,7 +60,7 @@ void BUS_SPI::cs_deselect() const
 #else // defaults to FRAMEWORK_ARDUINO
 #if defined(FRAMEWORK_ARDUINO_ESP32)
 #else
-    *_csOut |= _csBit; // set _csOut high
+    *bus->_csOut |= bus->_csBit; // set _csOut high
     // digitalWrite(_pins.cs, HIGH);
 #endif
 
@@ -76,7 +74,7 @@ Called when IMU interrupt pin signals an interrupt.
 Currently support only one interrupt, but could index action off gpio pin
 */
 #if defined(FRAMEWORK_RPI_PICO)
-void BUS_SPI::dataReadyISR(unsigned int gpio, uint32_t events)
+void __not_in_flash_func(BUS_SPI::dataReadyISR)(unsigned int gpio, uint32_t events) // NOLINT(bugprone-reserved-identifier,cert-dcl37-c,cert-dcl51-cpp)
 {
     // The IMU has indicated it has new data, so initiate a read.
     (void)gpio;
@@ -143,7 +141,7 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef* hspi)
 
 #else
 
-IRAM_ATTR void BUS_SPI::dataReadyISR()
+FAST_CODE void BUS_SPI::dataReadyISR()
 {
 #if defined(LIBRARY_IMU_USE_SPI_DMA)
     static_assert(false); // assert false until this is implemented
@@ -394,8 +392,11 @@ void BUS_SPI::setInterruptDriven(irq_level_e irqLevel) // NOLINT(readability-mak
     (void)level;
 #endif
 }
-
-IRAM_ATTR uint8_t BUS_SPI::readRegister(uint8_t reg) const
+#if defined(FRAMEWORK_RPI_PICO)
+uint8_t __not_in_flash_func(BUS_SPI::readRegister)(uint8_t reg) const
+#else
+FAST_CODE uint8_t BUS_SPI::readRegister(uint8_t reg) const
+#endif
 {
 #if defined(FRAMEWORK_RPI_PICO)
     cs_select();
@@ -430,9 +431,9 @@ IRAM_ATTR uint8_t BUS_SPI::readRegister(uint8_t reg) const
     return 0;
 }
 
-IRAM_ATTR uint8_t BUS_SPI::readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const
+FAST_CODE uint8_t BUS_SPI::readRegisterWithTimeout(uint8_t reg, uint32_t timeoutMs) const
 {
-#if defined(FRAMEWORK_ARDUINO_STM32)
+#if defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
     cs_select();
     std::array<uint8_t, 2> outBuf = { static_cast<uint8_t>(reg | READ_BIT), 0 };
     std::array<uint8_t, 2> inBuf;
@@ -448,7 +449,7 @@ IRAM_ATTR uint8_t BUS_SPI::readRegisterWithTimeout(uint8_t reg, uint32_t timeout
 /*!
 Read 
 */
-IRAM_ATTR bool BUS_SPI::readDeviceDataDMA()
+FAST_CODE bool BUS_SPI::readDeviceDataDMA()
 {
     enum { START = SPI_BUFFER_SIZE - 1 };
 //dma_channel_set_irq0_enabled(channel, enabled);
@@ -502,7 +503,7 @@ IRAM_ATTR bool BUS_SPI::readDeviceDataDMA()
     return false;
 }
 
-IRAM_ATTR bool BUS_SPI::readDeviceData()
+FAST_CODE bool BUS_SPI::readDeviceData()
 {
     enum { START = SPI_BUFFER_SIZE - 1 };
 #if defined(FRAMEWORK_RPI_PICO)
@@ -522,7 +523,7 @@ IRAM_ATTR bool BUS_SPI::readDeviceData()
 #endif
 }
 
-IRAM_ATTR bool BUS_SPI::readRegister(uint8_t reg, uint8_t* data, size_t length) const // NOLINT(readability-non-const-parameter)
+FAST_CODE bool BUS_SPI::readRegister(uint8_t reg, uint8_t* data, size_t length) const // NOLINT(readability-non-const-parameter)
 {
 #if defined(FRAMEWORK_RPI_PICO)
     reg |= READ_BIT;
@@ -570,7 +571,7 @@ IRAM_ATTR bool BUS_SPI::readRegister(uint8_t reg, uint8_t* data, size_t length) 
     return false;
 }
 
-IRAM_ATTR bool BUS_SPI::readBytes(uint8_t* data, size_t length) const // NOLINT(readability-non-const-parameter)
+FAST_CODE bool BUS_SPI::readBytes(uint8_t* data, size_t length) const // NOLINT(readability-non-const-parameter)
 {
 #if defined(FRAMEWORK_RPI_PICO)
 #if defined(LIBRARY_IMU_USE_SPI_HARDWARE_CHIP_SELECT)
@@ -608,9 +609,9 @@ IRAM_ATTR bool BUS_SPI::readBytes(uint8_t* data, size_t length) const // NOLINT(
     return false;
 }
 
-IRAM_ATTR bool BUS_SPI::readBytesWithTimeout(uint8_t* data, size_t length, uint32_t timeoutMs) const
+FAST_CODE bool BUS_SPI::readBytesWithTimeout(uint8_t* data, size_t length, uint32_t timeoutMs) const
 {
-#if defined(FRAMEWORK_ARDUINO_STM32)
+#if defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
     //  HAL_OK, HAL_ERROR, HAL_BUSY, HAL_TIMEOUT
     const HAL_StatusTypeDef status = HAL_SPI_Transmit(&_spi, data, length, timeoutMs); //!!T
     return status == HAL_ERROR ? false : true;
@@ -620,7 +621,7 @@ IRAM_ATTR bool BUS_SPI::readBytesWithTimeout(uint8_t* data, size_t length, uint3
 #endif
 }
 
-IRAM_ATTR uint8_t BUS_SPI::writeRegister(uint8_t reg, uint8_t data) // NOLINT(readability-make-member-function-const)
+FAST_CODE uint8_t BUS_SPI::writeRegister(uint8_t reg, uint8_t data) // NOLINT(readability-make-member-function-const)
 {
 #if defined(FRAMEWORK_RPI_PICO)
     std::array<uint8_t, 2> outBuf = { static_cast<uint8_t>(reg & (~READ_BIT)), data }; // remove read bit as this is a write
@@ -655,7 +656,7 @@ IRAM_ATTR uint8_t BUS_SPI::writeRegister(uint8_t reg, uint8_t data) // NOLINT(re
     return 0;
 }
 
-IRAM_ATTR uint8_t BUS_SPI::writeRegister(uint8_t reg, const uint8_t* data, size_t length) // NOLINT(readability-make-member-function-const)
+FAST_CODE uint8_t BUS_SPI::writeRegister(uint8_t reg, const uint8_t* data, size_t length) // NOLINT(readability-make-member-function-const)
 {
 #if defined(FRAMEWORK_RPI_PICO)
     reg &= ~READ_BIT; // NOLINT(hicpp-signed-bitwise)
@@ -700,7 +701,7 @@ IRAM_ATTR uint8_t BUS_SPI::writeRegister(uint8_t reg, const uint8_t* data, size_
     return 0;
 }
 
-IRAM_ATTR uint8_t BUS_SPI::writeBytes(const uint8_t* data, size_t length) // NOLINT(readability-make-member-function-const)
+FAST_CODE uint8_t BUS_SPI::writeBytes(const uint8_t* data, size_t length) // NOLINT(readability-make-member-function-const)
 {
 #if defined(FRAMEWORK_RPI_PICO)
 #if defined(LIBRARY_IMU_USE_SPI_HARDWARE_CHIP_SELECT)

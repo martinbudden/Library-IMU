@@ -438,7 +438,7 @@ xyz_t IMU_ICM426xx::readAcc()
     return accFromRaw(acc.value);
 }
 
-IRAM_ATTR IMU_Base::accGyroRPS_t IMU_ICM426xx::readAccGyroRPS()
+FAST_CODE IMU_Base::accGyroRPS_t IMU_ICM426xx::readAccGyroRPS()
 {
     i2cSemaphoreTake(_i2cMutex);
     _bus.readDeviceData();
@@ -450,7 +450,7 @@ IRAM_ATTR IMU_Base::accGyroRPS_t IMU_ICM426xx::readAccGyroRPS()
 /*!
 Return the gyroAcc data that was read in the ISR
 */
-IRAM_ATTR IMU_Base::accGyroRPS_t IMU_ICM426xx::getAccGyroRPS() const
+FAST_CODE IMU_Base::accGyroRPS_t IMU_ICM426xx::getAccGyroRPS() const
 {
     return accGyroRPSFromRaw(_spiAccGyroData.accGyro.value);
 }

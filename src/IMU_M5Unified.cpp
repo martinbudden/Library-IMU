@@ -200,7 +200,7 @@ xyz_t IMU_M5_UNIFIED::readGyroDPS()
     return gyroDPS;
 }
 
-IRAM_ATTR IMU_Base::accGyroRPS_t IMU_M5_UNIFIED::readAccGyroRPS()
+FAST_CODE IMU_Base::accGyroRPS_t IMU_M5_UNIFIED::readAccGyroRPS()
 {
     // This is very slow on the M5 Atom.
     i2cSemaphoreTake(_i2cMutex);

@@ -8,9 +8,37 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 #endif
+
 #if defined(FRAMEWORK_RPI_PICO)
+
 #include <pico/mutex.h>
+
+#elif defined(FRAMEWORK_ESPIDF)
+
+#if !defined(FAST_CODE)
+#define FAST_CODE IRAM_ATTR
 #endif
+#if !defined(IRAM_ATTR)
+#define IRAM_ATTR
+#endif
+
+#elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
+
+#include "stm32f4xx_hal.h"
+
+#elif defined(FRAMEWORK_TEST)
+
+#else // defaults to FRAMEWORK_ARDUINO
+#if defined(FRAMEWORK_ARDUINO_RPI_PICO)
+#elif defined(FRAMEWORK_ARDUINO_ESP32)
+#endif // FRAMEWORK_ARDUINO
+
+#endif // FRAMEWORK
+
+#if !defined(FAST_CODE)
+#define FAST_CODE
+#endif
+
 
 /*!
 Base class for BUS_I2C and BUS_SPI.
@@ -19,7 +47,7 @@ Note
 bus_index is zero-based.
 
 RPI Pico bus index is also zero-based so, for SPI, BUS_INDEX_0 corresponds to spi0
-STM32 bus index is also one-based so, for SPI, BUS_INDEX_0 corresponds to SPI1
+STM32 bus index is one-based so, for SPI, BUS_INDEX_0 corresponds to SPI1
 */
 class BUS_BASE {
 public:

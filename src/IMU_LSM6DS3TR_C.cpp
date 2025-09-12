@@ -368,7 +368,7 @@ IMU_Base::xyz_int32_t IMU_LSM6DS3TR_C::readAccRaw()
     };
 }
 
-IRAM_ATTR IMU_Base::accGyroRPS_t IMU_LSM6DS3TR_C::readAccGyroRPS()
+FAST_CODE IMU_Base::accGyroRPS_t IMU_LSM6DS3TR_C::readAccGyroRPS()
 {
     i2cSemaphoreTake();
     //_bus.readRegister(REG_OUTX_L_G, &_spiAccGyroData.accGyro.data[0], sizeof(_spiAccGyroData.accGyro));
@@ -381,7 +381,7 @@ IRAM_ATTR IMU_Base::accGyroRPS_t IMU_LSM6DS3TR_C::readAccGyroRPS()
 /*!
 Return the gyroAcc data that was read in the ISR
 */
-IRAM_ATTR IMU_Base::accGyroRPS_t IMU_LSM6DS3TR_C::getAccGyroRPS() const
+FAST_CODE IMU_Base::accGyroRPS_t IMU_LSM6DS3TR_C::getAccGyroRPS() const
 {
     return accGyroRPSFromRaw(_spiAccGyroData.accGyro.value);
 }
