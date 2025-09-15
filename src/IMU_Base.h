@@ -4,11 +4,6 @@
 
 #include <Quaternion.h>
 
-#if defined(FRAMEWORK_USE_FREERTOS)
-#include <freertos/FreeRTOS.h>
-#include <freertos/semphr.h>
-#endif
-
 
 /*!
 IMU virtual base class.

@@ -38,7 +38,7 @@ void BUS_SPI::cs_select()
 
 #if defined(FRAMEWORK_ARDUINO_ESP32)
 #else
-    *_csOut &= ~_csBit; // set _csOut low
+    *bus->_csOut &= ~bus->_csBit; // set _csOut low
     // digitalWrite(_pins.cs, LOW);
 #endif
 
@@ -238,7 +238,9 @@ void BUS_SPI::init()
     bi_decl(bi_3pins_with_func(_pins.cipo.pin, _pins.copi.pin, _pins.sck.pin, GPIO_FUNC_SPI));
     bi_decl(bi_1pin_with_name(_pins.cs.pin, "SPI CS"));
 #endif
+#if !defined(FRAMEWORK_USE_FREERTOS)
     mutex_init(&_dataReadyMutex);
+#endif
 
 #elif defined(FRAMEWORK_ESPIDF)
 
