@@ -305,6 +305,7 @@ void BUS_SPI::init()
     configASSERT(_dataReadyQueue);
     const UBaseType_t messageCount = uxQueueMessagesWaiting(_dataReadyQueue);
     assert(messageCount == 0);
+    (void)messageCount;
 #endif
 
     configureDMA();
@@ -373,7 +374,7 @@ void BUS_SPI::setInterruptDriven(irq_level_e irqLevel) // NOLINT(readability-mak
     pinMode(_pins.irq.pin, INPUT);
     // map to ESP32 constants
     enum { LEVEL_LOW = 0x04, LEVEL_HIGH = 0x05, EDGE_FALL = 0x02, EDGE_RISE = 0x01, EDGE_CHANGE = 0x03 };
-    const uint8_t level = 
+    const uint8_t level =
         (irqLevel == IRQ_LEVEL_LOW) ? LEVEL_LOW :
         (irqLevel == IRQ_LEVEL_HIGH) ? LEVEL_HIGH :
         (irqLevel == IRQ_EDGE_FALL) ? EDGE_FALL :
@@ -386,7 +387,7 @@ void BUS_SPI::setInterruptDriven(irq_level_e irqLevel) // NOLINT(readability-mak
     gpio_set_irq_enabled_with_callback(_pins.irq.pin, irqLevel, IRQ_ENABLED, &dataReadyISR);
 #else
     enum { LEVEL_LOW = 0x04, LEVEL_HIGH = 0x05, EDGE_FALL = 0x02, EDGE_RISE = 0x01, EDGE_CHANGE = 0x03 };
-    const uint8_t level = 
+    const uint8_t level =
         (irqLevel == IRQ_LEVEL_LOW) ? LEVEL_LOW :
         (irqLevel == IRQ_LEVEL_HIGH) ? LEVEL_HIGH :
         (irqLevel == IRQ_EDGE_FALL) ? EDGE_FALL :
@@ -449,7 +450,7 @@ FAST_CODE uint8_t BUS_SPI::readRegisterWithTimeout(uint8_t reg, uint32_t timeout
 }
 
 /*!
-Read 
+Read
 */
 FAST_CODE bool BUS_SPI::readDeviceDataDMA()
 {

@@ -117,6 +117,7 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, bus_index_e I2C_index, const pins_t& pins)
     configASSERT(_dataReadyQueue);
     const UBaseType_t messageCount = uxQueueMessagesWaiting(_dataReadyQueue);
     assert(messageCount == 0);
+    (void)messageCount;
 #endif
 
 #endif // FRAMEWORK
@@ -141,6 +142,7 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, TwoWire& wire, const pins_t& pins) :
     configASSERT(_dataReadyQueue);
     const UBaseType_t messageCount = uxQueueMessagesWaiting(_dataReadyQueue);
     assert(messageCount == 0);
+    (void)messageCount;
 #endif
 }
 #endif
@@ -174,7 +176,7 @@ void BUS_I2C::setInterruptDriven(irq_level_e irqLevel) // NOLINT(readability-mak
     //pinMode(_pins.irq, INPUT);
     // map to ESP32 constants
     enum { LEVEL_LOW = 0x04, LEVEL_HIGH = 0x05, EDGE_FALL = 0x02, EDGE_RISE = 0x01, EDGE_CHANGE = 0x03 };
-    const uint8_t level = 
+    const uint8_t level =
         (irqLevel == IRQ_LEVEL_LOW) ? LEVEL_LOW :
         (irqLevel == IRQ_LEVEL_HIGH) ? LEVEL_HIGH :
         (irqLevel == IRQ_EDGE_FALL) ? EDGE_FALL :
@@ -183,7 +185,7 @@ void BUS_I2C::setInterruptDriven(irq_level_e irqLevel) // NOLINT(readability-mak
     //attachInterrupt(digitalPinToInterrupt(_pins.irq), &dataReadyISR, irqLevel); // esp32-hal-gpio.h
 #else
     enum { LEVEL_LOW = 0x04, LEVEL_HIGH = 0x05, EDGE_FALL = 0x02, EDGE_RISE = 0x01, EDGE_CHANGE = 0x03 };
-    const uint8_t level = 
+    const uint8_t level =
         (irqLevel == IRQ_LEVEL_LOW) ? LEVEL_LOW :
         (irqLevel == IRQ_LEVEL_HIGH) ? LEVEL_HIGH :
         (irqLevel == IRQ_EDGE_FALL) ? EDGE_FALL :
