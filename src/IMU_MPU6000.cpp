@@ -98,7 +98,7 @@ IMU_MPU6000::IMU_MPU6000(axis_order_e axisOrder, BUS_BASE::bus_index_e I2C_index
     _bus(I2C_address, I2C_index, pins)
 {
 }
-#if !defined(FRAMEWORK_RPI_PICO) && !defined(FRAMEWORK_ESPIDF) && !defined(FRAMEWORK_TEST)
+#if !defined(FRAMEWORK_RPI_PICO) && !defined(FRAMEWORK_ESPIDF) &&!defined(FRAMEWORK_STM32_CUBE) && !defined(FRAMEWORK_TEST)
 IMU_MPU6000::IMU_MPU6000(axis_order_e axisOrder, TwoWire& wire, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
     IMU_Base(axisOrder, _bus),
     _bus(I2C_address, wire, pins)
@@ -109,7 +109,7 @@ IMU_MPU6000::IMU_MPU6000(axis_order_e axisOrder, TwoWire& wire, const BUS_I2C::p
 
 int IMU_MPU6000::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) // NOLINT(readability-function-cognitive-complexity)
 {
-#if defined(I2C_MUTEX_REQUIRED)
+#if defined(LIBRARY_IMU_I2C_MUTEX_REQUIRED)
     _i2cMutex = static_cast<SemaphoreHandle_t>(i2cMutex);
 #else
     (void)i2cMutex;

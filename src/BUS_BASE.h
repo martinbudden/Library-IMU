@@ -34,7 +34,15 @@
 
 #elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
 
-#include "stm32f4xx_hal.h"
+#if defined(FRAMEWORK_STM32_CUBE_F1)
+#include <stm32f1xx_hal.h>
+#elif defined(FRAMEWORK_STM32_CUBE_F3)
+#include <stm32f3xx_hal.h>
+#elif defined(FRAMEWORK_STM32_CUBE_F4)
+#include <stm32f4xx_hal.h>
+#elif defined(FRAMEWORK_STM32_CUBE_F7)
+#include <stm32f7xx_hal.h>
+#endif
 
 #elif defined(FRAMEWORK_TEST)
 

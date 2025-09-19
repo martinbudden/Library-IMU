@@ -1,5 +1,6 @@
 {
     "cSpell.words": [
+        "ADDRESSINGMODE",
         "afruitnrf",
         "AFSR",
         "AHRS",
@@ -24,6 +25,8 @@
         "DRDY",
         "DSOX",
         "DSTR",
+        "DUALADDRESS",
+        "DUTYCYCLE",
         "earlephilhower",
         "ESPIDF",
         "espressif",
@@ -51,6 +54,7 @@
         "MSBFIRST",
         "nordicnrf",
         "noreturn",
+        "NOSTRETCH",
         "NVIC",
         "picotool",
         "pioenvs",
@@ -69,6 +73,7 @@
         "TMST",
         "TPULSE",
         "unflags",
+        "USART",
         "USRH",
         "USRL",
         "Wattributes",
@@ -95,8 +100,5 @@
         "YOUT",
         "ZNEG",
         "ZOUT"
-    ],
-    "files.associations": {
-        "cstdint": "cpp"
-    }
+    ]
 }

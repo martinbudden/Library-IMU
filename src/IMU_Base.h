@@ -200,7 +200,7 @@ public:
 
     inline uint32_t getFlags() const { return _flags; }
 #if defined(FRAMEWORK_USE_FREERTOS)
-#if defined(I2C_MUTEX_REQUIRED)
+#if defined(LIBRARY_IMU_I2C_MUTEX_REQUIRED)
     inline void i2cSemaphoreTake() const { xSemaphoreTake(_i2cMutex, portMAX_DELAY); }
     inline void i2cSemaphoreGive() const { xSemaphoreGive(_i2cMutex); }
 #else

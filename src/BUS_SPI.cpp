@@ -12,7 +12,15 @@
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_TEST)
 #elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
-#include "stm32f4xx_hal_gpio.h"
+#if defined(FRAMEWORK_STM32_CUBE_F1)
+#include <stm32f1xx_hal_gpio.h>
+#elif defined(FRAMEWORK_STM32_CUBE_F3)
+#include <stm32f3xx_hal_gpio.h>
+#elif defined(FRAMEWORK_STM32_CUBE_F4)
+#include <stm32f4xx_hal_gpio.h>
+#elif defined(FRAMEWORK_STM32_CUBE_F7)
+#include <stm32f7xx_hal_gpio.h>
+#endif
 static inline GPIO_TypeDef* gpioPort(uint8_t port) { return reinterpret_cast<GPIO_TypeDef*>(GPIOA_BASE + port*(GPIOB_BASE - GPIOA_BASE)); }
 static inline uint16_t gpioPin(uint8_t pin) { return static_cast<uint16_t>(1U << pin); }
 #else // defaults to FRAMEWORK_ARDUINO
@@ -173,6 +181,15 @@ BUS_SPI::BUS_SPI(uint32_t frequency, bus_index_e SPI_index, const pins_t& pins) 
     ,_dmaInterruptNumber(DMA_IRQ_0)
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
+#if defined(FRAMEWORK_STM32_CUBE_F1)
+#include <stm32f1xx_hal_spi.h>
+#elif defined(FRAMEWORK_STM32_CUBE_F3)
+#include <stm32f3xx_hal_spi.h>
+#elif defined(FRAMEWORK_STM32_CUBE_F4)
+#include <stm32f4xx_hal_spi.h>
+#elif defined(FRAMEWORK_STM32_CUBE_F7)
+#include <stm32f7xx_hal_spi.h>
+#endif
 #elif defined(FRAMEWORK_TEST)
 #else // defaults to FRAMEWORK_ARDUINO
 #if defined(FRAMEWORK_ARDUINO_ESP32)
@@ -256,7 +273,9 @@ void BUS_SPI::init()
         .Mode = GPIO_MODE_OUTPUT_PP,
         .Pull = GPIO_NOPULL,
         .Speed = GPIO_SPEED_FREQ_LOW,
+#if !defined(FRAMEWORK_STM32_CUBE_F1)
         .Alternate = 0
+#endif
     };
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
@@ -271,7 +290,11 @@ void BUS_SPI::init()
     //HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
     _spi.Instance = (_SPI_index == BUS_INDEX_0) ? SPI1 :
+#if defined(FRAMEWORK_STM32_CUBE_F1)
+                    SPI2;
+#else
                     (_SPI_index == BUS_INDEX_1) ? SPI2 : SPI3;
+#endif
     _spi.Init.Mode = SPI_MODE_MASTER;
     _spi.Init.Direction = SPI_DIRECTION_2LINES;
     _spi.Init.DataSize = SPI_DATASIZE_8BIT;

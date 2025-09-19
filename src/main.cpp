@@ -1,25 +1,64 @@
 #if defined (USE_EMPTY_SETUP_LOOP)
 
 #include "IMU_LSM6DS3TR_C.h"
-#include <Arduino.h>
 
-//#define IMU_SPI_PINS BUS_SPI::pins_t{.cs=17,.sck=18,.cipo=16,.copi=19,.irq=20}
-//#define IMU_SPI_PORT_PINS BUS_SPI::port_pins_t{.cs={PB,11},.sck={PB,14},.cipo={PB,14},.copi={PB,15},.irq={PB,10}}
-
-void setup()
+static void setupIMU()
 {
     enum {PA=0, PB=1, PC=2, PD=3, PE=4, PF=5, PG=6, PH=7};
 
     //const BUS_SPI::pins_t pins = IMU_SPI_PINS;
     //const BUS_SPI::port_pins_t port_pins = IMU_SPI_PORT_PINS;
 
+#if defined(LIBRARY_IMU_USE_SPI_BUS)
     static constexpr uint32_t spiFrequency = 20000000;
     const IMU_LSM6DS3TR_C imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::IMU_SPI_INDEX, BUS_SPI::IMU_SPI_PINS);
-    //const IMU_LSM6DS3TR_C imu2(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::BUS_INDEX_0, IMU_SPI_PORT_PINS);
     (void)imu;
+#else
+    enum { I2C_Address = 0x68 };
+    const IMU_LSM6DS3TR_C imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{.sda=11,.scl=14,.irq=0xFF});
+    //const IMU_LSM6DS3TR_C imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::port_pins_t{.sda={PB,11},.scl={PB,14},.irq={0,0xFF}});
+    (void)imu;
+#endif
+}
+
+#if defined(FRAMEWORK_RPI_PICO)
+int main()
+{
+    setupIMU();
+    return 0;
+}
+
+#elif defined(FRAMEWORK_ESPIDF)
+
+extern "C" void app_main()
+{
+    setupIMU();
+    return 0;
+}
+
+#elif defined(FRAMEWORK_STM32_CUBE)
+
+int main()
+{
+    setupIMU();
+    return 0;
+}
+
+#elif defined(FRAMEWORK_TEST)
+
+#else // defaults to FRAMEWORK_ARDUINO
+
+#include <Arduino.h>
+
+
+void setup()
+{
+    setupIMU();
 }
 
 void loop()
 {
 }
-#endif
+#endif // FRAMEWORK
+
+#endif // USE_EMPTY_SETUP_LOOP

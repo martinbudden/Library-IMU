@@ -185,7 +185,7 @@ int IMU_BMI270::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSen
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
 
-#if defined(I2C_MUTEX_REQUIRED)
+#if defined(LIBRARY_IMU_I2C_MUTEX_REQUIRED)
     _i2cMutex = static_cast<SemaphoreHandle_t>(i2cMutex);
 #else
     (void)i2cMutex;

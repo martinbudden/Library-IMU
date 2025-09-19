@@ -54,7 +54,7 @@ public:
     IMU_ICM426xx(axis_order_e axisOrder, BUS_BASE::bus_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address);
     IMU_ICM426xx(axis_order_e axisOrder, const BUS_I2C::pins_t& pins, uint8_t I2C_address) : IMU_ICM426xx(axisOrder, BUS_BASE::BUS_INDEX_0, pins, I2C_address) {}
     IMU_ICM426xx(axis_order_e axisOrder, const BUS_I2C::pins_t& pins) : IMU_ICM426xx(axisOrder, pins, I2C_ADDRESS) {}
-#if !defined(FRAMEWORK_RPI_PICO) && !defined(FRAMEWORK_ESPIDF) && !defined(FRAMEWORK_TEST)
+#if !defined(FRAMEWORK_RPI_PICO) && !defined(FRAMEWORK_ESPIDF) &&!defined(FRAMEWORK_STM32_CUBE) && !defined(FRAMEWORK_TEST)
     IMU_ICM426xx(axis_order_e axisOrder, TwoWire& wire, const BUS_I2C::pins_t& pins, uint8_t I2C_address);
 #endif
 #endif

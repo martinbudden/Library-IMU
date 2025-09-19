@@ -82,7 +82,7 @@ int IMU_BNO085::init(uint32_t outputDataRateHz, gyro_sensitivity_e gyroSensitivi
 
     _gyroSampleRateHz = outputDataRateHz;
     _accSampleRateHz = outputDataRateHz;
-#if defined(I2C_MUTEX_REQUIRED)
+#if defined(LIBRARY_IMU_I2C_MUTEX_REQUIRED)
     _i2cMutex = static_cast<SemaphoreHandle_t>(i2cMutex);
 #else
     (void)i2cMutex;
