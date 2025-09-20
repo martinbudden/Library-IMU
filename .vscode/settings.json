@@ -1,6 +1,7 @@
 {
     "cSpell.words": [
         "ADDRESSINGMODE",
+        "afroflight",
         "afruitnrf",
         "AFSR",
         "AHRS",
@@ -26,6 +27,7 @@
         "DSOX",
         "DSTR",
         "DUALADDRESS",
+        "duino",
         "DUTYCYCLE",
         "earlephilhower",
         "ESPIDF",
@@ -44,6 +46,7 @@
         "hspi",
         "Inven",
         "IRAM",
+        "Isrc",
         "libc",
         "llvmlibc",
         "martinbudden",

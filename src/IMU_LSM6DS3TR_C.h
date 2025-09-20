@@ -42,6 +42,10 @@ public:
     IMU_LSM6DS3TR_C(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::pins_t& pins);
 #else
     // I2C constructors
+    IMU_LSM6DS3TR_C(axis_order_e axisOrder, BUS_BASE::bus_index_e I2C_index, const BUS_I2C::port_pins_t& pins, uint8_t I2C_address);
+    IMU_LSM6DS3TR_C(axis_order_e axisOrder, const BUS_I2C::port_pins_t& pins, uint8_t I2C_address) : IMU_LSM6DS3TR_C(axisOrder, BUS_I2C::BUS_INDEX_0, pins, I2C_address) {}
+    IMU_LSM6DS3TR_C(axis_order_e axisOrder, const BUS_I2C::port_pins_t& pins) : IMU_LSM6DS3TR_C(axisOrder, pins, I2C_ADDRESS) {}
+
     IMU_LSM6DS3TR_C(axis_order_e axisOrder, BUS_BASE::bus_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address);
     IMU_LSM6DS3TR_C(axis_order_e axisOrder, const BUS_I2C::pins_t& pins, uint8_t I2C_address) : IMU_LSM6DS3TR_C(axisOrder, BUS_I2C::BUS_INDEX_0, pins, I2C_address) {}
     IMU_LSM6DS3TR_C(axis_order_e axisOrder, const BUS_I2C::pins_t& pins) : IMU_LSM6DS3TR_C(axisOrder, pins, I2C_ADDRESS) {}

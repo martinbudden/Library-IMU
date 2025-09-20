@@ -93,6 +93,11 @@ IMU_MPU6000::IMU_MPU6000(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::b
 {
 }
 #else
+IMU_MPU6000::IMU_MPU6000(axis_order_e axisOrder, BUS_BASE::bus_index_e I2C_index, const BUS_I2C::port_pins_t& pins, uint8_t I2C_address) :
+    IMU_Base(axisOrder, _bus),
+    _bus(I2C_address, I2C_index, pins)
+{
+}
 IMU_MPU6000::IMU_MPU6000(axis_order_e axisOrder, BUS_BASE::bus_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
     IMU_Base(axisOrder, _bus),
     _bus(I2C_address, I2C_index, pins)
