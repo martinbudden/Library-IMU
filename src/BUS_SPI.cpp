@@ -252,9 +252,53 @@ void BUS_SPI::init()
 
 #elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
 
-    /// GPIO Ports Clock Enable
-    //__HAL_RCC_GPIOD_CLK_ENABLE();
-    //__HAL_RCC_GPIOA_CLK_ENABLE();
+    // STM32 indices are 1-based
+    if (_SPI_index == BUS_INDEX_0) {
+        _spi.Instance = SPI1;
+#if defined(SPI2)
+    } else if (_SPI_index == BUS_INDEX_1) {
+        _spi.Instance = SPI2;
+#endif
+#if defined(SPI3)
+    } else if (_SPI_index == BUS_INDEX_2) {
+        _spi.Instance = SPI3;
+#endif
+#if defined(SPI4)
+    } else if (_SPI_index == BUS_INDEX_3) {
+        _spi.Instance = SPI4;
+#endif
+#if defined(SPI5)
+    } else if (_SPI_index == BUS_INDEX_4) {
+        _spi.Instance = SPI5;
+#endif
+#if defined(SPI6)
+    } else if (_SPI_index == BUS_INDEX_5) {
+        _spi.Instance = SPI6;
+#endif
+    }
+    if (gpioPort(_pins.sck) == GPIOA) {
+        __HAL_RCC_GPIOA_CLK_ENABLE();
+    }
+#if defined(GPIOB)
+    if (gpioPort(_pins.sck) == GPIOB) {
+        __HAL_RCC_GPIOB_CLK_ENABLE();
+    }
+#endif
+#if defined(GPIOC)
+    if (gpioPort(_pins.sck) == GPIOC) {
+        __HAL_RCC_GPIOC_CLK_ENABLE();
+    }
+#endif
+#if defined(GPIOD)
+    if (gpioPort(_pins.sck) == GPIOD) {
+        __HAL_RCC_GPIOC_CLK_ENABLE();
+    }
+#endif
+#if defined(GPIOE)
+    if (gpioPort(_pins.sck) == GPIOE) {
+        __HAL_RCC_GPIOC_CLK_ENABLE();
+    }
+#endif
 
     // Configure GPIO pin for SPI IRQ
     GPIO_InitTypeDef GPIO_InitStruct = {};

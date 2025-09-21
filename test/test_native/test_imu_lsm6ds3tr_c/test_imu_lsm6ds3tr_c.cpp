@@ -15,7 +15,7 @@ void test_lsm6ds3tr_c()
 #if defined(LIBRARY_IMU_USE_SPI_BUS)
     constexpr uint32_t spiFrequency = 2000000;
     const IMU_LSM6DS3TR_C imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::BUS_INDEX_0,
-        BUS_SPI::port_pins_t{});
+        BUS_SPI::pins_t{});
 #else
     constexpr uint8_t SDA_pin = 0;
     constexpr uint8_t SCL_pin = 0;

@@ -132,6 +132,45 @@ void BUS_I2C::init()
 
 #elif defined(FRAMEWORK_STM32_CUBE)
 
+    // STM32 indices are 1-based
+    if (_I2C_index == BUS_INDEX_0) {
+        _I2C.Instance = I2C1;
+#if defined(I2C2)
+    } else if (_I2C_index == BUS_INDEX_1) {
+        _I2C.Instance = I2C2;
+#endif
+#if defined(I2C3)
+    } else if (_I2C_index == BUS_INDEX_2) {
+        _I2C.Instance = I2C3;
+#endif
+#if defined(I2C4)
+    } else if (_I2C_index == BUS_INDEX_3) {
+        _I2C.Instance = I2C4;
+#endif
+    }
+    if (gpioPort(_pins.sda) == GPIOA) {
+        __HAL_RCC_GPIOA_CLK_ENABLE();
+    }
+#if defined(GPIOB)
+    if (gpioPort(_pins.sda) == GPIOB) {
+        __HAL_RCC_GPIOB_CLK_ENABLE();
+    }
+#endif
+#if defined(GPIOC)
+    if (gpioPort(_pins.sda) == GPIOC) {
+        __HAL_RCC_GPIOC_CLK_ENABLE();
+    }
+#endif
+#if defined(GPIOD)
+    if (gpioPort(_pins.sda) == GPIOD) {
+        __HAL_RCC_GPIOC_CLK_ENABLE();
+    }
+#endif
+#if defined(GPIOE)
+    if (gpioPort(_pins.sda) == GPIOE) {
+        __HAL_RCC_GPIOC_CLK_ENABLE();
+    }
+#endif
     _I2C.Init.ClockSpeed = 100000;
     _I2C.Init.DutyCycle = I2C_DUTYCYCLE_2;
     _I2C.Init.OwnAddress1 = 0;
