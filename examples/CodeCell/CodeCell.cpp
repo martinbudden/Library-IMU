@@ -1,8 +1,10 @@
 #include <Arduino.h>
 #include <IMU_BNO085.h>
 
-static constexpr uint8_t I2C_SDA_PIN = 8;
-static constexpr uint8_t I2C_SCL_PIN = 9;
+//static constexpr uint8_t I2C_SDA_PIN = 8;
+//static constexpr uint8_t I2C_SCL_PIN = 9;
+
+#define IMU_I2C_PINS        pins_t{.sda=,8,.scl=9,.irq=0xFF}
 
 static IMU_Base* imu;
 
@@ -13,7 +15,7 @@ void setup()
     Serial.begin(115200);
 
     // statically allocate a BNO085 IMU object
-    static IMU_BNO085 imuStatic(IMU_Base::XPOS_YPOS_ZPOS, I2C_SDA_PIN, I2C_SCL_PIN);
+    static IMU_BNO085 imuStatic(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{.sda=8,.scl=9,.irq=0xFF});
     imu = &imuStatic;
     // initialize the IMU
     imu->init();

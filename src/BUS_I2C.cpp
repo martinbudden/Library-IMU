@@ -40,7 +40,7 @@ FAST_CODE void BUS_I2C::dataReadyISR()
 }
 #endif
 
-BUS_I2C::BUS_I2C(uint8_t I2C_address, bus_index_e I2C_index, const port_pins_t& pins) :
+BUS_I2C::BUS_I2C(uint8_t I2C_address, bus_index_e I2C_index, const stm32_i2c_pins_t& pins) :
     _I2C_index(I2C_index),
     _pins(pins),
 #if defined(FRAMEWORK_RPI_PICO)

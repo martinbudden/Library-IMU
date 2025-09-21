@@ -195,7 +195,7 @@ BUS_SPI::BUS_SPI(uint32_t frequency, bus_index_e SPI_index, const pins_t& pins) 
     init();
 }
 
-BUS_SPI::BUS_SPI(uint32_t frequency, bus_index_e SPI_index, const port_pins_t& pins) :
+BUS_SPI::BUS_SPI(uint32_t frequency, bus_index_e SPI_index, const stm32_spi_pins_t& pins) :
     _frequency(frequency)
     ,_SPI_index(SPI_index)
     ,_pins(pins)

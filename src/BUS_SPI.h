@@ -35,7 +35,7 @@ public:
         uint8_t copi; // TX, COPI, MOSI, PICO
         uint8_t irq; // interrupt pin
     };
-    struct port_pins_t {
+    struct stm32_spi_pins_t {
         port_pin_t cs;
         port_pin_t sck;
         port_pin_t cipo; // RX, CIPO, MISO, POCI
@@ -45,7 +45,7 @@ public:
     static constexpr uint8_t READ_BIT = 0x80U;
 public:
     virtual ~BUS_SPI();
-    BUS_SPI(uint32_t frequency, bus_index_e SPI_index, const port_pins_t& pins);
+    BUS_SPI(uint32_t frequency, bus_index_e SPI_index, const stm32_spi_pins_t& pins);
     BUS_SPI(uint32_t frequency, bus_index_e SPI_index, const pins_t& pins);
 public:
     void init();
@@ -70,7 +70,7 @@ private:
     uint32_t _clockDivider {1};
     uint32_t _frequency {1000000};
     bus_index_e _SPI_index {};
-    port_pins_t _pins {};
+    stm32_spi_pins_t _pins {};
 #if defined(FRAMEWORK_RPI_PICO)
     spi_inst_t* _spi {};
     uint32_t _dmaInterruptNumber {};

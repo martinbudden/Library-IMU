@@ -17,13 +17,13 @@ Targets
 #if defined(LIBRARY_IMU_USE_SPI_BUS)
     #define IMU_SPI_INDEX       BUS_INDEX_0
     //                                      A0         A1          A2           A3           A4
-    #define IMU_SPI_PINS        port_pins_t{.cs={PA,4},.sck={PA,5},.cipo={PA,6},.copi={PA,7},.irq={PC,4}}
+    #define IMU_SPI_PINS        stm32_spi_pins_t{.cs={PA,4},.sck={PA,5},.cipo={PA,6},.copi={PA,7},.irq={PC,4}}
 #else
     // function-pin-marking on board
     // I2C1 SDA-PB7-SCL SCL-PB6-SDA
     #define IMU_I2C_INDEX       BUS_INDEX_0
     //                                      SDA         SCL 
-    #define IMU_I2C_PINS        port_pins_t{.sda={PB,7},.scl={PB,6},.irq={0,0xFF}}
+    #define IMU_I2C_PINS        stm32_i2c_pins_t{.sda={PB,7},.scl={PB,6},.irq={0,0xFF}}
 #endif
 
     #define USE_RECEIVER_SBUS
@@ -66,9 +66,9 @@ Targets
 
     #define IMU_AXIS_ORDER      IMU_Base::XPOS_YPOS_ZPOS
     //!!TODO: add port_pins to IMU_MPU6000
-    #define IMU_I2C_PINS        port_pins_t{.sda={PB,11},.scl={PB,10},.irq={PB,13}}
+    #define IMU_I2C_PINS        stm32_i2c_pins_t{.sda={PB,11},.scl={PB,10},.irq={PB,13}}
     // On afroflight Rev 5 MPU6050 is connected to IC2 index 2
-    #define IMU_SPI_PINS        port_pins_t{.cs={PA,4},.sck={PA,5},.cipo={PA,6},.copi={PA,7},.irq={PA,0xFF}}
+    #define IMU_SPI_PINS        stm32_spi_pins_t{.cs={PA,4},.sck={PA,5},.cipo={PA,6},.copi={PA,7},.irq={PA,0xFF}}
 
     #define USE_RECEIVER_SBUS
     #define RECEIVER_UART_INDEX 0

@@ -16,7 +16,7 @@ static void setupIMU()
 #else
     enum { I2C_Address = 0x68 };
     //const IMU_LSM6DS3TR_C imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{.sda=11,.scl=14,.irq=0xFF});
-    const IMU_LSM6DS3TR_C imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::port_pins_t{.sda={PB,11},.scl={PB,14},.irq={0,0xFF}});
+    const IMU_LSM6DS3TR_C imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::stm32_i2c_pins_t{.sda={PB,11},.scl={PB,14},.irq={0,0xFF}});
     (void)imu;
 #endif
 }
