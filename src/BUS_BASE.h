@@ -36,12 +36,16 @@
 
 #if defined(FRAMEWORK_STM32_CUBE_F1)
 #include <stm32f1xx_hal.h>
+#include <stm32f1xx_hal_gpio.h>
 #elif defined(FRAMEWORK_STM32_CUBE_F3)
 #include <stm32f3xx_hal.h>
+#include <stm32f3xx_hal_gpio.h>
 #elif defined(FRAMEWORK_STM32_CUBE_F4)
 #include <stm32f4xx_hal.h>
+#include <stm32f4xx_hal_gpio.h>
 #elif defined(FRAMEWORK_STM32_CUBE_F7)
 #include <stm32f7xx_hal.h>
+#include <stm32f7xx_hal_gpio.h>
 #endif
 
 #elif defined(FRAMEWORK_TEST)
@@ -83,6 +87,10 @@ public:
         _readBuf = readBuf;
         _readLength = readLength;
     }
+#if defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
+    static inline GPIO_TypeDef* gpioPort(port_pin_t portPin) { return reinterpret_cast<GPIO_TypeDef*>(GPIOA_BASE + portPin.port*(GPIOB_BASE - GPIOA_BASE)); }
+    static inline uint16_t gpioPin(port_pin_t portPin) { return static_cast<uint16_t>(1U << portPin.pin); }
+#endif
 protected:
     uint8_t _deviceDataRegister {}; // the device register that is read in the readDeviceData() function
     uint8_t* _readBuf {};

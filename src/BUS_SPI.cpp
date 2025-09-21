@@ -12,17 +12,6 @@
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_TEST)
 #elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
-#if defined(FRAMEWORK_STM32_CUBE_F1)
-#include <stm32f1xx_hal_gpio.h>
-#elif defined(FRAMEWORK_STM32_CUBE_F3)
-#include <stm32f3xx_hal_gpio.h>
-#elif defined(FRAMEWORK_STM32_CUBE_F4)
-#include <stm32f4xx_hal_gpio.h>
-#elif defined(FRAMEWORK_STM32_CUBE_F7)
-#include <stm32f7xx_hal_gpio.h>
-#endif
-static inline GPIO_TypeDef* gpioPort(uint8_t port) { return reinterpret_cast<GPIO_TypeDef*>(GPIOA_BASE + port*(GPIOB_BASE - GPIOA_BASE)); }
-static inline uint16_t gpioPin(uint8_t pin) { return static_cast<uint16_t>(1U << pin); }
 #else // defaults to FRAMEWORK_ARDUINO
 #include <Arduino.h>
 #include <SPI.h>
@@ -40,7 +29,7 @@ void BUS_SPI::cs_select()
     asm volatile("nop \n nop \n nop"); // NOLINT(hicpp-no-assembler)
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
-    HAL_GPIO_WritePin(gpioPort(bus->_pins.cs.port), gpioPin(bus->_pins.cs.pin), GPIO_PIN_SET);
+    HAL_GPIO_WritePin(gpioPort(bus->_pins.cs), gpioPin(bus->_pins.cs), GPIO_PIN_SET);
 #elif defined(FRAMEWORK_TEST)
 #else // defaults to FRAMEWORK_ARDUINO
 
@@ -63,7 +52,7 @@ void BUS_SPI::cs_deselect()
     asm volatile("nop \n nop \n nop"); // NOLINT(hicpp-no-assembler)
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
-    HAL_GPIO_WritePin(gpioPort(bus->_pins.cs.port), gpioPin(bus->_pins.cs.pin), GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(gpioPort(bus->_pins.cs), gpioPin(bus->_pins.cs), GPIO_PIN_RESET);
 #elif defined(FRAMEWORK_TEST)
 #else // defaults to FRAMEWORK_ARDUINO
 #if defined(FRAMEWORK_ARDUINO_ESP32)
@@ -267,23 +256,28 @@ void BUS_SPI::init()
     //__HAL_RCC_GPIOD_CLK_ENABLE();
     //__HAL_RCC_GPIOA_CLK_ENABLE();
 
-    // Configure GPIO pin : PA8
-    GPIO_InitTypeDef GPIO_InitStruct = {
-        .Pin = GPIO_PIN_8,
-        .Mode = GPIO_MODE_OUTPUT_PP,
-        .Pull = GPIO_NOPULL,
-        .Speed = GPIO_SPEED_FREQ_LOW,
-#if !defined(FRAMEWORK_STM32_CUBE_F1)
-        .Alternate = 0
-#endif
-    };
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-    // Configure irq GPIO pin
-    GPIO_InitStruct.Pin = gpioPin(_pins.irq.pin);
+    // Configure GPIO pin for SPI IRQ
+    GPIO_InitTypeDef GPIO_InitStruct = {};
+    GPIO_InitStruct.Pin = gpioPin(_pins.irq);
     GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(gpioPort(_pins.irq.port), &GPIO_InitStruct);
+    HAL_GPIO_Init(gpioPort(_pins.irq), &GPIO_InitStruct);
+
+#if false
+    // Configure GPIO pins for SPI
+    GPIO_InitStruct.Pin = gpioPin(_pins.sck) | gpioPin(_pins.cipo) | gpioPin(_pins.copi);
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = (_SPI_index == BUS_INDEX_0) ? GPIO_AF5_SPI1 : (_SPI_index == BUS_INDEX_1) ? GPIO_AF5_SPI2 : GPIO_AF6_SPI3;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    // Configure GPIO pin for SPI SCK
+    GPIO_InitStruct.Pin = gpioPin(_pins.sck);
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    HAL_GPIO_Init(gpioPort(_pins.irq), &GPIO_InitStruct);
+#endif
 
     // EXTI interrupt init
     //HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
@@ -295,18 +289,24 @@ void BUS_SPI::init()
 #else
                     (_SPI_index == BUS_INDEX_1) ? SPI2 : SPI3;
 #endif
+
     _spi.Init.Mode = SPI_MODE_MASTER;
     _spi.Init.Direction = SPI_DIRECTION_2LINES;
     _spi.Init.DataSize = SPI_DATASIZE_8BIT;
     _spi.Init.CLKPolarity = SPI_POLARITY_LOW;
     _spi.Init.CLKPhase = SPI_PHASE_1EDGE;
 #if defined(LIBRARY_IMU_USE_SPI_HARDWARE_CHIP_SELECT)
-    _spi.Init.NSS = SPI_NSS_HARD_OUTPUT | SPI_NSS_HARD_INPUT;
+    //_spi.Init.NSS = SPI_NSS_HARD_OUTPUT | SPI_NSS_HARD_INPUT;
+    _spi.Init.NSS = SPI_NSS_HARD_OUTPUT;
 #else
     _spi.Init.NSS = SPI_NSS_SOFT;
 #endif
     _spi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+    //hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
     _spi.Init.FirstBit = SPI_FIRSTBIT_MSB;
+    _spi.Init.TIMode = SPI_TIMODE_DISABLE;
+    _spi.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+    _spi.Init.CRCPolynomial = 10;
     HAL_SPI_Init(&_spi);
 #elif defined(FRAMEWORK_TEST)
 

@@ -1,4 +1,4 @@
-#if defined (USE_EMPTY_SETUP_LOOP)
+#if defined (USE_EMPTY_MAIN)
 
 #include "IMU_LSM6DS3TR_C.h"
 
@@ -15,8 +15,8 @@ static void setupIMU()
     (void)imu;
 #else
     enum { I2C_Address = 0x68 };
-    const IMU_LSM6DS3TR_C imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{.sda=11,.scl=14,.irq=0xFF});
-    //const IMU_LSM6DS3TR_C imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::port_pins_t{.sda={PB,11},.scl={PB,14},.irq={0,0xFF}});
+    //const IMU_LSM6DS3TR_C imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{.sda=11,.scl=14,.irq=0xFF});
+    const IMU_LSM6DS3TR_C imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::port_pins_t{.sda={PB,11},.scl={PB,14},.irq={0,0xFF}});
     (void)imu;
 #endif
 }
@@ -61,4 +61,4 @@ void loop()
 }
 #endif // FRAMEWORK
 
-#endif // USE_EMPTY_SETUP_LOOP
+#endif // USE_EMPTY_MAIN

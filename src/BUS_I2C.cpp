@@ -132,7 +132,7 @@ void BUS_I2C::init()
 
 #elif defined(FRAMEWORK_STM32_CUBE)
 
-    _I2C.Init.ClockSpeed = 400000;
+    _I2C.Init.ClockSpeed = 100000;
     _I2C.Init.DutyCycle = I2C_DUTYCYCLE_2;
     _I2C.Init.OwnAddress1 = 0;
     _I2C.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
