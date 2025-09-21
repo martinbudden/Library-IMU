@@ -1,5 +1,6 @@
 {
     "cSpell.words": [
+        "afroflight",
         "afruitnrf",
         "AHRS",
         "altera",
@@ -7,21 +8,29 @@
         "CIPO",
         "clangtidy",
         "cppcoreguidelines",
+        "duino",
         "earlephilhower",
         "ESPIDF",
         "espressif",
-        "IRAM",
+        "GPIOA",
+        "GPIOB",
+        "Isrc",
         "libc",
         "llvmlibc",
         "martinbudden",
         "nordicnrf",
-        "ONLOW",
+        "noreturn",
         "picotool",
         "raspberrypi",
         "rpipico",
+        "SDCARD",
+        "SDIO",
         "Seeed",
+        "stlink",
+        "ststm",
         "suppr",
         "unflags",
+        "USART",
         "Wattributes",
         "Wdisabled",
         "Wdouble",
@@ -32,6 +41,6 @@
         "Wnarrowing",
         "Wsign",
         "Wtrampolines",
-        "xaio"
+        "xiao"
     ]
 }

@@ -1,24 +1,11 @@
+#include "Targets.h"
 #include <Arduino.h>
 #include <IMU_LSM6DS3TR_C.h>
 #include <boards/pico.h>
 
-#define IMU_I2C_PINS pins_t{.sda=4,.scl=5,.irq=6}
-#define IMU_SPI_INDEX BUS_INDEX_0
-#define IMU_SPI_PINS pins_t{.cs=17,.sck=18,.cipo=16,.copi=19,.irq=20}
-
-/*
-static constexpr uint8_t IMU_I2C_SDA_PIN=4;
-static constexpr uint8_t IMU_I2C_SCL_PIN=5;
-static constexpr uint8_t IMU_I2C_IRQ_PIN=6;
-
-static constexpr uint8_t IMU_SPI_CS_PIN=17;
-static constexpr uint8_t IMU_SPI_SCK_PIN=18;
-static constexpr uint8_t IMU_SPI_CIPO_PIN=16; // RX
-static constexpr uint8_t IMU_SPI_COPI_PIN=19; // TX
-static constexpr uint8_t IMU_SPI_IRQ_PIN=20;
-*/
 
 static IMU_Base* imu;
+static bool ledOn = false;
 
 #define INTERRUPT_DRIVEN
 
@@ -29,12 +16,11 @@ void setup()
     Serial.begin(115200);
     gpio_init(PICO_DEFAULT_LED_PIN); // 25
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
-    gpio_put(PICO_DEFAULT_LED_PIN, 0);
+    gpio_put(PICO_DEFAULT_LED_PIN, ledOn);
 
     // statically allocate an LSM6DS3TR_C IMU object
 #if defined(LIBRARY_IMU_USE_SPI_BUS)
-    constexpr uint32_t spiFrequency = 20000000; // 20 MHz
-    static IMU_LSM6DS3TR_C imuStatic(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::IMU_SPI_INDEX, BUS_SPI::IMU_SPI_PINS);
+    static IMU_LSM6DS3TR_C imuStatic(IMU_Base::XPOS_YPOS_ZPOS, SPI_FREQUENCY, BUS_SPI::IMU_SPI_INDEX, BUS_SPI::IMU_SPI_PINS);
 #else
     static IMU_LSM6DS3TR_C imuStatic(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::IMU_I2C_PINS);
 #endif
@@ -57,7 +43,6 @@ void loop()
     imu->readAccGyroRPS();
 #endif
 
-    //gpio_put(PICO_DEFAULT_LED_PIN, 0);
     Serial.println();
 
     // get the gyro data read in the Interrupt Service Routine
@@ -83,4 +68,6 @@ void loop()
     Serial.println(acc.z);
 
     delay(500);
+    ledOn = !ledOn;
+    gpio_put(PICO_DEFAULT_LED_PIN, ledOn);
 }
