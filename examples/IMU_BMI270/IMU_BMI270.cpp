@@ -3,7 +3,7 @@
 #include <M5Unified.h>
 
 
-#define IMU_I2C_PINS pins_t{.sda=45,.scl=0,.irq=BUS_I2C::IRQ_NOT_SET}
+#define IMU_I2C_PINS i2c_pins_t{.sda=45,.scl=0,.irq=BUS_I2C::IRQ_NOT_SET}
 
 static IMU_Base* imu;
 

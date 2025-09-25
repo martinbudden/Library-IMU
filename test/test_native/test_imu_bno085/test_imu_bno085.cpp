@@ -13,9 +13,9 @@ IMU_BNO085& newBNO085()
 {
 #if defined(LIBRARY_IMU_USE_SPI_BUS)
     constexpr uint32_t spiFrequency = 2000000;
-    static IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::BUS_INDEX_0, BUS_SPI::pins_t{});
+    static IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::BUS_INDEX_0, BUS_SPI::spi_pins_t{});
 #else
-    static IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{});
+    static IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::i2c_pins_t{});
 #endif
     return imu;
 }
@@ -122,9 +122,9 @@ void test_bno085()
 {
 #if defined(LIBRARY_IMU_USE_SPI_BUS)
     constexpr uint32_t spiFrequency = 2000000;
-    static const IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::BUS_INDEX_0, BUS_SPI::pins_t{});
+    static const IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::BUS_INDEX_0, BUS_SPI::spi_pins_t{});
 #else
-    static const IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{});
+    static const IMU_BNO085 imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::i2c_pins_t{});
 #endif
     TEST_ASSERT_EQUAL(4096, imu.getAccOneG_Raw());
     TEST_ASSERT_EQUAL(IMU_Base::IMU_AUTO_CALIBRATES | IMU_Base::IMU_PERFORMS_SENSOR_FUSION, imu.getFlags());

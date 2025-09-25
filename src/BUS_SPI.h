@@ -28,7 +28,7 @@ typedef struct spi_inst spi_inst_t;
 
 class BUS_SPI : public BUS_BASE {
 public:
-    struct pins_t {
+    struct spi_pins_t {
         uint8_t cs;
         uint8_t sck;
         uint8_t cipo; // RX, CIPO, MISO, POCI
@@ -46,7 +46,7 @@ public:
 public:
     virtual ~BUS_SPI();
     BUS_SPI(uint32_t frequency, bus_index_e SPI_index, const stm32_spi_pins_t& pins);
-    BUS_SPI(uint32_t frequency, bus_index_e SPI_index, const pins_t& pins);
+    BUS_SPI(uint32_t frequency, bus_index_e SPI_index, const spi_pins_t& pins);
 public:
     void init();
     void configureDMA();

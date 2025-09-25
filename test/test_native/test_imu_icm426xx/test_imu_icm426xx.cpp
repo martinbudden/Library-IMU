@@ -14,7 +14,7 @@ void test_icm426xx()
 {
 #if defined(LIBRARY_IMU_USE_SPI_BUS)
     constexpr uint32_t spiFrequency = 2000000;
-    static IMU_ICM426xx imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::BUS_INDEX_0, BUS_SPI::pins_t{});
+    static IMU_ICM426xx imu(IMU_Base::XPOS_YPOS_ZPOS, spiFrequency, BUS_SPI::BUS_INDEX_0, BUS_SPI::spi_pins_t{});
 #else
     static IMU_ICM426xx imu(IMU_Base::XPOS_YPOS_ZPOS, IMU_I2C_SDA_PIN, IMU_I2C_SCL_PIN);
 #endif

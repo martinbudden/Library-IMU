@@ -59,7 +59,7 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, bus_index_e I2C_index, const stm32_i2c_pin
     init();
 }
 
-BUS_I2C::BUS_I2C(uint8_t I2C_address, bus_index_e I2C_index, const pins_t& pins) :
+BUS_I2C::BUS_I2C(uint8_t I2C_address, bus_index_e I2C_index, const i2c_pins_t& pins) :
     _I2C_index(I2C_index),
 #if defined(FRAMEWORK_RPI_PICO)
     _I2C(I2C_index == BUS_INDEX_1 ? i2c1 : i2c0),
@@ -203,7 +203,7 @@ void BUS_I2C::init()
 }
 
 #if !defined(FRAMEWORK_RPI_PICO) && !defined(FRAMEWORK_ESPIDF) && !defined(FRAMEWORK_STM32_CUBE) && !defined(FRAMEWORK_TEST)
-BUS_I2C::BUS_I2C(uint8_t I2C_address, TwoWire& wire, const pins_t& pins) :
+BUS_I2C::BUS_I2C(uint8_t I2C_address, TwoWire& wire, const i2c_pins_t& pins) :
     _I2C_index(BUS_INDEX_0),
     _wire(wire),
     _I2C_address(I2C_address)
@@ -231,16 +231,16 @@ BUS_I2C::BUS_I2C(uint8_t I2C_address, TwoWire& wire, const pins_t& pins) :
 BUS_I2C::BUS_I2C(uint8_t I2C_address, bus_index_e I2C_index)
 #if defined(FRAMEWORK_RPI_PICO)
     : BUS_I2C(I2C_address, I2C_index,
-        I2C_index == BUS_INDEX_0 ? pins_t{.sda=PICO_DEFAULT_I2C_SDA_PIN, .scl=PICO_DEFAULT_I2C_SCL_PIN, .irq=IRQ_NOT_SET} :
-                                   pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET})
+        I2C_index == BUS_INDEX_0 ? i2c_pins_t{.sda=PICO_DEFAULT_I2C_SDA_PIN, .scl=PICO_DEFAULT_I2C_SCL_PIN, .irq=IRQ_NOT_SET} :
+                                   i2c_pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET})
 #elif defined(FRAMEWORK_ESPIDF)
-    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET})
+    : BUS_I2C(I2C_address, I2C_index, i2c_pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET})
 #elif defined(FRAMEWORK_STM32_CUBE)
-    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET})
+    : BUS_I2C(I2C_address, I2C_index, i2c_pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET})
 #elif defined(FRAMEWORK_TEST)
-    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET})
+    : BUS_I2C(I2C_address, I2C_index, i2c_pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET})
 #else // defaults to FRAMEWORK_ARDUINO
-    : BUS_I2C(I2C_address, I2C_index, pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET})
+    : BUS_I2C(I2C_address, I2C_index, i2c_pins_t{.sda=0, .scl=0, .irq=IRQ_NOT_SET})
 #endif // FRAMEWORK
 {
 }

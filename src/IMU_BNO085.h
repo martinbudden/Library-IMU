@@ -125,12 +125,12 @@ public:
 #if defined(LIBRARY_IMU_USE_SPI_BUS)
     // SPI constructors
     IMU_BNO085(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::stm32_spi_pins_t& pins);
-    IMU_BNO085(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::pins_t& pins);
+    IMU_BNO085(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::spi_pins_t& pins);
 #else
     // I2C constructors
-    IMU_BNO085(axis_order_e axisOrder, BUS_BASE::bus_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address);
-    IMU_BNO085(axis_order_e axisOrder, const BUS_I2C::pins_t& pins, uint8_t I2C_address) : IMU_BNO085(axisOrder, BUS_I2C::BUS_INDEX_0, pins, I2C_address) {}
-    IMU_BNO085(axis_order_e axisOrder, const BUS_I2C::pins_t& pins) : IMU_BNO085(axisOrder, pins, I2C_ADDRESS) {}
+    IMU_BNO085(axis_order_e axisOrder, BUS_BASE::bus_index_e I2C_index, const BUS_I2C::i2c_pins_t& pins, uint8_t I2C_address);
+    IMU_BNO085(axis_order_e axisOrder, const BUS_I2C::i2c_pins_t& pins, uint8_t I2C_address) : IMU_BNO085(axisOrder, BUS_I2C::BUS_INDEX_0, pins, I2C_address) {}
+    IMU_BNO085(axis_order_e axisOrder, const BUS_I2C::i2c_pins_t& pins) : IMU_BNO085(axisOrder, pins, I2C_ADDRESS) {}
 #endif
 public:
     virtual int init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroSensitivity, acc_sensitivity_e accSensitivity, void* i2cMutex) override;

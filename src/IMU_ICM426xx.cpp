@@ -179,7 +179,7 @@ IMU_ICM426xx::IMU_ICM426xx(axis_order_e axisOrder, uint32_t frequency, BUS_BASE:
     static_assert(sizeof(mems_sensor_data_t) == mems_sensor_data_t::DATA_SIZE);
     static_assert(sizeof(acc_gyro_data_t) == acc_gyro_data_t::DATA_SIZE);
 }
-IMU_ICM426xx::IMU_ICM426xx(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::pins_t& pins) :
+IMU_ICM426xx::IMU_ICM426xx(axis_order_e axisOrder, uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::spi_pins_t& pins) :
     IMU_Base(axisOrder, _bus),
     _bus(frequency, SPI_index, pins)
 {
@@ -190,13 +190,13 @@ IMU_ICM426xx::IMU_ICM426xx(axis_order_e axisOrder, BUS_BASE::bus_index_e I2C_ind
     _bus(I2C_address, I2C_index, pins)
 {
 }
-IMU_ICM426xx::IMU_ICM426xx(axis_order_e axisOrder, BUS_BASE::bus_index_e I2C_index, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
+IMU_ICM426xx::IMU_ICM426xx(axis_order_e axisOrder, BUS_BASE::bus_index_e I2C_index, const BUS_I2C::i2c_pins_t& pins, uint8_t I2C_address) :
     IMU_Base(axisOrder, _bus),
     _bus(I2C_address, I2C_index, pins)
 {
 }
 #if !defined(FRAMEWORK_RPI_PICO) && !defined(FRAMEWORK_ESPIDF) &&!defined(FRAMEWORK_STM32_CUBE) && !defined(FRAMEWORK_TEST)
-IMU_ICM426xx::IMU_ICM426xx(axis_order_e axisOrder, TwoWire& wire, const BUS_I2C::pins_t& pins, uint8_t I2C_address) :
+IMU_ICM426xx::IMU_ICM426xx(axis_order_e axisOrder, TwoWire& wire, const BUS_I2C::i2c_pins_t& pins, uint8_t I2C_address) :
     IMU_Base(axisOrder, _bus),
     _bus(I2C_address, wire, pins)
 {

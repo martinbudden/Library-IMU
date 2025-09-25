@@ -6,8 +6,7 @@ static void setupIMU()
 {
     enum {PA=0, PB=1, PC=2, PD=3, PE=4, PF=5, PG=6, PH=7};
 
-    //const BUS_SPI::pins_t pins = IMU_SPI_PINS;
-    //const BUS_SPI::port_pins_t port_pins = IMU_SPI_PORT_PINS;
+    //const BUS_SPI::spi_pins_t pins = IMU_SPI_PINS;
 
 #if defined(LIBRARY_IMU_USE_SPI_BUS)
     static constexpr uint32_t spiFrequency = 20000000;
@@ -15,7 +14,7 @@ static void setupIMU()
     (void)imu;
 #else
     enum { I2C_Address = 0x68 };
-    //const IMU_LSM6DS3TR_C imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::pins_t{.sda=11,.scl=14,.irq=0xFF});
+    //const IMU_LSM6DS3TR_C imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::i2c_pins_t{.sda=11,.scl=14,.irq=0xFF});
     const IMU_LSM6DS3TR_C imu(IMU_Base::XPOS_YPOS_ZPOS, BUS_I2C::stm32_i2c_pins_t{.sda={PB,11},.scl={PB,14},.irq={0,0xFF}});
     (void)imu;
 #endif

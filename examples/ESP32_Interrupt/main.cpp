@@ -4,7 +4,7 @@
 
 
 
-#define IMU_I2C_PINS pins_t{.sda=45,.scl=0,.irq=16}
+#define IMU_I2C_PINS i2c_pins_t{.sda=45,.scl=0,.irq=16}
 
 //static constexpr uint8_t I2C_SDA_PIN = 45;
 //static constexpr uint8_t I2C_SCL_PIN = 0;

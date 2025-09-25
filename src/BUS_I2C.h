@@ -35,7 +35,7 @@ typedef struct i2c_inst i2c_inst_t;
 
 class BUS_I2C  : public BUS_BASE {
 public:
-    struct pins_t {
+    struct i2c_pins_t {
         uint8_t sda;
         uint8_t scl;
         uint8_t irq;
@@ -48,13 +48,13 @@ public:
 public:
     BUS_I2C(uint8_t I2C_address, bus_index_e I2C_index);
     explicit BUS_I2C(uint8_t I2C_address) : BUS_I2C(I2C_address, BUS_INDEX_0) {}
-    BUS_I2C(uint8_t I2C_address, bus_index_e I2C_index, const pins_t& pins);
-    BUS_I2C(uint8_t I2C_address, const pins_t& pins) : BUS_I2C(I2C_address, BUS_INDEX_0, pins) {}
+    BUS_I2C(uint8_t I2C_address, bus_index_e I2C_index, const i2c_pins_t& pins);
+    BUS_I2C(uint8_t I2C_address, const i2c_pins_t& pins) : BUS_I2C(I2C_address, BUS_INDEX_0, pins) {}
 
     BUS_I2C(uint8_t I2C_address, bus_index_e I2C_index, const stm32_i2c_pins_t& pins);
     BUS_I2C(uint8_t I2C_address, const stm32_i2c_pins_t& pins) : BUS_I2C(I2C_address, BUS_INDEX_0, pins) {}
 #if !defined(FRAMEWORK_RPI_PICO) && !defined(FRAMEWORK_ESPIDF) &&!defined(FRAMEWORK_STM32_CUBE) && !defined(FRAMEWORK_TEST)
-    BUS_I2C(uint8_t I2C_address, TwoWire& wire, const pins_t& pins);
+    BUS_I2C(uint8_t I2C_address, TwoWire& wire, const i2c_pins_t& pins);
 #endif
 public:
     void init();
