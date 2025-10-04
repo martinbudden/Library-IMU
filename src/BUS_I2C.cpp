@@ -171,6 +171,9 @@ void BUS_I2C::init()
         __HAL_RCC_GPIOC_CLK_ENABLE();
     }
 #endif
+#if defined(FRAMEWORK_STM32_CUBE_F1)
+#elif defined(FRAMEWORK_STM32_CUBE_F3)
+#elif defined(FRAMEWORK_STM32_CUBE_F4)
     _I2C.Init.ClockSpeed = 100000;
     _I2C.Init.DutyCycle = I2C_DUTYCYCLE_2;
     _I2C.Init.OwnAddress1 = 0;
@@ -180,6 +183,7 @@ void BUS_I2C::init()
     _I2C.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
     _I2C.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
     HAL_I2C_Init(&_I2C);
+#endif
 
 #elif defined(FRAMEWORK_TEST)
 
