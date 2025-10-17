@@ -135,9 +135,10 @@ void IMU_M5_UNIFIED::setAxisOrder(axis_order_e axisOrder)
     }
 }
 
-[[noreturn]] IMU_Base::xyz_int32_t IMU_M5_UNIFIED::readAccRaw()
+IMU_Base::xyz_int32_t IMU_M5_UNIFIED::readAccRaw()
 {
     assert(false && ("M5Unified variants should not call readAccRaw")); // NOLINT(readability-simplify-boolean-expr)
+    return xyz_int32_t {};
 }
 
 xyz_t IMU_M5_UNIFIED::readAcc()
@@ -159,9 +160,10 @@ xyz_t IMU_M5_UNIFIED::readAcc()
     return acc;
 }
 
-[[noreturn]] IMU_Base::xyz_int32_t IMU_M5_UNIFIED::readGyroRaw()
+IMU_Base::xyz_int32_t IMU_M5_UNIFIED::readGyroRaw()
 {
     assert(false && ("M5Unified variants should not call readGyroRaw")); // NOLINT(readability-simplify-boolean-expr)
+    return xyz_int32_t {};
 }
 
 xyz_t IMU_M5_UNIFIED::readGyroRPS()
