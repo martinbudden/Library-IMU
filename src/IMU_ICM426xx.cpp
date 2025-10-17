@@ -13,6 +13,8 @@ namespace { // use anonymous namespace to make items local to this translation u
 
 constexpr uint8_t REG_SENSOR_CONFIG0        = 0x03;
 
+constexpr uint8_t REG_DEVICE_CONFIG         = 0x11;
+    constexpr uint8_t DEVICE_CONFIG_DEFAULT         = 0b00000000;
 constexpr uint8_t REG_INT_CONFIG            = 0x14;
     constexpr uint8_t INT1_MODE_LATCHED             = 0b00000100;
     constexpr uint8_t INT1_MODE_PULSED              = 0b00000000;
@@ -224,8 +226,23 @@ int IMU_ICM426xx::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroS
 
     _bus.setDeviceDataRegister(REG_ACCEL_DATA_X1, reinterpret_cast<uint8_t*>(&_spiAccGyroData), sizeof(_spiAccGyroData));
 
-    _bus.writeRegister(REG_BANK_SEL, 0); // software reset
-    _bus.writeRegister(REG_PWR_MGMT0, PWR_OFF); // turn off IMU
+    /*
+    Turn off ACC and GYRO so they can be configured.
+    
+    From section 12.9, REGISTER VALUES MODIFICATION, in ICM-42688-P datasheet:
+
+    The only register settings that user can modify during sensor operation are for ODR selection, FSR selection, and sensor mode changes
+    (register parameters GYRO_ODR, ACCEL_ODR, GYRO_FS_SEL, ACCEL_FS_SEL, GYRO_MODE, ACCEL_MODE). 
+    User MUST NOT modify any other register values during sensor operation. 
+    The following procedure must be used for other register values modification:
+        1. Turn Accel and Gyro Off
+        2. Modify register values
+        3. Turn Accel and/or Gyro On
+    */
+    _bus.writeRegister(REG_BANK_SEL, 0);
+    _bus.writeRegister(REG_PWR_MGMT0, PWR_OFF);
+
+    _bus.writeRegister(REG_DEVICE_CONFIG, DEVICE_CONFIG_DEFAULT); // default reset configuration
 
     // set AntiAlias filter, see pages 28ff of TDK ICM-42688-P Datasheet
     enum { GYRO_AAF_DELT=38, GYRO_AAF_DELTSQR=1440, GYRO_AAF_BITSH=4 }; // gives 3dB Bandwidth of 2029 Hz
@@ -239,27 +256,28 @@ int IMU_ICM426xx::init(uint32_t targetOutputDataRateHz, gyro_sensitivity_e gyroS
     _bus.writeRegister(REG_GYRO_ACCEL_CONFIG0, ACCEL_FILTER_LOW_LATENCY | GYRO_FILTER_LOW_LATENCY);
 
     // Configure interrupts
-
     _bus.writeRegister(REG_INT_CONFIG, INT1_MODE_PULSED | INT1_DRIVE_CIRCUIT_PUSH_PULL | INT1_POLARITY_ACTIVE_HIGH); // cppcheck-suppress badBitmaskCheck
-
     _bus.writeRegister(REG_INT_CONFIG0, INT_CLEAR_ON_STATUS_BIT_READ);
-
+    // set interrupt pulse duration to 8us and disable de-assert duration, both required for ODR >= 4kHz
+    _bus.writeRegister(REG_INT_CONFIG1, INT_TPULSE_DURATION_8US | INT_TDEASSERT_DISABLE);
     _bus.writeRegister(REG_INT_SOURCE0, INT1_UI_DATA_READY_ENABLED);
 
-    _bus.writeRegister(REG_INT_CONFIG1, INT_TPULSE_DURATION_8US | INT_TDEASSERT_DISABLE);
-
-    //_bus.writeRegister(REG_INTF_CONFIG0, SENSOR_DATA_LITTLE_ENDIAN | UI_SIFS_CFG_DISABLE_I2C);
-
-    // Disable AFSR to prevent stalls in gyro output
+    // Configure INTF
+    _bus.writeRegister(REG_INTF_CONFIG0, SENSOR_DATA_LITTLE_ENDIAN | UI_SIFS_CFG_DISABLE_I2C);
+    // Disable AFSR to prevent stalls in gyro output (undocumented in datasheet)
+    constexpr uint8_t CONFIG1_DEFAULT_VALUE = 0b10010001;
+    constexpr uint8_t CONFIG1_AFSR_MASK     = 0b00111111;
+    constexpr uint8_t CONFIG1_AFSR_DISABLE  = 0b01000000;
+#if false
     uint8_t intFConfig1 = _bus.readRegister(REG_INTF_CONFIG1);
-    //constexpr uint8_t CONFIG1_RESET_VALUE   = 0b10010001;
-    constexpr uint8_t CONFIG1_AFSR_MASK     = 0b00001100U;
-    constexpr uint8_t CONFIG1_AFSR_DISABLE  = 0b00000100U;
-    intFConfig1 &= ~CONFIG1_AFSR_MASK; // NOLINT(hicpp-signed-bitwise)
+    intFConfig1 &= CONFIG1_AFSR_MASK;
     intFConfig1 |= CONFIG1_AFSR_DISABLE;
     _bus.writeRegister(REG_INTF_CONFIG1, intFConfig1);
+#else
+    _bus.writeRegister(REG_INTF_CONFIG1, (CONFIG1_DEFAULT_VALUE & CONFIG1_AFSR_MASK) | CONFIG1_AFSR_DISABLE);
+#endif
 
-    // Turn on gyro and acc on again so Output Data Rate(ODR) and Full Scale Rate (FSRP can be configured
+    // Turn on gyro and acc on before configuring Output Data Rate(ODR) and Full Scale Rate (FSRP)
     _bus.writeRegister(REG_PWR_MGMT0, PWR_TEMP_ENABLED | PWR_GYRO_LOW_NOISE | PWR_ACCEL_LOW_NOISE); // cppcheck-suppress badBitmaskCheck
     delayMs(1);
 
