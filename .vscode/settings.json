@@ -94,6 +94,7 @@
         "Winline",
         "Wmissing",
         "Wnarrowing",
+        "Wnrvo",
         "Wpacked",
         "Wpadded",
         "Wshadow",
@@ -106,5 +107,9 @@
         "YOUT",
         "ZNEG",
         "ZOUT"
-    ]
+    ],
+    "files.associations": {
+        "compare": "cpp",
+        "cstdint": "cpp"
+    }
 }

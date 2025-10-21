@@ -13,30 +13,21 @@ public:
         enum { DATA_SIZE = 6 };
         std::array<uint8_t, DATA_SIZE> data;
         struct value_t {
-            uint8_t x_h;
-            uint8_t x_l;
-            uint8_t y_h;
-            uint8_t y_l;
-            uint8_t z_h;
-            uint8_t z_l;
+            int16_t x;
+            int16_t y;
+            int16_t z;
         } value;
     };
     union acc_gyro_data_t {
         enum { DATA_SIZE = 12 };
         std::array<uint8_t, DATA_SIZE> data;
         struct value_t {
-            uint8_t acc_x_h;
-            uint8_t acc_x_l;
-            uint8_t acc_y_h;
-            uint8_t acc_y_l;
-            uint8_t acc_z_h;
-            uint8_t acc_z_l;
-            uint8_t gyro_x_h;
-            uint8_t gyro_x_l;
-            uint8_t gyro_y_h;
-            uint8_t gyro_y_l;
-            uint8_t gyro_z_h;
-            uint8_t gyro_z_l;
+            int16_t gyro_x;
+            int16_t gyro_y;
+            int16_t gyro_z;
+            int16_t acc_x;
+            int16_t acc_y;
+            int16_t acc_z;
         } value;
     };
     struct spi_acc_gyro_data_t {
