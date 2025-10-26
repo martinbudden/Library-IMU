@@ -28,6 +28,7 @@
         "Wimplicit",
         "Winline",
         "Wnarrowing",
+        "Wnrvo",
         "Wsign",
         "Wtrampolines",
         "xiao"

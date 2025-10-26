@@ -1,6 +1,7 @@
 #include "Targets.h"
 #include <Arduino.h>
 #include <IMU_LSM6DS3TR_C.h>
+#include <IMU_NULL.h>
 #include <boards/pico.h>
 
 
@@ -66,6 +67,11 @@ void loop()
     Serial.print(acc.y);
     Serial.print(" accZ:");
     Serial.println(acc.z);
+
+    static const IMU_Null XPOS_ZPOS_YNEG(IMU_Base::XPOS_ZPOS_YNEG);
+    const xyz_t output = XPOS_ZPOS_YNEG.mapAxes(acc);
+    Serial.print("outputX:");
+    Serial.print(output.x);
 
     delay(500);
     ledOn = !ledOn;
