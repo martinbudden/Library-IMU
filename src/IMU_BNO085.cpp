@@ -302,9 +302,9 @@ uint16_t IMU_BNO085::parseInputSensorReport(const SHTP_Packet& packet)
     const uint8_t accuracy = status & 0x03U;
     const uint16_t delay = static_cast<uint16_t>(status & 0xFCU) << 6U | packet.data[8];
 
-    const uint16_t dataX = static_cast<uint16_t>(packet.data[10]) << 8U | packet.data[9];
-    const uint16_t dataY = static_cast<uint16_t>(packet.data[12]) << 8U | packet.data[11];
-    const uint16_t dataZ = static_cast<uint16_t>(packet.data[14]) << 8U | packet.data[13];
+    const int16_t dataX = static_cast<int16_t>(packet.data[10]) << 8U | packet.data[9];
+    const int16_t dataY = static_cast<int16_t>(packet.data[12]) << 8U | packet.data[11];
+    const int16_t dataZ = static_cast<int16_t>(packet.data[14]) << 8U | packet.data[13];
 
     switch (reportID) {
     case SENSOR_REPORTID_ACCELEROMETER:
@@ -468,12 +468,12 @@ Arduino I2C read limit is 32 bytes. Header is 4 bytes, so max data we can read p
 bool IMU_BNO085::readData(size_t readLength)
 {
     size_t index = 0;
-    int bytesToRead = static_cast<int>(readLength);
+    size_t bytesToRead = readLength;
 
     //Setup a series of chunked 32 byte reads
     while (bytesToRead > 0) {
         //Serial.printf("bytesToRead:%d\r\n", bytesToRead);
-        int readCount = bytesToRead;
+        size_t readCount = bytesToRead;
         if (readCount + sizeof(SHTP_Header) > MAX_I2C_READ_LENGTH) {
             readCount = MAX_I2C_READ_LENGTH - sizeof(SHTP_Header);
         }
