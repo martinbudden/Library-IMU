@@ -302,9 +302,9 @@ uint16_t IMU_BNO085::parseInputSensorReport(const SHTP_Packet& packet)
     const uint8_t accuracy = status & 0x03U;
     const uint16_t delay = static_cast<uint16_t>(status & 0xFCU) << 6U | packet.data[8];
 
-    const int16_t dataX = static_cast<int16_t>(packet.data[10]) << 8U | packet.data[9];
-    const int16_t dataY = static_cast<int16_t>(packet.data[12]) << 8U | packet.data[11];
-    const int16_t dataZ = static_cast<int16_t>(packet.data[14]) << 8U | packet.data[13];
+    const int16_t dataX = static_cast<int16_t>(packet.data[10]) << 8U | packet.data[9]; // NOLINT(hicpp-signed-bitwise)
+    const int16_t dataY = static_cast<int16_t>(packet.data[12]) << 8U | packet.data[11]; // NOLINT(hicpp-signed-bitwise)
+    const int16_t dataZ = static_cast<int16_t>(packet.data[14]) << 8U | packet.data[13]; // NOLINT(hicpp-signed-bitwise)
 
     switch (reportID) {
     case SENSOR_REPORTID_ACCELEROMETER:

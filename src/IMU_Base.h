@@ -102,7 +102,7 @@ public:
 
     static constexpr float sin45f = 0.7071067811865475F;
     static constexpr float cos45f = 0.7071067811865475F;
-    const std::array<Quaternion, 24> axisOrientations = {
+    const std::array<Quaternion, 24> axisOrientations = {{
         Quaternion(  1.0F,    0.0F,    0.0F,    0.0F ),
         Quaternion(  sin45f,  0.0F,    0.0F,    sin45f ),
         Quaternion(  0.0F,    0.0F,    0.0F,    1.0F ),
@@ -127,7 +127,7 @@ public:
         Quaternion(  0.0F,   -sin45f,  0.0F,   -sin45f ),
         Quaternion(  0.5F,   -0.5F,   -0.5F,   -0.5F ),
         Quaternion(  sin45f,  0.0F,   -sin45f,  0.0F )
-    };
+    }};
 public:
     virtual ~IMU_Base() = default;
     IMU_Base(axis_order_e axisOrder, BUS_BASE& busBase, uint32_t flags);

@@ -214,11 +214,11 @@ IMU_MPU6886::mems_sensor_data_t::value_t IMU_MPU6886::gyroOffsetFromXYZ(const xy
 {
     return mems_sensor_data_t::value_t {
         .x_h = static_cast<uint8_t>((-data.x) >> 8U),
-        .x_l = static_cast<uint8_t>((-data.x) & 0xFFU),
+        .x_l = static_cast<uint8_t>(static_cast<uint32_t>(-data.x) & 0xFFU),
         .y_h = static_cast<uint8_t>((-data.y) >> 8U),
-        .y_l = static_cast<uint8_t>((-data.y) & 0xFFU),
+        .y_l = static_cast<uint8_t>(static_cast<uint32_t>(-data.y) & 0xFFU),
         .z_h = static_cast<uint8_t>((-data.z) >> 8U),
-        .z_l = static_cast<uint8_t>((-data.z) & 0xFFU)
+        .z_l = static_cast<uint8_t>(static_cast<uint32_t>(-data.z) & 0xFFU)
     };
 }
 
