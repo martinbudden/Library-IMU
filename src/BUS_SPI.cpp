@@ -479,7 +479,7 @@ FAST_CODE uint8_t BUS_SPI::readRegister(uint8_t reg) const
     (void)reg;
 #elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
     cs_select();
-    std::array<uint8_t, 2> outBuf = { static_cast<uint8_t>(reg | READ_BIT), 0 };
+    std::array<uint8_t, 2> outBuf = {{ static_cast<uint8_t>(reg | READ_BIT), 0 }};
     std::array<uint8_t, 2> inBuf;
     HAL_SPI_TransmitReceive(&_spi, &outBuf[0], &inBuf[0], 2, HAL_MAX_DELAY);
     cs_deselect();
@@ -505,7 +505,7 @@ FAST_CODE uint8_t BUS_SPI::readRegisterWithTimeout(uint8_t reg, uint32_t timeout
 {
 #if defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
     cs_select();
-    std::array<uint8_t, 2> outBuf = { static_cast<uint8_t>(reg | READ_BIT), 0 };
+    std::array<uint8_t, 2> outBuf = {{ static_cast<uint8_t>(reg | READ_BIT), 0 }};
     std::array<uint8_t, 2> inBuf;
     HAL_SPI_TransmitReceive(&_spi, &outBuf[0], &inBuf[0], 2, timeoutMs); // note timeout is in milliseconds
     cs_deselect();
