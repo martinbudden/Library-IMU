@@ -470,7 +470,7 @@ FAST_CODE uint8_t BUS_SPI::readRegister(uint8_t reg) const
 {
 #if defined(FRAMEWORK_RPI_PICO)
     cs_select();
-    std::array<uint8_t, 2> outBuf = { static_cast<uint8_t>(reg | READ_BIT), 0 };
+    std::array<uint8_t, 2> outBuf = {{ static_cast<uint8_t>(reg | READ_BIT), 0 }};
     std::array<uint8_t, 2> inBuf;
     spi_write_read_blocking(_spi, &outBuf[0], &inBuf[0], 2);
     cs_deselect();
@@ -694,7 +694,7 @@ FAST_CODE bool BUS_SPI::readBytesWithTimeout(uint8_t* data, size_t length, uint3
 FAST_CODE uint8_t BUS_SPI::writeRegister(uint8_t reg, uint8_t data) // NOLINT(readability-make-member-function-const)
 {
 #if defined(FRAMEWORK_RPI_PICO)
-    std::array<uint8_t, 2> outBuf = { static_cast<uint8_t>(reg & (~READ_BIT)), data }; // remove read bit as this is a write
+    std::array<uint8_t, 2> outBuf = {{ static_cast<uint8_t>(reg & (~READ_BIT)), data }}; // remove read bit as this is a write
     std::array<uint8_t, 2> inBuf;
     cs_select();
     spi_write_read_blocking(_spi, &outBuf[0], &inBuf[0], 2);

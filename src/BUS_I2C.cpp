@@ -439,7 +439,7 @@ FAST_CODE bool BUS_I2C::readBytesWithTimeout(uint8_t* data, size_t length, uint3
 FAST_CODE uint8_t BUS_I2C::writeRegister(uint8_t reg, uint8_t data)
 {
 #if defined(FRAMEWORK_RPI_PICO)
-    std::array<uint8_t, 2> buf = { reg, data };
+    std::array<uint8_t, 2> buf = {{ reg, data }};
     i2c_write_blocking(_I2C, _I2C_address, &buf[0], sizeof(buf), false);
 #elif defined(FRAMEWORK_ESPIDF)
     (void)reg;
