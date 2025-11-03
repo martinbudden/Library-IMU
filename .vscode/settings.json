@@ -61,6 +61,7 @@
         "noreturn",
         "NOSTRETCH",
         "NVIC",
+        "OSRS",
         "picotool",
         "pioenvs",
         "piolibdeps",
@@ -102,14 +103,11 @@
         "Wtrampolines",
         "Wunreachable",
         "xiao",
+        "XLSB",
         "XOUT",
         "YNEG",
         "YOUT",
         "ZNEG",
         "ZOUT"
-    ],
-    "files.associations": {
-        "compare": "cpp",
-        "cstdint": "cpp"
-    }
+    ]
 }
