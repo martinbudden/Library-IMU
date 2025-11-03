@@ -45,7 +45,7 @@ public:
         } value;
     };
 public:
-#if defined(LIBRARY_IMU_USE_SPI_BUS)
+#if defined(LIBRARY_SENSORS_BAROMETER_USE_SPI_BUS)
     // SPI constructors
     Barometer_BMP280(uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::stm32_spi_pins_t& pins);
     Barometer_BMP280(uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::spi_pins_t& pins);
@@ -65,7 +65,7 @@ public:
     virtual float readAltitudeMeters() override;
     virtual float calculateAltitudeMeters(float pressure) override;
 private:
-#if defined(LIBRARY_IMU_USE_SPI_BUS)
+#if defined(LIBRARY_SENSORS_BAROMETER_USE_SPI_BUS)
     BUS_SPI _bus; //!< SPI bus interface
 #else
     BUS_I2C _bus; //!< I2C bus interface

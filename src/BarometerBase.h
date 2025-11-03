@@ -4,17 +4,24 @@
 
 
 /*!
-BPS virtual base class.
-
-Base class for an Barometric Pressure Sensor.
+Barometer virtual base class.
 */
 class BarometerBase {
 public:
     enum  { NOT_DETECTED = -1 };
+    // Values for reporting barometer type back to MSP (MultiWii Serial Protocol)
+    enum barometer_type_e {
+        MSP_BAROMETER_ID_DEFAULT = 0,
+        MSP_BAROMETER_ID_NONE = 1,
+        MSP_BAROMETER_ID_BMP280 = 4,
+        MSP_BAROMETER_ID_VIRTUAL = 11,
+    };
+
 public:
     virtual ~BarometerBase() = default;
     explicit BarometerBase(BUS_BASE& busBase);
     virtual int init() = 0;
+
     uint32_t getSampleRateHz() const { return _sampleRateHz; }
     float getTemperatureCelsius() const { return _temperatureCelsius; }
     float getPressurePascals() const { return _pressurePascals; }

@@ -65,7 +65,7 @@ namespace { // use anonymous namespace to make items local to this translation u
     constexpr uint8_t SPI_3WIRE_ENABLE  = 0x01;
 } // end namespace/
 
-#if defined(LIBRARY_IMU_USE_SPI_BUS)
+#if defined(LIBRARY_SENSORS_BAROMETER_USE_SPI_BUS)
 Barometer_BMP280::Barometer_BMP280(uint32_t frequency, BUS_BASE::bus_index_e SPI_index, const BUS_SPI::stm32_spi_pins_t& pins) :
     BarometerBase(_bus),
     _bus(frequency, SPI_index, pins)
